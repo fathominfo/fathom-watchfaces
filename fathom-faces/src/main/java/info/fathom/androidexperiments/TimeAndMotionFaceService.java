@@ -33,6 +33,7 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.TimeZone;
@@ -57,8 +58,23 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
 
     private class Engine extends CanvasWatchFaceService.Engine {
 
-//        private static final float HAND_END_CAP_RADIUS = 8f;
-//        private static final float SHADOW_RADIUS = 12f;
+        private static final float SECONDS_RADIUS = 0.9f;  // expressed as a ratio of the screen 'radius'
+        private static final float MINUTES_RADIUS = 0.85f;
+        private static final float HOURS_RADIUS = 0.73f;
+        private static final float INNER_MASK_RADIUS = 0.5f;  // the empty circle inside
+
+        private static final int BACKGROUND_COLOR_INTERACTIVE = Color.WHITE;
+        private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
+
+        private final int SECONDS_COLOR = Color.rgb(200, 200, 200);
+
+        private final int MINUTES_COLOR_INTERACTIVE = Color.rgb(150, 150, 150);
+        private final int MINUTES_COLOR_AMBIENT = Color.rgb(150, 150, 150);
+
+        private final int HOURS_COLOR_INTERACTIVE = Color.rgb(100, 100, 100);
+        private final int HOURS_COLOR_AMBIENT = Color.rgb(200, 200, 200);
+
+        private final int CIRCLES_COLOR = Color.argb(127, 150, 150, 150);
 
 
         /* Handler to update the time once a second in interactive mode. */
@@ -78,39 +94,6 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
         };
 
 
-//        private boolean mRegisteredTimeZoneReceiver = false;
-//
-//        private boolean mLowBitAmbient;
-//        private boolean mBurnInProtection;
-
-//        private static final float STROKE_WIDTH = 3f;
-
-//        private Time mTime;
-
-//        private Paint mBackgroundPaint;
-//        private Paint mHandPaint;
-//
-//        private boolean mAmbient;
-//
-//        private float mHourHandLength;
-//        private float mMinuteHandLength;
-//        private float mSecondHandLength;
-//
-//        private int mWidth;
-//        private int mHeight;
-//        private float mCenterX;
-//        private float mCenterY;
-//
-//        private Bitmap mBackgroundBitmap;
-//        private Bitmap mGrayBackgroundBitmap;
-//
-//        private Rect mCardBounds = new Rect();
-
-
-        /**
-         * NEW STUFF
-         */
-
         private boolean mRegisteredTimeZoneReceiver = false;
 //        private boolean mLowBitAmbient;
 //        private boolean mBurnInProtection;
@@ -118,16 +101,20 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
 
         private Time mTime;
 
-        private Paint mBackgroundPaint;
-        private Paint mSecondsPaint, mMinutesPaint, mHoursPaint;
-        private Paint mCircleMaskPaint;
+//        private Paint mBackgroundPaint;
+        private Paint mSecondsPaint,
+                mMinutesPaintInteractive, mMinutesPaintAmbient,
+                mHoursPaintInteractive, mHoursPaintAmbient;
+        private Paint mCircleMaskPaintInteractive, mCircleMaskPaintAmbient;
+//        private Paint mCirclesPaint;
 
         private int mWidth;
         private int mHeight;
         private float mCenterX;
         private float mCenterY;
 
-        private float mSecondsHandRadius, mMinutesHandRadius, mHoursHandRadius;
+        private float mSecondsHandRadius, mMinutesHandRadius,
+                mHoursHandRadius, mInnerMaskRadius;
 
 
 
@@ -146,40 +133,48 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
                     .build());
 
 //            mBackgroundPaint = new Paint();
-//            mBackgroundPaint.setColor(Color.BLACK);
-//
-//            mBackgroundBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.terrence_background);
-//
-//            mHandPaint = new Paint();
-//            mHandPaint.setColor(Color.RED);
-//            mHandPaint.setStrokeWidth(STROKE_WIDTH);
-//            mHandPaint.setAntiAlias(true);
-//            mHandPaint.setStrokeCap(Paint.Cap.ROUND);
-//            mHandPaint.setShadowLayer(SHADOW_RADIUS, 0, 0, Color.BLACK);
-//            mHandPaint.setStyle(Paint.Style.STROKE);
-//
-//            mTime = new Time();
-
-            mBackgroundPaint = new Paint();
-            mBackgroundPaint.setColor(Color.WHITE);
+//            mBackgroundPaint.setColor(Color.WHITE);
 
             mSecondsPaint = new Paint();
-            mSecondsPaint.setColor(Color.RED);
-            mSecondsPaint.setStrokeWidth(10f);
+            mSecondsPaint.setColor(SECONDS_COLOR);
+            mSecondsPaint.setAntiAlias(true);
             mSecondsPaint.setStyle(Paint.Style.FILL);
+//            mSecondsPaint.setStrokeWidth(10f);
 
-            mMinutesPaint = new Paint();
-            mMinutesPaint.setColor(Color.GREEN);
-            mMinutesPaint.setStrokeWidth(10f);
-            mMinutesPaint.setStyle(Paint.Style.FILL);
+            mMinutesPaintInteractive = new Paint();
+            mMinutesPaintInteractive.setColor(MINUTES_COLOR_INTERACTIVE);
+            mMinutesPaintInteractive.setAntiAlias(true);
+            mMinutesPaintInteractive.setStyle(Paint.Style.FILL);
+//            mMinutesPaintInteractive.setStrokeWidth(10f);
 
-            mHoursPaint = new Paint();
-            mHoursPaint.setColor(Color.BLUE);
-            mHoursPaint.setStrokeWidth(10f);
-            mHoursPaint.setStyle(Paint.Style.FILL);
+            mMinutesPaintAmbient = new Paint();
+            mMinutesPaintAmbient.setColor(MINUTES_COLOR_AMBIENT);
+            mMinutesPaintAmbient.setAntiAlias(false);
+            mMinutesPaintAmbient.setStyle(Paint.Style.FILL);
+//            mMinutesPaintInteractive.setStrokeWidth(10f);
 
-            mCircleMaskPaint = new Paint();
-            mCircleMaskPaint.setColor(Color.WHITE);
+            mHoursPaintInteractive = new Paint();
+            mHoursPaintInteractive.setColor(HOURS_COLOR_INTERACTIVE);
+            mHoursPaintInteractive.setAntiAlias(true);
+            mHoursPaintInteractive.setStyle(Paint.Style.FILL);
+//            mMinutesPaintInteractive.setStrokeWidth(10f);
+
+            mHoursPaintAmbient = new Paint();
+            mHoursPaintAmbient.setColor(HOURS_COLOR_AMBIENT);
+            mHoursPaintAmbient.setAntiAlias(false);
+            mHoursPaintAmbient.setStyle(Paint.Style.FILL);
+//            mMinutesPaintInteractive.setStrokeWidth(10f);
+
+            mCircleMaskPaintInteractive = new Paint();
+            mCircleMaskPaintInteractive.setColor(BACKGROUND_COLOR_INTERACTIVE);
+            mCircleMaskPaintInteractive.setAntiAlias(true);
+            mCircleMaskPaintInteractive.setStyle(Paint.Style.FILL);
+
+            mCircleMaskPaintAmbient = new Paint();
+            mCircleMaskPaintAmbient.setColor(BACKGROUND_COLOR_AMBIENT);
+            mCircleMaskPaintAmbient.setAntiAlias(false);
+            mCircleMaskPaintAmbient.setStyle(Paint.Style.FILL);
+
 
             mTime  = new Time();
         }
@@ -199,16 +194,9 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
         @Override
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
+
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
-
-//                mHandPaint.setAntiAlias(!mAmbient);
-
-                mBackgroundPaint.setAntiAlias(!mAmbient);
-                mSecondsPaint.setAntiAlias(!mAmbient);
-                mMinutesPaint.setAntiAlias(!mAmbient);
-                mHoursPaint.setAntiAlias(!mAmbient);
-                mCircleMaskPaint.setAntiAlias(!mAmbient);
 
                 invalidate();
             }
@@ -223,105 +211,29 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             super.onSurfaceChanged(holder, format, width, height);
-//            mWidth = width;
-//            mHeight = height;
-//            /*
-//             * Find the coordinates of the center point on the screen.
-//             * Ignore the window insets so that, on round watches
-//             * with a "chin", the watch face is centered on the entire screen,
-//             * not just the usable portion.
-//             */
-//            mCenterX = mWidth / 2f;
-//            mCenterY = mHeight / 2f;
-//            /*
-//             * Calculate the lengths of the watch hands and store them in member variables.
-//             */
-////            mHourHandLength = mCenterX - 80;
-////            mMinuteHandLength = mCenterX - 40;
-////            mSecondHandLength = mCenterX - 20;
-//            mHourHandLength = 0.5f * width / 2;
-//            mMinuteHandLength = 0.7f * width / 2;
-//            mSecondHandLength = 0.9f * width / 2;
-//
-//
-//            float mScale = ((float) width / (float) mBackgroundBitmap.getWidth());
-//
-//            mBackgroundBitmap = Bitmap.createScaledBitmap(mBackgroundBitmap,
-//                    (int) (mBackgroundBitmap.getWidth() * mScale),
-//                    (int) (mBackgroundBitmap.getHeight() * mScale), true);
-//
-//            if (!mLowBitAmbient || !mBurnInProtection) {
-//                initGrayBackgroundBitmap();
-//            }
-
-
 
             mWidth = width;
             mHeight = height;
             mCenterX = mWidth / 2f;
             mCenterY = mHeight / 2f;
 
-            mSecondsHandRadius = 0.9f * 0.5f * mWidth;
-            mMinutesHandRadius = 0.8f * 0.5f * mWidth;
-            mHoursHandRadius = 0.7f * 0.5f * mWidth;
-
+            mSecondsHandRadius = SECONDS_RADIUS * 0.5f * mWidth;
+            mMinutesHandRadius = MINUTES_RADIUS * 0.5f * mWidth;
+            mHoursHandRadius = HOURS_RADIUS * 0.5f * mWidth;
+            mInnerMaskRadius = INNER_MASK_RADIUS * 0.5f * width;
 
         }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-//            mTime.setToNow();
-//
-//            // Draw the background.
-//            if (mAmbient && (mLowBitAmbient || mBurnInProtection)) {
-//                canvas.drawColor(Color.BLACK);
-//            } else if (mAmbient) {
-//                canvas.drawBitmap(mGrayBackgroundBitmap, 0, 0, mBackgroundPaint);
-//            } else {
-//                canvas.drawBitmap(mBackgroundBitmap, 0, 0, mBackgroundPaint);
-//            }
-//
-//            /*
-//             * These calculations reflect the rotation in degrees per unit of
-//             * time, e.g. 360 / 60 = 6 and 360 / 12 = 30
-//             */
-//            final float secondsRotation = mTime.second * 6f;
-//            final float minutesRotation = mTime.minute * 6f;
-//            // account for the offset of the hour hand due to minutes of the hour.
-//            final float hourHandOffset = mTime.minute / 2f;
-//            final float hoursRotation = (mTime.hour * 30) + hourHandOffset;
-//
-//            // save the canvas state before we begin to rotate it
-//            canvas.save();
-//
-//            canvas.rotate(minutesRotation, mCenterX, mCenterY);
-//            drawHand(canvas, mMinuteHandLength, HAND_END_CAP_RADIUS, mHandPaint);
-//
-//            canvas.rotate(hoursRotation - minutesRotation, mCenterX, mCenterY);
-//            drawHand(canvas, mHourHandLength, HAND_END_CAP_RADIUS, mHandPaint);
-//
-//            if (!mAmbient) {
-//                canvas.rotate(secondsRotation - hoursRotation, mCenterX, mCenterY);
-//                canvas.drawLine(mCenterX, mCenterY - mSecondHandLength, mCenterX, mCenterY, mHandPaint);
-//            }
-//
-//            canvas.drawCircle(mCenterX, mCenterY, HAND_END_CAP_RADIUS, mHandPaint);
-//
-//            canvas.restore();
-//
-//            // Draw a rectangle behind a possible peek card
-//            // If on interactive mode, the system will take care of drawing it
-//            if (mAmbient) {
-//                canvas.drawRect(mCardBounds, mBackgroundPaint);
-//            }
 
             mTime.setToNow();
 
             // Draw the background.
             if (mAmbient) {
-                canvas.drawColor(Color.BLACK);
+                canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
             } else {
-                canvas.drawColor(Color.WHITE);
+                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
             }
 
             /*
@@ -332,23 +244,63 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
             final float minutesRotation = mTime.minute * 6f;
             // account for the offset of the hour hand due to minutes of the hour.
             final float hourHandOffset = mTime.minute / 2f;
-            final float hoursRotation = (mTime.hour * 30) + hourHandOffset;
+            final int hour1to12 = mTime.hour % 12 == 0 ? 12 : mTime.hour % 12;
+            final float hoursRotation = (hour1to12 * 30f) + hourHandOffset;
 
+//            Log.v("hour1to12:", Float.toString(hour1to12));
+//            Log.v("hourHandOffset:", Float.toString(hourHandOffset));
+//            Log.v("hoursRotation:", Float.toString(hoursRotation));
+
+            // Start drawing watch elements
             canvas.save();
 
-            if (!mAmbient) {
-                canvas.drawArc(mCenterX - mSecondsHandRadius, mCenterY - mSecondsHandRadius, mCenterX + mSecondsHandRadius, mCenterY + mSecondsHandRadius, 270, secondsRotation, true, mSecondsPaint);
+            if (mAmbient) {
+                canvas.drawArc(mCenterX - mMinutesHandRadius,
+                        mCenterY - mMinutesHandRadius,
+                        mCenterX + mMinutesHandRadius,
+                        mCenterY + mMinutesHandRadius,
+                        270, minutesRotation,
+                        true, mMinutesPaintAmbient);
+                canvas.drawCircle(mCenterX, mCenterY,
+                        mHoursHandRadius + 2f, mCircleMaskPaintAmbient);
+                canvas.drawArc(mCenterX - mHoursHandRadius,
+                        mCenterY - mHoursHandRadius,
+                        mCenterX + mHoursHandRadius,
+                        mCenterY + mHoursHandRadius,
+                        270, hoursRotation,
+                        true, mHoursPaintAmbient);
+                canvas.drawCircle(mCenterX, mCenterY,
+                        mInnerMaskRadius, mCircleMaskPaintAmbient);
+
+            } else {
+                canvas.drawArc(mCenterX - mSecondsHandRadius,
+                        mCenterY - mSecondsHandRadius,
+                        mCenterX + mSecondsHandRadius,
+                        mCenterY + mSecondsHandRadius,
+                        270, secondsRotation,
+                        true, mSecondsPaint);
+                canvas.drawCircle(mCenterX, mCenterY,
+                        mMinutesHandRadius, mCircleMaskPaintInteractive);
+                canvas.drawArc(mCenterX - mMinutesHandRadius,
+                        mCenterY - mMinutesHandRadius,
+                        mCenterX + mMinutesHandRadius,
+                        mCenterY + mMinutesHandRadius,
+                        270, minutesRotation,
+                        true, mMinutesPaintInteractive);
+                canvas.drawCircle(mCenterX, mCenterY,
+                        mHoursHandRadius, mCircleMaskPaintInteractive);
+                canvas.drawArc(mCenterX - mHoursHandRadius,
+                        mCenterY - mHoursHandRadius,
+                        mCenterX + mHoursHandRadius,
+                        mCenterY + mHoursHandRadius,
+                        270, hoursRotation,
+                        true, mHoursPaintInteractive);
+                canvas.drawCircle(mCenterX, mCenterY,
+                        mInnerMaskRadius, mCircleMaskPaintInteractive);
+
             }
-            canvas.drawArc(mCenterX - mMinutesHandRadius, mCenterY - mMinutesHandRadius, mCenterX + mMinutesHandRadius, mCenterY + mMinutesHandRadius, 270, minutesRotation, true, mMinutesPaint);
-            canvas.drawArc(mCenterX - mHoursHandRadius, mCenterY - mHoursHandRadius, mCenterX + mHoursHandRadius, mCenterY + mHoursHandRadius, 270, hoursRotation, true, mHoursPaint);
 
             canvas.restore();
-
-//            // Draw a rectangle behind a possible peek card
-//            // If on interactive mode, the system will take care of drawing it
-//            if (mAmbient) {
-//                canvas.drawRect(mCardBounds, mBackgroundPaint);
-//            }
 
         }
 
