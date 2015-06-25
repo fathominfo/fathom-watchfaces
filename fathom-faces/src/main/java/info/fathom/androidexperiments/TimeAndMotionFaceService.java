@@ -20,20 +20,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.TimeZone;
@@ -44,6 +41,13 @@ import java.util.concurrent.TimeUnit;
  * devices with low-bit ambient mode, the hands are drawn without anti-aliasing in ambient mode.
  */
 public class TimeAndMotionFaceService extends CanvasWatchFaceService {
+
+    private static final String TAG = "TimeAndMotionFaceService";
+
+    private static final Typeface BOLD_TYPEFACE =
+            Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
+    private static final Typeface NORMAL_TYPEFACE =
+            Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
     /**
      * Update rate in milliseconds for interactive mode. We update once a second to advance the
@@ -59,9 +63,9 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
     private class Engine extends CanvasWatchFaceService.Engine {
 
         private static final float SECONDS_RADIUS = 0.9f;  // expressed as a ratio of the screen 'radius'
-        private static final float MINUTES_RADIUS = 0.85f;
-        private static final float HOURS_RADIUS = 0.73f;
-        private static final float INNER_MASK_RADIUS = 0.5f;  // the empty circle inside
+        private static final float MINUTES_RADIUS = 0.86f;
+        private static final float HOURS_RADIUS = 0.77f;
+        private static final float INNER_MASK_RADIUS = 0.6f;  // the empty circle inside
 
         private static final int BACKGROUND_COLOR_INTERACTIVE = Color.WHITE;
         private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
@@ -74,8 +78,12 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
         private final int HOURS_COLOR_INTERACTIVE = Color.rgb(100, 100, 100);
         private final int HOURS_COLOR_AMBIENT = Color.rgb(200, 200, 200);
 
-        private final int CIRCLES_COLOR = Color.argb(127, 150, 150, 150);
+        private final float[] CIRCLE_RADII = {0.62f, 0.40f, 0.15f, 0.05f};
+        private final static float CIRCLE_STROKE_THICKNESS = 0.015f;  // expressed as a ratio of the screen 'radius'
+        private final int CIRCLES_COLOR = Color.argb(64, 150, 150, 150);
 
+        private final int TEXT_COLOR_INTERACTIVE = Color.argb(127, 175, 175, 175);
+        private final int TEXT_COLOR_AMBIENT = Color.argb(127, 200, 200, 200);
 
         /* Handler to update the time once a second in interactive mode. */
         private final Handler mUpdateTimeHandler = new Handler() {
@@ -106,7 +114,9 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
                 mMinutesPaintInteractive, mMinutesPaintAmbient,
                 mHoursPaintInteractive, mHoursPaintAmbient;
         private Paint mCircleMaskPaintInteractive, mCircleMaskPaintAmbient;
-//        private Paint mCirclesPaint;
+        private Paint mCirclesPaint;
+
+        private Paint mTextPaintInteractive;
 
         private int mWidth;
         private int mHeight;
@@ -115,6 +125,10 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
 
         private float mSecondsHandRadius, mMinutesHandRadius,
                 mHoursHandRadius, mInnerMaskRadius;
+
+        private int mCirclesStrokeWidth = 0;
+
+        private final Rect textBounds = new Rect();
 
 
 
@@ -138,43 +152,43 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
             mSecondsPaint = new Paint();
             mSecondsPaint.setColor(SECONDS_COLOR);
             mSecondsPaint.setAntiAlias(true);
-            mSecondsPaint.setStyle(Paint.Style.FILL);
-//            mSecondsPaint.setStrokeWidth(10f);
+//            mSecondsPaint.setStyle(Paint.Style.FILL);  // FILL is default
 
             mMinutesPaintInteractive = new Paint();
             mMinutesPaintInteractive.setColor(MINUTES_COLOR_INTERACTIVE);
             mMinutesPaintInteractive.setAntiAlias(true);
-            mMinutesPaintInteractive.setStyle(Paint.Style.FILL);
-//            mMinutesPaintInteractive.setStrokeWidth(10f);
 
             mMinutesPaintAmbient = new Paint();
             mMinutesPaintAmbient.setColor(MINUTES_COLOR_AMBIENT);
             mMinutesPaintAmbient.setAntiAlias(false);
-            mMinutesPaintAmbient.setStyle(Paint.Style.FILL);
-//            mMinutesPaintInteractive.setStrokeWidth(10f);
 
             mHoursPaintInteractive = new Paint();
             mHoursPaintInteractive.setColor(HOURS_COLOR_INTERACTIVE);
             mHoursPaintInteractive.setAntiAlias(true);
-            mHoursPaintInteractive.setStyle(Paint.Style.FILL);
-//            mMinutesPaintInteractive.setStrokeWidth(10f);
 
             mHoursPaintAmbient = new Paint();
             mHoursPaintAmbient.setColor(HOURS_COLOR_AMBIENT);
             mHoursPaintAmbient.setAntiAlias(false);
-            mHoursPaintAmbient.setStyle(Paint.Style.FILL);
-//            mMinutesPaintInteractive.setStrokeWidth(10f);
 
             mCircleMaskPaintInteractive = new Paint();
             mCircleMaskPaintInteractive.setColor(BACKGROUND_COLOR_INTERACTIVE);
             mCircleMaskPaintInteractive.setAntiAlias(true);
-            mCircleMaskPaintInteractive.setStyle(Paint.Style.FILL);
 
             mCircleMaskPaintAmbient = new Paint();
             mCircleMaskPaintAmbient.setColor(BACKGROUND_COLOR_AMBIENT);
             mCircleMaskPaintAmbient.setAntiAlias(false);
-            mCircleMaskPaintAmbient.setStyle(Paint.Style.FILL);
 
+            mCirclesPaint = new Paint();
+            mCirclesPaint.setColor(CIRCLES_COLOR);
+            mCirclesPaint.setAntiAlias(true);
+            mCirclesPaint.setStyle(Paint.Style.STROKE);
+//            mCirclesPaint.setStrokeWidth(mCirclesStrokeWidth);  // moved to onSurfaceChanged
+
+            mTextPaintInteractive = new Paint();
+            mTextPaintInteractive.setColor(TEXT_COLOR_INTERACTIVE);
+            mTextPaintInteractive.setTypeface(NORMAL_TYPEFACE);
+            mTextPaintInteractive.setAntiAlias(true);
+            mTextPaintInteractive.setTextSize(50);
 
             mTime  = new Time();
         }
@@ -222,19 +236,15 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
             mHoursHandRadius = HOURS_RADIUS * 0.5f * mWidth;
             mInnerMaskRadius = INNER_MASK_RADIUS * 0.5f * width;
 
+            mCirclesStrokeWidth = (int) (CIRCLE_STROKE_THICKNESS * 0.5f * width);
+            mCirclesPaint.setStrokeWidth(mCirclesStrokeWidth);
+
         }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
 
             mTime.setToNow();
-
-            // Draw the background.
-            if (mAmbient) {
-                canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
-            } else {
-                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
-            }
 
             /*
              * These calculations reflect the rotation in degrees per unit of
@@ -255,6 +265,7 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
             canvas.save();
 
             if (mAmbient) {
+                canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
                 canvas.drawArc(mCenterX - mMinutesHandRadius,
                         mCenterY - mMinutesHandRadius,
                         mCenterX + mMinutesHandRadius,
@@ -273,6 +284,7 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
                         mInnerMaskRadius, mCircleMaskPaintAmbient);
 
             } else {
+                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
                 canvas.drawArc(mCenterX - mSecondsHandRadius,
                         mCenterY - mSecondsHandRadius,
                         mCenterX + mSecondsHandRadius,
@@ -297,11 +309,21 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
                         true, mHoursPaintInteractive);
                 canvas.drawCircle(mCenterX, mCenterY,
                         mInnerMaskRadius, mCircleMaskPaintInteractive);
+                canvas.drawCircle(mCenterX, mCenterY, 0.01f * mWidth, mHoursPaintInteractive);  // central dot
+
+                // floating circles
+                for (int i = 0; i < CIRCLE_RADII.length; i++) {
+                    canvas.drawCircle(mCenterX, mCenterY, CIRCLE_RADII[i] * 0.5f * mWidth, mCirclesPaint);
+                }
+
+                mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+                drawTextVerticallyCentered(canvas, mTextPaintInteractive, Integer.toString(hour1to12), mCenterX - 20, mCenterY);
+//                canvas.drawText(Integer.toString(hour1to12), mCenterX - 10, mCenterY, mTextPaintInteractive);
+                mTextPaintInteractive.setTextAlign(Paint.Align.LEFT);
+                drawTextVerticallyCentered(canvas, mTextPaintInteractive, Integer.toString(mTime.minute), mCenterX + 20, mCenterY);
+//                canvas.drawText(Integer.toString(mTime.minute), mCenterX + 10, mCenterY, mTextPaintInteractive);
 
             }
-
-            canvas.restore();
-
         }
 
         @Override
@@ -394,6 +416,12 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
                     mCenterX + radius,
                     mCenterY + radius,
                     radius, radius, paint);
+        }
+
+        // http://stackoverflow.com/a/24969713/1934487
+        private void drawTextVerticallyCentered(Canvas canvas, Paint paint, String text, float cx, float cy){
+            paint.getTextBounds(text, 0, text.length(), textBounds);
+            canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
 
 
