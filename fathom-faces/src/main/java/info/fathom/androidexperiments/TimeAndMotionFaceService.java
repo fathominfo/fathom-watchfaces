@@ -83,7 +83,8 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
         private final int CIRCLES_COLOR = Color.argb(64, 150, 150, 150);
 
         private final int TEXT_COLOR_INTERACTIVE = Color.argb(127, 175, 175, 175);
-        private final int TEXT_COLOR_AMBIENT = Color.argb(127, 200, 200, 200);
+        private final int TEXT_COLOR_AMBIENT = Color.WHITE;
+        private static final float TEXT_HEIGHT = 0.2f;  // as a factor of screen height
 
         /* Handler to update the time once a second in interactive mode. */
         private final Handler mUpdateTimeHandler = new Handler() {
@@ -116,7 +117,7 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
         private Paint mCircleMaskPaintInteractive, mCircleMaskPaintAmbient;
         private Paint mCirclesPaint;
 
-        private Paint mTextPaintInteractive;
+        private Paint mTextPaintInteractive, mTextPaintAmbient;
 
         private int mWidth;
         private int mHeight;
@@ -129,6 +130,7 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
         private int mCirclesStrokeWidth = 0;
 
         private final Rect textBounds = new Rect();
+        private float mTextHeight;
 
 
 
@@ -188,7 +190,11 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
             mTextPaintInteractive.setColor(TEXT_COLOR_INTERACTIVE);
             mTextPaintInteractive.setTypeface(NORMAL_TYPEFACE);
             mTextPaintInteractive.setAntiAlias(true);
-            mTextPaintInteractive.setTextSize(50);
+
+            mTextPaintAmbient = new Paint();
+            mTextPaintAmbient.setColor(TEXT_COLOR_AMBIENT);
+            mTextPaintAmbient.setTypeface(NORMAL_TYPEFACE);
+            mTextPaintAmbient.setAntiAlias(false);
 
             mTime  = new Time();
         }
@@ -239,6 +245,10 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
             mCirclesStrokeWidth = (int) (CIRCLE_STROKE_THICKNESS * 0.5f * width);
             mCirclesPaint.setStrokeWidth(mCirclesStrokeWidth);
 
+            mTextHeight = TEXT_HEIGHT * mHeight;
+            mTextPaintInteractive.setTextSize(mTextHeight);
+            mTextPaintAmbient.setTextSize(mTextHeight);
+
         }
 
         @Override
@@ -266,22 +276,17 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
-                canvas.drawArc(mCenterX - mMinutesHandRadius,
-                        mCenterY - mMinutesHandRadius,
-                        mCenterX + mMinutesHandRadius,
-                        mCenterY + mMinutesHandRadius,
-                        270, minutesRotation,
-                        true, mMinutesPaintAmbient);
-                canvas.drawCircle(mCenterX, mCenterY,
-                        mHoursHandRadius + 2f, mCircleMaskPaintAmbient);
-                canvas.drawArc(mCenterX - mHoursHandRadius,
-                        mCenterY - mHoursHandRadius,
-                        mCenterX + mHoursHandRadius,
-                        mCenterY + mHoursHandRadius,
-                        270, hoursRotation,
-                        true, mHoursPaintAmbient);
-                canvas.drawCircle(mCenterX, mCenterY,
-                        mInnerMaskRadius, mCircleMaskPaintAmbient);
+
+                canvas.drawCircle(mCenterX, mCenterY, 0.01f * mWidth, mHoursPaintAmbient);  // central dot
+
+                mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+                drawTextVerticallyCentered(canvas, mTextPaintAmbient,
+                        hour1to12 > 9 ? Integer.toString(hour1to12) : "0" + Integer.toString(hour1to12),
+                        mCenterX - 20, mCenterY);
+                mTextPaintAmbient.setTextAlign(Paint.Align.LEFT);
+                drawTextVerticallyCentered(canvas, mTextPaintAmbient,
+                        mTime.minute > 9 ? Integer.toString(mTime.minute) : "0" + Integer.toString(mTime.minute),
+                        mCenterX + 20, mCenterY);
 
             } else {
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
@@ -317,11 +322,13 @@ public class TimeAndMotionFaceService extends CanvasWatchFaceService {
                 }
 
                 mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, Integer.toString(hour1to12), mCenterX - 20, mCenterY);
-//                canvas.drawText(Integer.toString(hour1to12), mCenterX - 10, mCenterY, mTextPaintInteractive);
+                drawTextVerticallyCentered(canvas, mTextPaintInteractive,
+                        hour1to12 > 9 ? Integer.toString(hour1to12) : "0" + Integer.toString(hour1to12),
+                        mCenterX - 20, mCenterY);
                 mTextPaintInteractive.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, Integer.toString(mTime.minute), mCenterX + 20, mCenterY);
-//                canvas.drawText(Integer.toString(mTime.minute), mCenterX + 10, mCenterY, mTextPaintInteractive);
+                drawTextVerticallyCentered(canvas, mTextPaintInteractive,
+                        mTime.minute > 9 ? Integer.toString(mTime.minute) : "0" + Integer.toString(mTime.minute),
+                        mCenterX + 20, mCenterY);
 
             }
         }
