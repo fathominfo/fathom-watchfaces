@@ -25,6 +25,9 @@
     <uses-permission android:name="com.google.android.permission.PROVIDE_BACKGROUND" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- Calendar permission used by CalendarWatchFaceService -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
@@ -105,6 +108,25 @@
                 android:name="com.google.android.wearable.watchface.preview_circular"
                 android:resource="@drawable/preview_bouncing_ball" />
 
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".FitDataFaceService"
+            android:label="@string/fit_data_name"
+            android:permission="android.permission.BIND_WALLPAPER" >
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/watch_face" />
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview"
+                android:resource="@drawable/fathom" />
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview_circular"
+                android:resource="@drawable/fathom" />
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
                 <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />

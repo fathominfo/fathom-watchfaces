@@ -20,4 +20,5 @@
     <string name="time_and_motion_name">Fathom Time Motion</string>
     <string name="sensor_name">Fathom Motion Sensing</string>
     <string name="bouncing_ball_name">Fathom Bouncing Ball</string>
+    <string name="fit_data_name">Fathom Fit Data Test</string>
 </resources>
