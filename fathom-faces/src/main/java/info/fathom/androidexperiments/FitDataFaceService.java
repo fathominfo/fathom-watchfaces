@@ -69,19 +69,6 @@ public class FitDataFaceService extends CanvasWatchFaceService {
 
         /* Handler to update the time once a second in interactive mode. */
         final Handler mMainHandler = new Handler() {
-//            @Override
-//            public void handleMessage(Message message) {
-//                if (R.id.message_update == message.what) {
-//                    invalidate();
-//                    if (shouldTimerBeRunning()) {
-//                        long timeMs = System.currentTimeMillis();
-//                        long delayMs = INTERACTIVE_UPDATE_RATE_MS
-//                                - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
-//                        mMainHandler.sendEmptyMessageDelayed(R.id.message_update, delayMs);
-//                    }
-//                }
-//            }
-
             @Override
             public void handleMessage(Message message) {
                 switch (message.what) {
@@ -106,25 +93,6 @@ public class FitDataFaceService extends CanvasWatchFaceService {
                 }
             }
         };
-
-
-        /* Handler to load the meetings once a minute in interactive mode. */
-//        private final Handler mLoadMeetingsHandler = new Handler() {
-//            @Override
-//            public void handleMessage(Message message) {
-//                switch (message.what) {
-//                    case MSG_LOAD_MEETINGS:
-//                        cancelLoadMeetingTask();
-//                        mLoadMeetingsTask = new LoadMeetingsTask();
-//                        mLoadMeetingsTask.execute();
-//                        if (Log.isLoggable(TAG, Log.VERBOSE)) {
-//                            Log.v(TAG, "mLoadMeetingsHandler triggered");
-//                        }
-//                        break;
-//                }
-//            }
-//        };
-
 
 
         private boolean mRegisteredTimeZoneReceiver = false;
@@ -246,17 +214,17 @@ public class FitDataFaceService extends CanvasWatchFaceService {
         }
 
 
-//        private boolean mIsCalendarReceiverRegistered;
-//        private BroadcastReceiver mCalendarReceiver = new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                if (Intent.ACTION_PROVIDER_CHANGED.equals(intent.getAction())
-//                        && WearableCalendarContract.CONTENT_URI.equals(intent.getData())) {
-//                    cancelLoadMeetingTask();
-//                    mLoadMeetingsHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
-//                }
-//            }
-//        };
+        private boolean mIsCalendarReceiverRegistered;
+        private BroadcastReceiver mCalendarReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (Intent.ACTION_PROVIDER_CHANGED.equals(intent.getAction())
+                        && WearableCalendarContract.CONTENT_URI.equals(intent.getData())) {
+                    cancelLoadMeetingTask();
+                    mMainHandler.sendEmptyMessage(MSG_LOAD_MEETINGS);
+                }
+            }
+        };
 
         @Override
         public void onVisibilityChanged(boolean visible) {
@@ -265,12 +233,12 @@ public class FitDataFaceService extends CanvasWatchFaceService {
             if (visible) {
                 registerTimeReceiver();
 
-//                // Register Calendar receiver
-//                IntentFilter filter = new IntentFilter(Intent.ACTION_PROVIDER_CHANGED);
-//                filter.addDataScheme("content");
-//                filter.addDataAuthority(WearableCalendarContract.AUTHORITY, null);
-//                registerReceiver(mCalendarReceiver, filter);
-//                mIsCalendarReceiverRegistered = true;
+                // Register Calendar receiver
+                IntentFilter filter = new IntentFilter(Intent.ACTION_PROVIDER_CHANGED);
+                filter.addDataScheme("content");
+                filter.addDataAuthority(WearableCalendarContract.AUTHORITY, null);
+                registerReceiver(mCalendarReceiver, filter);
+                mIsCalendarReceiverRegistered = true;
 
                 // Update time zone in case it changed while we weren't visible.
                 mTime.clear(TimeZone.getDefault().getID());
@@ -281,10 +249,10 @@ public class FitDataFaceService extends CanvasWatchFaceService {
             } else {
                 unregisterTimeReceiver();
 
-//                if (mIsCalendarReceiverRegistered) {
-//                    unregisterReceiver(mCalendarReceiver);
-//                    mIsCalendarReceiverRegistered = false;
-//                }
+                if (mIsCalendarReceiverRegistered) {
+                    unregisterReceiver(mCalendarReceiver);
+                    mIsCalendarReceiverRegistered = false;
+                }
 
                 mMainHandler.removeMessages(MSG_LOAD_MEETINGS);
                 cancelLoadMeetingTask();
