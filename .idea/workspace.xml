@@ -24,17 +24,35 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="FitDataFaceService.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="FitDataFaceService.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="1.4348739">
-              <caret line="226" column="10" selection-start-line="226" selection-start-column="10" selection-end-line="226" selection-end-column="10" />
+            <state vertical-scroll-proportion="-11.551724">
+              <caret line="76" column="37" selection-start-line="76" selection-start-column="37" selection-end-line="76" selection-end-column="37" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#1507#1508#0" expanded="true" />
                 <element signature="e#1542#1543#0" expanded="true" />
-                <element signature="e#11708#11709#0" expanded="true" />
-                <element signature="e#11772#11773#0" expanded="true" />
+                <element signature="e#2413#3561#0" expanded="true" />
+                <element signature="e#3560#3561#0" expanded="true" />
+                <element signature="e#8092#8534#0" expanded="true" />
+                <element signature="e#8533#8534#0" expanded="true" />
+                <element signature="e#10560#10798#0" expanded="true" />
+                <element signature="e#10797#10798#0" expanded="true" />
+                <element signature="e#12018#12019#0" expanded="true" />
+                <element signature="e#12082#12083#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="build.gradle" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/fathom-faces/build.gradle">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.8053435">
+              <caret line="43" column="0" selection-start-line="43" selection-start-column="0" selection-end-line="43" selection-end-column="0" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -427,24 +445,129 @@
                 <option name="name" value="preReleaseBuild" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
+                <option name="description" value="Prepare com.android.support:appcompat-v7:22.0.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComAndroidSupportAppcompatV72200Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.android.support:mediarouter-v7:22.0.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComAndroidSupportMediarouterV72200Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
                 <option name="description" value="Prepare com.android.support:recyclerview-v7:21.0.0" />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
                 <option name="name" value="prepareComAndroidSupportRecyclerviewV72100Library" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
-                <option name="description" value="Prepare com.android.support:support-v4:21.0.0" />
+                <option name="description" value="Prepare com.android.support:support-v4:22.0.0" />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="prepareComAndroidSupportSupportV42100Library" />
+                <option name="name" value="prepareComAndroidSupportSupportV42200Library" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
-                <option name="description" value="Prepare com.google.android.gms:play-services-base:6.5.87" />
+                <option name="description" value="Prepare com.google.android.gms:play-services:7.5.0" />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesBase6587Library" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServices750Library" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
-                <option name="description" value="Prepare com.google.android.gms:play-services-wearable:6.5.87" />
+                <option name="description" value="Prepare com.google.android.gms:play-services-ads:7.5.0" />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
-                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesWearable6587Library" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAds750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-analytics:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAnalytics750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-appindexing:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAppindexing750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-appinvite:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAppinvite750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-appstate:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAppstate750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-base:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesBase750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-cast:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesCast750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-drive:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesDrive750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-fitness:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesFitness750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-games:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesGames750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-gcm:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesGcm750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-identity:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesIdentity750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-location:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesLocation750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-maps:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesMaps750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-nearby:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesNearby750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-panorama:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesPanorama750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-plus:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesPlus750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-safetynet:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesSafetynet750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-wallet:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesWallet750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-wearable:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesWearable750Library" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
                 <option name="description" value="Prepare com.google.android.support:wearable:1.1.0" />
@@ -901,24 +1024,129 @@
                 <option name="name" value="preReleaseBuild" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
+                <option name="description" value="Prepare com.android.support:appcompat-v7:22.0.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComAndroidSupportAppcompatV72200Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.android.support:mediarouter-v7:22.0.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComAndroidSupportMediarouterV72200Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
                 <option name="description" value="Prepare com.android.support:recyclerview-v7:21.0.0" />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
                 <option name="name" value="prepareComAndroidSupportRecyclerviewV72100Library" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
-                <option name="description" value="Prepare com.android.support:support-v4:21.0.0" />
+                <option name="description" value="Prepare com.android.support:support-v4:22.0.0" />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
-                <option name="name" value="prepareComAndroidSupportSupportV42100Library" />
+                <option name="name" value="prepareComAndroidSupportSupportV42200Library" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
-                <option name="description" value="Prepare com.google.android.gms:play-services-base:6.5.87" />
+                <option name="description" value="Prepare com.google.android.gms:play-services:7.5.0" />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
-                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesBase6587Library" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServices750Library" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
-                <option name="description" value="Prepare com.google.android.gms:play-services-wearable:6.5.87" />
+                <option name="description" value="Prepare com.google.android.gms:play-services-ads:7.5.0" />
                 <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
-                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesWearable6587Library" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAds750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-analytics:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAnalytics750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-appindexing:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAppindexing750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-appinvite:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAppinvite750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-appstate:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesAppstate750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-base:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesBase750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-cast:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesCast750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-drive:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesDrive750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-fitness:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesFitness750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-games:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesGames750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-gcm:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesGcm750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-identity:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesIdentity750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-location:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesLocation750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-maps:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesMaps750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-nearby:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesNearby750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-panorama:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesPanorama750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-plus:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesPlus750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-safetynet:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesSafetynet750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-wallet:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesWallet750Library" />
+              </ExternalTaskPojo>
+              <ExternalTaskPojo>
+                <option name="description" value="Prepare com.google.android.gms:play-services-wearable:7.5.0" />
+                <option name="linkedExternalProjectPath" value="$PROJECT_DIR$/fathom-faces" />
+                <option name="name" value="prepareComGoogleAndroidGmsPlayServicesWearable750Library" />
               </ExternalTaskPojo>
               <ExternalTaskPojo>
                 <option name="description" value="Prepare com.google.android.support:wearable:1.1.0" />
@@ -1028,7 +1256,7 @@
     </option>
     <option name="modificationStamps">
       <map>
-        <entry key="$PROJECT_DIR$" value="4305531470957" />
+        <entry key="$PROJECT_DIR$" value="4306572636345" />
       </map>
     </option>
     <option name="projectBuildClasspath">
@@ -1195,11 +1423,32 @@
                             <option value="$APPLICATION_HOME_DIR$/gradle/m2repository/commons-codec/commons-codec/1.4/commons-codec-1.4-sources.jar" />
                             <option value="$APPLICATION_HOME_DIR$/gradle/m2repository/commons-codec/commons-codec/1.4/commons-codec-1.4.jar" />
                             <option value="C:/android-sdk/extras/google/m2repository/com/google/android/support/wearable/1.1.0/wearable-1.1.0.aar" />
-                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-wearable/6.5.87/play-services-wearable-6.5.87.aar" />
-                            <option value="C:/android-sdk/extras/android/m2repository/com/android/support/support-v4/21.0.0/support-v4-21.0.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services/7.5.0/play-services-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-wearable/7.5.0/play-services-wearable-7.5.0.aar" />
                             <option value="C:/android-sdk/extras/android/m2repository/com/android/support/recyclerview-v7/21.0.0/recyclerview-v7-21.0.0.aar" />
-                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-base/6.5.87/play-services-base-6.5.87.aar" />
-                            <option value="C:/android-sdk/extras/android/m2repository/com/android/support/support-annotations/21.0.0/support-annotations-21.0.0.jar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-ads/7.5.0/play-services-ads-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-analytics/7.5.0/play-services-analytics-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-appindexing/7.5.0/play-services-appindexing-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-appinvite/7.5.0/play-services-appinvite-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-appstate/7.5.0/play-services-appstate-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-base/7.5.0/play-services-base-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-cast/7.5.0/play-services-cast-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-drive/7.5.0/play-services-drive-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-fitness/7.5.0/play-services-fitness-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-games/7.5.0/play-services-games-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-gcm/7.5.0/play-services-gcm-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-identity/7.5.0/play-services-identity-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-location/7.5.0/play-services-location-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-maps/7.5.0/play-services-maps-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-nearby/7.5.0/play-services-nearby-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-panorama/7.5.0/play-services-panorama-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-plus/7.5.0/play-services-plus-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-safetynet/7.5.0/play-services-safetynet-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/google/m2repository/com/google/android/gms/play-services-wallet/7.5.0/play-services-wallet-7.5.0.aar" />
+                            <option value="C:/android-sdk/extras/android/m2repository/com/android/support/mediarouter-v7/22.0.0/mediarouter-v7-22.0.0.aar" />
+                            <option value="C:/android-sdk/extras/android/m2repository/com/android/support/appcompat-v7/22.0.0/appcompat-v7-22.0.0.aar" />
+                            <option value="C:/android-sdk/extras/android/m2repository/com/android/support/support-v4/22.0.0/support-v4-22.0.0.aar" />
+                            <option value="C:/android-sdk/extras/android/m2repository/com/android/support/support-annotations/22.0.0/support-annotations-22.0.0.jar" />
                           </list>
                         </option>
                         <option name="path" value="$PROJECT_DIR$/fathom-faces" />
@@ -1335,6 +1584,7 @@
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/BouncingBallFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/res/values/strings.xml" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/fathom-faces/build.gradle" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java" />
       </list>
     </option>
@@ -1395,60 +1645,6 @@
             <PATH_ELEMENT>
               <option name="myItemId" value="fathom-faces" />
               <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="res" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidResFolderNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fathom-watchfaces" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fathom-faces" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="res" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidResFolderNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="values" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidResFolderTypeNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fathom-watchfaces" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fathom-faces" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidSourceTypeNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="androidexperiments" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fathom-watchfaces" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fathom-faces" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="manifests" />
-              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidManifestsGroupNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
@@ -1664,7 +1860,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1066" extended-state="1" />
+    <frame x="-8" y="-8" width="1936" height="1066" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -1678,11 +1874,10 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.48720682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Android" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.44247788" sideWeight="0.6204691" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.38938054" sideWeight="0.6204691" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21481876" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -1693,6 +1888,7 @@
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -1719,13 +1915,49 @@
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="8" selection-start-line="0" selection-start-column="8" selection-end-line="0" selection-end-column="38" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#1507#1508#0" expanded="true" />
+            <element signature="e#1542#1543#0" expanded="true" />
+            <element signature="e#2413#3561#0" expanded="true" />
+            <element signature="e#3560#3561#0" expanded="true" />
+            <element signature="e#8092#8534#0" expanded="true" />
+            <element signature="e#8533#8534#0" expanded="true" />
+            <element signature="e#10560#10798#0" expanded="true" />
+            <element signature="e#10797#10798#0" expanded="true" />
+            <element signature="e#12018#12019#0" expanded="true" />
+            <element signature="e#12082#12083#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#1507#1508#0" expanded="true" />
             <element signature="e#1542#1543#0" expanded="true" />
-            <element signature="e#11708#11709#0" expanded="true" />
-            <element signature="e#11772#11773#0" expanded="true" />
+            <element signature="e#2413#3561#0" expanded="true" />
+            <element signature="e#3560#3561#0" expanded="true" />
+            <element signature="e#8092#8534#0" expanded="true" />
+            <element signature="e#8533#8534#0" expanded="true" />
+            <element signature="e#10560#10798#0" expanded="true" />
+            <element signature="e#10797#10798#0" expanded="true" />
+            <element signature="e#12018#12019#0" expanded="true" />
+            <element signature="e#12082#12083#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1762,8 +1994,14 @@
             <element signature="imports" expanded="true" />
             <element signature="e#1507#1508#0" expanded="true" />
             <element signature="e#1542#1543#0" expanded="true" />
-            <element signature="e#11708#11709#0" expanded="true" />
-            <element signature="e#11772#11773#0" expanded="true" />
+            <element signature="e#2413#3561#0" expanded="true" />
+            <element signature="e#3560#3561#0" expanded="true" />
+            <element signature="e#8092#8534#0" expanded="true" />
+            <element signature="e#8533#8534#0" expanded="true" />
+            <element signature="e#10560#10798#0" expanded="true" />
+            <element signature="e#10797#10798#0" expanded="true" />
+            <element signature="e#12018#12019#0" expanded="true" />
+            <element signature="e#12082#12083#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1800,8 +2038,14 @@
             <element signature="imports" expanded="true" />
             <element signature="e#1507#1508#0" expanded="true" />
             <element signature="e#1542#1543#0" expanded="true" />
-            <element signature="e#11708#11709#0" expanded="true" />
-            <element signature="e#11772#11773#0" expanded="true" />
+            <element signature="e#2413#3561#0" expanded="true" />
+            <element signature="e#3560#3561#0" expanded="true" />
+            <element signature="e#8092#8534#0" expanded="true" />
+            <element signature="e#8533#8534#0" expanded="true" />
+            <element signature="e#10560#10798#0" expanded="true" />
+            <element signature="e#10797#10798#0" expanded="true" />
+            <element signature="e#12018#12019#0" expanded="true" />
+            <element signature="e#12082#12083#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1838,8 +2082,14 @@
             <element signature="imports" expanded="true" />
             <element signature="e#1507#1508#0" expanded="true" />
             <element signature="e#1542#1543#0" expanded="true" />
-            <element signature="e#11708#11709#0" expanded="true" />
-            <element signature="e#11772#11773#0" expanded="true" />
+            <element signature="e#2413#3561#0" expanded="true" />
+            <element signature="e#3560#3561#0" expanded="true" />
+            <element signature="e#8092#8534#0" expanded="true" />
+            <element signature="e#8533#8534#0" expanded="true" />
+            <element signature="e#10560#10798#0" expanded="true" />
+            <element signature="e#10797#10798#0" expanded="true" />
+            <element signature="e#12018#12019#0" expanded="true" />
+            <element signature="e#12082#12083#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -2017,20 +2267,53 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="4.6903973">
           <caret line="235" column="29" selection-start-line="235" selection-start-column="29" selection-end-line="235" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="n#!!doc" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/android-sdk/platforms/android-21/android.jar!/android/os/Handler.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.34767643">
+          <caret line="96" column="25" selection-start-line="96" selection-start-column="25" selection-end-line="96" selection-end-column="25" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.4348739">
-          <caret line="226" column="10" selection-start-line="226" selection-start-column="10" selection-end-line="226" selection-end-column="10" />
+        <state vertical-scroll-proportion="-11.551724">
+          <caret line="76" column="37" selection-start-line="76" selection-start-column="37" selection-end-line="76" selection-end-column="37" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#1507#1508#0" expanded="true" />
             <element signature="e#1542#1543#0" expanded="true" />
-            <element signature="e#11708#11709#0" expanded="true" />
-            <element signature="e#11772#11773#0" expanded="true" />
+            <element signature="e#2413#3561#0" expanded="true" />
+            <element signature="e#3560#3561#0" expanded="true" />
+            <element signature="e#8092#8534#0" expanded="true" />
+            <element signature="e#8533#8534#0" expanded="true" />
+            <element signature="e#10560#10798#0" expanded="true" />
+            <element signature="e#10797#10798#0" expanded="true" />
+            <element signature="e#12018#12019#0" expanded="true" />
+            <element signature="e#12082#12083#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.8053435">
+          <caret line="43" column="0" selection-start-line="43" selection-start-column="0" selection-end-line="43" selection-end-column="0" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
           </folding>
         </state>
       </provider>

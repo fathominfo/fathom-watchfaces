@@ -71,6 +71,7 @@ public class FitDataFaceService extends CanvasWatchFaceService {
         final Handler mMainHandler = new Handler() {
             @Override
             public void handleMessage(Message message) {
+                Log.i(TAG, "handling msg " + message.what);
                 switch (message.what) {
                     case MSG_UPDATE_TIMER:
                         invalidate();
@@ -136,7 +137,9 @@ public class FitDataFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onDestroy() {
-            mMainHandler.removeMessages(R.id.message_update);
+//            mMainHandler.removeMessages(R.id.message_update);
+            mMainHandler.removeMessages(MSG_UPDATE_TIMER);
+            mMainHandler.removeMessages(MSG_LOAD_MEETINGS);
             super.onDestroy();
         }
 
@@ -314,10 +317,13 @@ public class FitDataFaceService extends CanvasWatchFaceService {
         }
 
         private void updateTimer() {
-            mMainHandler.removeMessages(R.id.message_update);
+//            mMainHandler.removeMessages(R.id.message_update);
+            mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             if (shouldTimerBeRunning()) {
-                mMainHandler.sendEmptyMessage(R.id.message_update);
+//                mMainHandler.sendEmptyMessage(R.id.message_update);
+                mMainHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
             }
+
         }
 
         /**
