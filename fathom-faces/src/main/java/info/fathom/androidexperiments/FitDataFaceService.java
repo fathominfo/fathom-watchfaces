@@ -11,6 +11,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -25,11 +29,13 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 
-public class FitDataFaceService extends CanvasWatchFaceService {
+public class FitDataFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
     private static final String TAG = "FitDataFaceService";
 
@@ -42,6 +48,29 @@ public class FitDataFaceService extends CanvasWatchFaceService {
      * Update rate in milliseconds for interactive mode.
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
+
+    // STEP SENSING
+    private SensorManager mSensorStepCountManager;
+    private Sensor mSensorStepCount;
+    private boolean mIsSensorStepCountRegistered;
+    private int mStepsToday;
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
+//            Log.i(TAG, event.toString());
+//            Log.i(TAG, event.values.toString());
+            Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
+            mStepsToday = Math.round(event.values[0]);
+        }
+    }
+
+
 
     @Override
     public Engine onCreateEngine() {
@@ -65,6 +94,9 @@ public class FitDataFaceService extends CanvasWatchFaceService {
 
         private static final int MSG_UPDATE_TIMER = 0;
         private static final int MSG_LOAD_MEETINGS = 1;
+
+
+
 
 
         /* Handler to update the time once a second in interactive mode. */
@@ -122,6 +154,10 @@ public class FitDataFaceService extends CanvasWatchFaceService {
                     .setShowSystemUiTime(false)
                     .build());
 
+            mSensorStepCountManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            mSensorStepCount = mSensorStepCountManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+            // REGISTERING MOVED TO onVisibilityChanged
+
             mTextPaintInteractive = new Paint();
             mTextPaintInteractive.setColor(TEXT_COLOR_INTERACTIVE);
             mTextPaintInteractive.setTypeface(NORMAL_TYPEFACE);
@@ -137,7 +173,6 @@ public class FitDataFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onDestroy() {
-//            mMainHandler.removeMessages(R.id.message_update);
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             mMainHandler.removeMessages(MSG_LOAD_MEETINGS);
             super.onDestroy();
@@ -204,6 +239,7 @@ public class FitDataFaceService extends CanvasWatchFaceService {
                 canvas.drawText(timeStr, 25, 125, mTextPaintAmbient);
                 canvas.drawText(mNumMeetings + " meetings today", 25, 150, mTextPaintAmbient);
                 canvas.drawText(mNumWatchPeeps + " peeps at your watch today", 25, 175, mTextPaintAmbient);
+                canvas.drawText(mStepsToday + " steps today", 25, 200, mTextPaintAmbient);
 
             } else {
                 final String secondStr = mTime.second > 9 ? Integer.toString(mTime.second) : "0" + Integer.toString(mTime.second);
@@ -213,6 +249,7 @@ public class FitDataFaceService extends CanvasWatchFaceService {
                 canvas.drawText(timeStr, 25, 125, mTextPaintInteractive);
                 canvas.drawText(mNumMeetings + " meetings today", 25, 150, mTextPaintInteractive);
                 canvas.drawText(mNumWatchPeeps + " peeps at your watch today", 25, 175, mTextPaintInteractive);
+                canvas.drawText(mStepsToday + " steps today", 25, 200, mTextPaintInteractive);
             }
         }
 
@@ -233,8 +270,11 @@ public class FitDataFaceService extends CanvasWatchFaceService {
         public void onVisibilityChanged(boolean visible) {
             super.onVisibilityChanged(visible);
 
+            Log.i(TAG, "onVisibilityChanged: " + visible);
+
             if (visible) {
                 registerTimeReceiver();
+                registerStepSensor();
 
                 // Register Calendar receiver
                 IntentFilter filter = new IntentFilter(Intent.ACTION_PROVIDER_CHANGED);
@@ -251,6 +291,7 @@ public class FitDataFaceService extends CanvasWatchFaceService {
 
             } else {
                 unregisterTimeReceiver();
+                unregisterStepSensor();
 
                 if (mIsCalendarReceiverRegistered) {
                     unregisterReceiver(mCalendarReceiver);
@@ -316,14 +357,30 @@ public class FitDataFaceService extends CanvasWatchFaceService {
             FitDataFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
+        private void registerStepSensor() {
+            if (mIsSensorStepCountRegistered) {
+                return;
+            }
+            mIsSensorStepCountRegistered = true;
+            mSensorStepCountManager.registerListener(FitDataFaceService.this, mSensorStepCount, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+        private void unregisterStepSensor() {
+            if (!mIsSensorStepCountRegistered) {
+                return;
+            }
+            mIsSensorStepCountRegistered = false;
+            mSensorStepCountManager.unregisterListener(FitDataFaceService.this);
+        }
+
+
+
+
         private void updateTimer() {
-//            mMainHandler.removeMessages(R.id.message_update);
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             if (shouldTimerBeRunning()) {
-//                mMainHandler.sendEmptyMessage(R.id.message_update);
                 mMainHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
             }
-
         }
 
         /**
@@ -340,7 +397,6 @@ public class FitDataFaceService extends CanvasWatchFaceService {
                 invalidate();
             }
         }
-
 
         private void cancelLoadMeetingTask() {
             if (mLoadMeetingsTask != null) {
@@ -373,6 +429,7 @@ public class FitDataFaceService extends CanvasWatchFaceService {
 
             }
         }
+
 
     }
 
