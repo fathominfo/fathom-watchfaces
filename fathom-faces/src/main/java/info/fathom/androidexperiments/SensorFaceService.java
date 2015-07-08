@@ -43,7 +43,7 @@ public class SensorFaceService extends CanvasWatchFaceService implements SensorE
      * second hand.
      */
 //    private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
-    private static final long INTERACTIVE_UPDATE_RATE_MS = 100;
+    private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
     @Override
     public Engine onCreateEngine() {
@@ -254,13 +254,6 @@ public class SensorFaceService extends CanvasWatchFaceService implements SensorE
 
     private float[] gravity = new float[3];
     private float[] linear_acceleration = new float[3];
-
-    // using the one in the engine
-//    public final void onCreate(Bundle savedInstanceState) {
-//
-//    }
-
-
 
 
     @Override
