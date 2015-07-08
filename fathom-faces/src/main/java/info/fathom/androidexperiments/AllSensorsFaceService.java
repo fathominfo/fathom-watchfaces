@@ -39,9 +39,9 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
     // Some sensor stuff
     private SensorManager mSensorManager;
 
-    private Sensor mStepCountSensor;
-    private boolean mStepCountIsRegistered;
-    private int mStepCountValue;
+    private Sensor mStepSensor;
+    private boolean mStepIsRegistered;
+    private int mStepValue;
 
     private Sensor mAccelerometerSensor;
     private boolean mAccelerometerIsRegistered;
@@ -49,27 +49,123 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
     private float[] mAccelerometerLinearAcceleration = new float[3];
     private float[] mAccelerometerGravity = new float[3];
 
+    private Sensor mGravitySensor;
+    private boolean mGravityIsRegistered;
+    private float[] mGravityValues = new float[3];
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        Log.d(TAG, "Sensor: " + sensor.getName() + ", onAccuracyChanged - accuracy: " + accuracy);
-    }
+    private Sensor mLinearAccelerationSensor;
+    private boolean mLinearAccelerationIsRegistered;
+    private float[] mLinearAccelerationValues = new float[3];
+
+    private Sensor mGyroscopeSensor;
+    private boolean mGyroscopeIsRegistered;
+    private float[] mGyroscopeValues = new float[3];
+
+    private Sensor mTemperatureSensor;
+    private boolean mTemperatureIsRegistered;
+    private float mTemperatureValue = 0.0f;
+
+    private Sensor mLightSensor;
+    private boolean mLightIsRegistered;
+    private float mLightValue = 0.0f;
+
+
+
 
     @Override
     public void onSensorChanged(SensorEvent event) {
 
         switch (event.sensor.getType()) {
             case Sensor.TYPE_STEP_COUNTER:
-                //            Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
-                mStepCountValue = Math.round(event.values[0]);
+                mStepValue = Math.round(event.values[0]);
                 break;
 
             case Sensor.TYPE_ACCELEROMETER:
                 updateAccelerometerValues(event.values);
                 break;
+
+            case Sensor.TYPE_GRAVITY:
+                mGravityValues = event.values;
+                break;
+
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                mLinearAccelerationValues = event.values;
+                break;
+
+            case Sensor.TYPE_GYROSCOPE:
+                mGyroscopeValues = event.values;
+                break;
+
+            case Sensor.TYPE_AMBIENT_TEMPERATURE:
+                mTemperatureValue = event.values[0];
+                break;
+
+            case Sensor.TYPE_LIGHT:
+                mLightValue = event.values[0];
+                break;
         }
 
     }
+
+    public void initializeSensors() {
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        mAccelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mGravitySensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        mLinearAccelerationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        mGyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        //mTemperatureSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        //mLightSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+    }
+
+    public void registerAllSensors() {
+        mStepIsRegistered = registerSensor(mStepSensor, mStepIsRegistered);
+        mAccelerometerIsRegistered = registerSensor(mAccelerometerSensor, mAccelerometerIsRegistered);
+        mGravityIsRegistered = registerSensor(mGravitySensor, mGravityIsRegistered);
+        mLinearAccelerationIsRegistered = registerSensor(mLinearAccelerationSensor, mLinearAccelerationIsRegistered);
+        mGyroscopeIsRegistered = registerSensor(mGyroscopeSensor, mGyroscopeIsRegistered);
+        //mTemperatureIsRegistered = registerSensor(mTemperatureSensor, mTemperatureIsRegistered);
+        //mLightIsRegistered = registerSensor(mLightSensor, mLightIsRegistered);
+    }
+
+    public void unregisterAllSensors() {
+        mStepIsRegistered = unregisterSensor(mStepSensor, mStepIsRegistered);
+        mAccelerometerIsRegistered = unregisterSensor(mAccelerometerSensor, mAccelerometerIsRegistered);
+        mGravityIsRegistered = unregisterSensor(mGravitySensor, mGravityIsRegistered);
+        mLinearAccelerationIsRegistered = unregisterSensor(mLinearAccelerationSensor, mLinearAccelerationIsRegistered);
+        mGyroscopeIsRegistered = unregisterSensor(mGyroscopeSensor, mGyroscopeIsRegistered);
+        //mTemperatureIsRegistered = unregisterSensor(mTemperatureSensor, mTemperatureIsRegistered);
+        //mLightIsRegistered = unregisterSensor(mLightSensor, mLightIsRegistered);
+    }
+
+
+
+    private boolean registerSensor(Sensor sensor, boolean sensorFlag) {
+        if (sensorFlag) return true;
+        sensorFlag = mSensorManager.registerListener(AllSensorsFaceService.this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        Log.i(TAG, "Registered " + sensor.getName() + ": " + sensorFlag);
+        return sensorFlag;
+    }
+
+    private boolean unregisterSensor(Sensor sensor, boolean sensorFlag) {
+        if (!sensorFlag) return false;
+        mSensorManager.unregisterListener(AllSensorsFaceService.this, sensor);
+        Log.i(TAG, "Unregistered " + sensor.getName());
+        return false;
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        Log.d(TAG, "Sensor: " + sensor.getName() + ", onAccuracyChanged - accuracy: " + accuracy);
+    }
+
+
+
+
+
+
+
 
 
     @Override
@@ -139,10 +235,8 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
             mTextPaintAmbient.setAntiAlias(false);
 
             // Initialize Sensors
-            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            mStepCountSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+            initializeSensors();
 
-            mAccelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
             mTime  = new Time();
         }
@@ -170,11 +264,9 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
             }
 
             if (inAmbientMode) {
-                mStepCountIsRegistered = unregisterSensor(mStepCountSensor, mStepCountIsRegistered);
-                mAccelerometerIsRegistered = unregisterSensor(mAccelerometerSensor, mAccelerometerIsRegistered);
+                unregisterAllSensors();
             } else {
-                mStepCountIsRegistered = registerSensor(mStepCountSensor, mStepCountIsRegistered);
-                mAccelerometerIsRegistered = registerSensor(mAccelerometerSensor, mAccelerometerIsRegistered);
+                registerAllSensors();
             }
 
             // If changed to interactive mode, update peep counter
@@ -213,12 +305,24 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
             final String accel = "[" + String.format("%.2f", mAccelerometerValues[0]) + ", "
                     + String.format("%.2f", mAccelerometerValues[1]) + ", "
                     + String.format("%.2f", mAccelerometerValues[2]) + "]";
-            final String linAccel = "[" + String.format("%.2f", mAccelerometerLinearAcceleration[0]) + ", "
+            final String linAccelComp = "[" + String.format("%.2f", mAccelerometerLinearAcceleration[0]) + ", "
                     + String.format("%.2f", mAccelerometerLinearAcceleration[1]) + ", "
                     + String.format("%.2f", mAccelerometerLinearAcceleration[2]) + "]";
-            final String gravity = "[" + String.format("%.2f", mAccelerometerGravity[0]) + ", "
+            final String linAccel = "[" + String.format("%.2f", mLinearAccelerationValues[0]) + ", "
+                    + String.format("%.2f", mLinearAccelerationValues[1]) + ", "
+                    + String.format("%.2f", mLinearAccelerationValues[2]) + "]";
+            final String gravityComp = "[" + String.format("%.2f", mAccelerometerGravity[0]) + ", "
                     + String.format("%.2f", mAccelerometerGravity[1]) + ", "
                     + String.format("%.2f", mAccelerometerGravity[2]) + "]";
+            final String gravity = "[" + String.format("%.2f", mGravityValues[0]) + ", "
+                    + String.format("%.2f", mGravityValues[1]) + ", "
+                    + String.format("%.2f", mGravityValues[2]) + "]";
+            final String gyroscope = "[" + String.format("%.2f", mGyroscopeValues[0]) + ", "
+                    + String.format("%.2f", mGyroscopeValues[1]) + ", "
+                    + String.format("%.2f", mGyroscopeValues[2]) + "]";
+            final String temperature = "[" + String.format("%.2f", mTemperatureValue) + "]";
+            final String light = "[" + String.format("%.2f", mLightValue) + "]";
+
 
             // Start drawing watch elements
             canvas.save();
@@ -238,10 +342,15 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
             canvas.drawColor(BACKGROUND_COLOR_AMBIENT);  // background
             canvas.drawText(timeStr, 75, 25, currentPaint);
             canvas.drawText(mNumWatchPeeps + " peeps at your watch today", 25, 40, currentPaint);
-            canvas.drawText(mStepCountValue + " steps today", 25, 55, currentPaint);
+            canvas.drawText(mStepValue + " steps today", 25, 55, currentPaint);
             canvas.drawText("Accelerometer: " + accel, 25, 70, currentPaint);
-            canvas.drawText("Lin accel*: " + linAccel, 25, 85, currentPaint);
-            canvas.drawText("Gravity*: " + gravity, 25, 100, currentPaint);
+            canvas.drawText("Lin accel: " + linAccelComp, 25, 85, currentPaint);
+            canvas.drawText("Lin accel*: " + linAccelComp, 25, 100, currentPaint);
+            canvas.drawText("Gravity: " + gravity, 25, 115, currentPaint);
+            canvas.drawText("Gravity*: " + gravityComp, 25, 130, currentPaint);
+            canvas.drawText("Gyroscope: " + gyroscope, 25, 145, currentPaint);
+            canvas.drawText("Temperature: " + temperature, 25, 160, currentPaint);
+            canvas.drawText("Light: " + light, 25, 175, currentPaint);
 
         }
 
@@ -253,8 +362,7 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
 
             if (visible) {
                 registerTimeReceiver();
-                mStepCountIsRegistered = registerSensor(mStepCountSensor, mStepCountIsRegistered);
-                mAccelerometerIsRegistered = registerSensor(mAccelerometerSensor, mAccelerometerIsRegistered);
+                registerAllSensors();
 
                 // Update time zone in case it changed while we weren't visible.
                 mTime.clear(TimeZone.getDefault().getID());
@@ -262,9 +370,7 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
 
             } else {
                 unregisterTimeReceiver();
-                mStepCountIsRegistered = unregisterSensor(mStepCountSensor, mStepCountIsRegistered);
-                mAccelerometerIsRegistered = unregisterSensor(mAccelerometerSensor, mAccelerometerIsRegistered);
-
+                unregisterAllSensors();
             }
 
             /*
@@ -304,19 +410,14 @@ public class AllSensorsFaceService extends CanvasWatchFaceService implements Sen
             AllSensorsFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
-        private boolean registerSensor(Sensor sensor, boolean sensorFlag) {
-            if (sensorFlag) return true;
-            sensorFlag = mSensorManager.registerListener(AllSensorsFaceService.this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
-            Log.i(TAG, "Registered " + sensor.getName() + ": " + sensorFlag);
-            return sensorFlag;
-        }
 
-        private boolean unregisterSensor(Sensor sensor, boolean sensorFlag) {
-            if (!sensorFlag) return false;
-            mSensorManager.unregisterListener(AllSensorsFaceService.this, sensor);
-            Log.i(TAG, "Unregistered " + sensor.getName());
-            return false;
-        }
+
+
+
+
+
+
+
 
 
 
