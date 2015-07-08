@@ -9,18 +9,22 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
-public class TheDingDongFaceService extends CanvasWatchFaceService {
+public class TheDingDongFaceService extends CanvasWatchFaceService implements SensorEventListener {
     private static final String TAG = "TheDingDongFaceService";
 
     private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
@@ -31,6 +35,39 @@ public class TheDingDongFaceService extends CanvasWatchFaceService {
      * second hand.
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
+
+
+
+    // STEP SENSING
+    private SensorManager mSensorManager;
+    private Sensor mStepSensor;
+    private boolean mStepSensorIsRegistered;
+    private int mPrevSteps = 0;
+    private int mCurrentSteps = 0;
+    private static final boolean GENERATE_FAKE_STEPS = true;
+    private static final int MAX_STEP_THRESHOLD = 10000;
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
+            if (!GENERATE_FAKE_STEPS) {
+                Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
+                mCurrentSteps = Math.round(event.values[0]);
+            }
+        }
+    }
+
+
+
+
+
+
+
 
     @Override
     public Engine onCreateEngine() {
@@ -82,6 +119,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService {
         private float mCenterX;
         private float mCenterY;
 
+
+
+
         @Override
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
@@ -91,6 +131,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService {
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
                     .build());
+
+            /**
+             * STEP SENSING
+             */
+            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
 
             mTextPaintInteractive = new Paint();
             mTextPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
@@ -126,11 +172,39 @@ public class TheDingDongFaceService extends CanvasWatchFaceService {
                 invalidate();
             }
 
+            if (!mAmbient) {
+                updateStepCounts();
+            }
+
             /*
              * Whether the timer should be running depends on whether we're visible (as well as
              * whether we're in ambient mode), so we may need to start or stop the timer.
              */
             updateTimer();
+        }
+
+        private void updateStepCounts() {
+            Log.v(TAG, "mPrevSteps: " + mPrevSteps);
+            Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+
+            if (GENERATE_FAKE_STEPS) {
+                int fakeSteps = (int) (500 * Math.random());
+                Log.v(TAG, "Generating fake steps: " + fakeSteps);
+                mCurrentSteps += fakeSteps;
+            }
+
+            int stepInc = mCurrentSteps - mPrevSteps;
+            mPrevSteps = mCurrentSteps;
+
+            Log.v(TAG, stepInc + " new steps!");
+
+            if (mCurrentSteps > MAX_STEP_THRESHOLD) {
+                Log.v(TAG, "Resetting step counts");
+                mPrevSteps = 0;
+                mCurrentSteps = 0;
+                Log.v(TAG, "mPrevSteps: " + mPrevSteps);
+                Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+            }
         }
 
         @Override
@@ -182,13 +256,15 @@ public class TheDingDongFaceService extends CanvasWatchFaceService {
             super.onVisibilityChanged(visible);
 
             if (visible) {
-                registerReceiver();
+                registerTimeReceiver();
+                registerStepSensor();
 
                 // Update time zone in case it changed while we weren't visible.
                 mTime.clear(TimeZone.getDefault().getID());
                 mTime.setToNow();
             } else {
-                unregisterReceiver();
+                unregisterTimeReceiver();
+                unregisterStepSensor();
             }
 
             /*
@@ -207,7 +283,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService {
             }
         };
 
-        private void registerReceiver() {
+        private void registerTimeReceiver() {
             if (mRegisteredTimeZoneReceiver) {
                 return;
             }
@@ -216,13 +292,32 @@ public class TheDingDongFaceService extends CanvasWatchFaceService {
             TheDingDongFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
-        private void unregisterReceiver() {
+        private void unregisterTimeReceiver() {
             if (!mRegisteredTimeZoneReceiver) {
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
             TheDingDongFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
+
+        private void registerStepSensor() {
+            if (mStepSensorIsRegistered) {
+                return;
+            }
+            mStepSensorIsRegistered = true;
+            mSensorManager.registerListener(TheDingDongFaceService.this, mStepSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+        private void unregisterStepSensor() {
+            if (!mStepSensorIsRegistered) {
+                return;
+            }
+            mStepSensorIsRegistered = false;
+            mSensorManager.unregisterListener(TheDingDongFaceService.this);
+        }
+
+
+
 
         private void updateTimer() {
             mMainHandler.removeMessages(R.id.message_update);
