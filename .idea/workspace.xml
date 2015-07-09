@@ -27,18 +27,37 @@
       <file leaf-file-name="TheDingDongFaceService.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.74585634">
-              <caret line="207" column="9" selection-start-line="207" selection-start-column="9" selection-end-line="207" selection-end-column="9" />
+            <state vertical-scroll-proportion="1.159386">
+              <caret line="492" column="49" selection-start-line="492" selection-start-column="49" selection-end-line="492" selection-end-column="49" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#2273#2274#0" expanded="true" />
-                <element signature="e#2308#2309#0" expanded="true" />
-                <element signature="e#2941#3619#0" expanded="true" />
-                <element signature="e#3618#3619#0" expanded="true" />
-                <element signature="e#9675#9913#0" expanded="true" />
-                <element signature="e#9912#9913#0" expanded="true" />
-                <element signature="e#11577#11578#0" expanded="true" />
-                <element signature="e#11641#11642#0" expanded="true" />
+                <element signature="e#2379#2380#0" expanded="true" />
+                <element signature="e#2414#2415#0" expanded="true" />
+                <element signature="e#2645#3315#0" expanded="true" />
+                <element signature="e#3314#3315#0" expanded="true" />
+                <element signature="e#10383#10621#0" expanded="true" />
+                <element signature="e#10620#10621#0" expanded="true" />
+                <element signature="e#12285#12286#0" expanded="true" />
+                <element signature="e#12349#12350#0" expanded="true" />
+                <element signature="e#17050#17051#0" expanded="true" />
+                <element signature="e#17120#17121#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TimeAndMotionFaceService.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TimeAndMotionFaceService.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="168" column="34" selection-start-line="168" selection-start-column="34" selection-end-line="168" selection-end-column="54" />
+              <folding>
+                <element signature="e#0#17143#0" expanded="false" />
+                <element signature="imports" expanded="false" />
+                <element signature="e#2149#2150#0" expanded="false" />
+                <element signature="e#2184#2185#0" expanded="false" />
+                <element signature="e#16415#16416#0" expanded="false" />
+                <element signature="e#16479#16480#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -49,7 +68,13 @@
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="35" column="93" selection-start-line="35" selection-start-column="63" selection-end-line="35" selection-end-column="93" />
-              <folding />
+              <folding>
+                <element signature="imports" expanded="false" />
+                <element signature="e#2991#2992#0" expanded="false" />
+                <element signature="e#3026#3027#0" expanded="false" />
+                <element signature="e#14293#14294#0" expanded="false" />
+                <element signature="e#14357#14358#0" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -59,17 +84,7 @@
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="167" column="27" selection-start-line="167" selection-start-column="27" selection-end-line="167" selection-end-column="27" />
-              <folding>
-                <element signature="e#1333#1351#0" expanded="true" />
-                <element signature="e#1551#1580#0" expanded="true" />
-                <element signature="e#2498#2528#0" expanded="true" />
-                <element signature="e#3439#3460#0" expanded="true" />
-                <element signature="e#4361#4389#0" expanded="true" />
-                <element signature="e#5297#5320#0" expanded="true" />
-                <element signature="e#6200#6226#0" expanded="true" />
-                <element signature="e#7107#7131#0" expanded="true" />
-                <element signature="e#8021#8060#0" expanded="true" />
-              </folding>
+              <folding />
             </state>
           </provider>
         </entry>
@@ -77,7 +92,7 @@
       <file leaf-file-name="strings.xml" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/res/values/strings.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-14.4">
+            <state vertical-scroll-proportion="0.0">
               <caret line="24" column="50" selection-start-line="24" selection-start-column="50" selection-end-line="24" selection-end-column="50" />
               <folding />
             </state>
@@ -1605,7 +1620,6 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/fathom-faces/src/main/res/values/dimens.xml" />
-        <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TimeAndMotionFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/BouncingBallFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/build.gradle" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java" />
@@ -1613,6 +1627,7 @@
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/AllSensorsFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/res/values/strings.xml" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TimeAndMotionFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java" />
       </list>
     </option>
@@ -1650,9 +1665,7 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="ProjectPane" />
       <pane id="PackagesPane" />
-      <pane id="Scratches" />
       <pane id="AndroidView">
         <subPane>
           <PATH>
@@ -1731,6 +1744,8 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="ProjectPane" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -1945,7 +1960,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1066" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -1955,10 +1970,10 @@
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.48507464" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3108407" sideWeight="0.48507464" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Android" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.36836284" sideWeight="0.6151386" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.49446902" sideWeight="0.6151386" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21481876" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -2002,6 +2017,10 @@
           <caret line="47" column="77" selection-start-line="47" selection-start-column="77" selection-end-line="47" selection-end-column="77" />
           <folding>
             <element signature="imports" expanded="false" />
+            <element signature="e#2991#2992#0" expanded="false" />
+            <element signature="e#3026#3027#0" expanded="false" />
+            <element signature="e#14293#14294#0" expanded="false" />
+            <element signature="e#14357#14358#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -2019,15 +2038,15 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#7128#7129#0" expanded="true" />
-            <element signature="e#7163#7164#0" expanded="true" />
-            <element signature="e#7772#8512#0" expanded="true" />
-            <element signature="e#8511#8512#0" expanded="true" />
-            <element signature="e#13944#14182#0" expanded="true" />
-            <element signature="e#14181#14182#0" expanded="true" />
-            <element signature="e#15291#15292#0" expanded="true" />
-            <element signature="e#15355#15356#0" expanded="true" />
+            <element signature="imports" expanded="false" />
+            <element signature="e#7128#7129#0" expanded="false" />
+            <element signature="e#7163#7164#0" expanded="false" />
+            <element signature="e#7772#8512#0" expanded="false" />
+            <element signature="e#8511#8512#0" expanded="false" />
+            <element signature="e#13944#14182#0" expanded="false" />
+            <element signature="e#14181#14182#0" expanded="false" />
+            <element signature="e#15291#15292#0" expanded="false" />
+            <element signature="e#15355#15356#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -2046,6 +2065,10 @@
           <caret line="0" column="8" selection-start-line="0" selection-start-column="8" selection-end-line="0" selection-end-column="38" />
           <folding>
             <element signature="imports" expanded="false" />
+            <element signature="e#2991#2992#0" expanded="false" />
+            <element signature="e#3026#3027#0" expanded="false" />
+            <element signature="e#14293#14294#0" expanded="false" />
+            <element signature="e#14357#14358#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -2063,6 +2086,10 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="false" />
+            <element signature="e#2991#2992#0" expanded="false" />
+            <element signature="e#3026#3027#0" expanded="false" />
+            <element signature="e#14293#14294#0" expanded="false" />
+            <element signature="e#14357#14358#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -2097,6 +2124,10 @@
           <caret line="244" column="73" selection-start-line="244" selection-start-column="73" selection-end-line="244" selection-end-column="73" />
           <folding>
             <element signature="imports" expanded="false" />
+            <element signature="e#2991#2992#0" expanded="false" />
+            <element signature="e#3026#3027#0" expanded="false" />
+            <element signature="e#14293#14294#0" expanded="false" />
+            <element signature="e#14357#14358#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -2131,6 +2162,10 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="false" />
+            <element signature="e#2991#2992#0" expanded="false" />
+            <element signature="e#3026#3027#0" expanded="false" />
+            <element signature="e#14293#14294#0" expanded="false" />
+            <element signature="e#14357#14358#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -2165,6 +2200,10 @@
           <caret line="212" column="13" selection-start-line="212" selection-start-column="13" selection-end-line="212" selection-end-column="13" />
           <folding>
             <element signature="imports" expanded="false" />
+            <element signature="e#2991#2992#0" expanded="false" />
+            <element signature="e#3026#3027#0" expanded="false" />
+            <element signature="e#14293#14294#0" expanded="false" />
+            <element signature="e#14357#14358#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -2350,35 +2389,27 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TimeAndMotionFaceService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="2.380137">
-          <caret line="206" column="0" selection-start-line="206" selection-start-column="0" selection-end-line="206" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/AllSensorsFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-22.137932">
           <caret line="489" column="9" selection-start-line="463" selection-start-column="8" selection-end-line="489" selection-end-column="9" />
           <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#7128#7129#0" expanded="true" />
-            <element signature="e#7163#7164#0" expanded="true" />
-            <element signature="e#7772#8512#0" expanded="true" />
-            <element signature="e#8511#8512#0" expanded="true" />
-            <element signature="e#13944#14182#0" expanded="true" />
-            <element signature="e#14181#14182#0" expanded="true" />
-            <element signature="e#15291#15292#0" expanded="true" />
-            <element signature="e#15355#15356#0" expanded="true" />
+            <element signature="imports" expanded="false" />
+            <element signature="e#7128#7129#0" expanded="false" />
+            <element signature="e#7163#7164#0" expanded="false" />
+            <element signature="e#7772#8512#0" expanded="false" />
+            <element signature="e#8511#8512#0" expanded="false" />
+            <element signature="e#13944#14182#0" expanded="false" />
+            <element signature="e#14181#14182#0" expanded="false" />
+            <element signature="e#15291#15292#0" expanded="false" />
+            <element signature="e#15355#15356#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/res/values/strings.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-14.4">
+        <state vertical-scroll-proportion="0.0">
           <caret line="24" column="50" selection-start-line="24" selection-start-column="50" selection-end-line="24" selection-end-column="50" />
           <folding />
         </state>
@@ -2388,17 +2419,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="167" column="27" selection-start-line="167" selection-start-column="27" selection-end-line="167" selection-end-column="27" />
-          <folding>
-            <element signature="e#1333#1351#0" expanded="true" />
-            <element signature="e#1551#1580#0" expanded="true" />
-            <element signature="e#2498#2528#0" expanded="true" />
-            <element signature="e#3439#3460#0" expanded="true" />
-            <element signature="e#4361#4389#0" expanded="true" />
-            <element signature="e#5297#5320#0" expanded="true" />
-            <element signature="e#6200#6226#0" expanded="true" />
-            <element signature="e#7107#7131#0" expanded="true" />
-            <element signature="e#8021#8060#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -2406,7 +2427,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="35" column="93" selection-start-line="35" selection-start-column="63" selection-end-line="35" selection-end-column="93" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#2991#2992#0" expanded="false" />
+            <element signature="e#3026#3027#0" expanded="false" />
+            <element signature="e#14293#14294#0" expanded="false" />
+            <element signature="e#14357#14358#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2418,20 +2445,37 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TimeAndMotionFaceService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="168" column="34" selection-start-line="168" selection-start-column="34" selection-end-line="168" selection-end-column="54" />
+          <folding>
+            <element signature="e#0#17143#0" expanded="false" />
+            <element signature="imports" expanded="false" />
+            <element signature="e#2149#2150#0" expanded="false" />
+            <element signature="e#2184#2185#0" expanded="false" />
+            <element signature="e#16415#16416#0" expanded="false" />
+            <element signature="e#16479#16480#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.74585634">
-          <caret line="207" column="9" selection-start-line="207" selection-start-column="9" selection-end-line="207" selection-end-column="9" />
+        <state vertical-scroll-proportion="1.159386">
+          <caret line="492" column="49" selection-start-line="492" selection-start-column="49" selection-end-line="492" selection-end-column="49" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#2273#2274#0" expanded="true" />
-            <element signature="e#2308#2309#0" expanded="true" />
-            <element signature="e#2941#3619#0" expanded="true" />
-            <element signature="e#3618#3619#0" expanded="true" />
-            <element signature="e#9675#9913#0" expanded="true" />
-            <element signature="e#9912#9913#0" expanded="true" />
-            <element signature="e#11577#11578#0" expanded="true" />
-            <element signature="e#11641#11642#0" expanded="true" />
+            <element signature="e#2379#2380#0" expanded="true" />
+            <element signature="e#2414#2415#0" expanded="true" />
+            <element signature="e#2645#3315#0" expanded="true" />
+            <element signature="e#3314#3315#0" expanded="true" />
+            <element signature="e#10383#10621#0" expanded="true" />
+            <element signature="e#10620#10621#0" expanded="true" />
+            <element signature="e#12285#12286#0" expanded="true" />
+            <element signature="e#12349#12350#0" expanded="true" />
+            <element signature="e#17050#17051#0" expanded="true" />
+            <element signature="e#17120#17121#0" expanded="true" />
           </folding>
         </state>
       </provider>
