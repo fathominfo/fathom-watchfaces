@@ -437,6 +437,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private Paint paintBig, paintMedium, paintSmall;
             private int prevSteps, currentSteps;
 
+            private int updateStep;  // @TODO add explanation here
+
             BubbleManager() {
                 paintBig = new Paint();
                 paintBig.setColor(COLOR_BIG);
@@ -456,6 +458,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
                 prevSteps = 0;
                 currentSteps = 0;
+
+                updateStep = 0;  // do not update
             }
 
             public void render(Canvas canvas) {
@@ -465,29 +469,95 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void update() {
-//                Log.v(TAG, "Manager update");
-                bubblesBig.update();
-                bubblesMedium.update();
-                bubblesSmall.update();
+////                Log.v(TAG, "Manager update");
+//                bubblesBig.update();
+//                bubblesMedium.update();
+//                bubblesSmall.update();
+
+                switch (updateStep) {
+                    case 1:
+                        int stepInc = currentSteps - prevSteps;  // @TODO account for remainder
+                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL);
+                        updateStep++;
+                        break;
+                    case 2:
+                        boolean continueUpdating1 = bubblesSmall.update();
+                        if (!continueUpdating1) updateStep++;
+                        break;
+                    case 3:
+                        int scaleRatioMS = STEP_RATIO_MEDIUM / STEP_RATIO_SMALL;
+                        int smallBubbleCount = bubblesSmall.bubbles.size();
+                        int newMediumBubbleCount = smallBubbleCount / scaleRatioMS;
+                        bubblesSmall.remove(newMediumBubbleCount * scaleRatioMS);
+                        bubblesMedium.add(newMediumBubbleCount);
+                        updateStep++;
+                        break;
+                    case 4:
+                        bubblesSmall.update();
+                        bubblesMedium.update();
+                        boolean continueUpdating3 =
+                                bubblesSmall.needsUpdate || bubblesMedium.needsUpdate;
+                        if (!continueUpdating3) updateStep++;
+                        break;
+                    case 5:
+                        int scaleRatioBM = STEP_RATIO_BIG / STEP_RATIO_MEDIUM;
+                        int mediumBubbleCount = bubblesMedium.bubbles.size();
+                        int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
+                        bubblesMedium.remove(newBigBubbleCount * scaleRatioBM);
+                        bubblesBig.add(newBigBubbleCount);
+                        updateStep++;
+                        break;
+                    case 6:
+                        bubblesMedium.update();
+                        bubblesBig.update();
+                        boolean continueUpdating5 =
+                                bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
+                        if (!continueUpdating5) updateStep = 0;
+                        break;
+
+                    case 11:
+                        bubblesSmall.remove(bubblesSmall.bubbles.size());
+                        bubblesMedium.remove(bubblesMedium.bubbles.size());
+                        bubblesBig.remove(bubblesBig.bubbles.size());
+                        updateStep++;
+                        break;
+                    case 12:
+                        bubblesSmall.update();
+                        bubblesMedium.update();
+                        bubblesBig.update();
+                        boolean continueUpdating12 =
+                                bubblesSmall.needsUpdate || bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
+                        if (!continueUpdating12) updateStep = 0;
+                        break;
+
+                    default:
+
+                        break;
+                }
+
             }
 
             public void updateSteps(int currentSteps_) {
-                int stepInc = currentSteps_ - currentSteps;
+//                int stepInc = currentSteps_ - currentSteps;
+//                prevSteps = currentSteps;
+//                currentSteps = currentSteps_;
+//
+//                Log.v(TAG, "Setting " + currentSteps + " steps");
+//
+//                int bigC = currentSteps / STEP_RATIO_BIG;
+//                int medC = (currentSteps - bigC * STEP_RATIO_BIG) / STEP_RATIO_MEDIUM;
+//                int smlC = (currentSteps - bigC * STEP_RATIO_BIG - medC * STEP_RATIO_MEDIUM) / STEP_RATIO_SMALL;
+//
+//                bubblesBig.set(bigC);
+//                bubblesMedium.set(medC);
+//                bubblesSmall.set(smlC);
+//
+////                bubblesSmall.set(currentSteps_ / STEP_RATIO_SMALL);
+
                 prevSteps = currentSteps;
                 currentSteps = currentSteps_;
 
-                Log.v(TAG, "Setting " + currentSteps + " steps");
-
-                int bigC = currentSteps / STEP_RATIO_BIG;
-                int medC = (currentSteps - bigC * STEP_RATIO_BIG) / STEP_RATIO_MEDIUM;
-                int smlC = (currentSteps - bigC * STEP_RATIO_BIG - medC * STEP_RATIO_MEDIUM) / STEP_RATIO_SMALL;
-
-                bubblesBig.set(bigC);
-                bubblesMedium.set(medC);
-                bubblesSmall.set(smlC);
-
-//                bubblesSmall.set(currentSteps_ / STEP_RATIO_SMALL);
-
+                updateStep = 1;
             }
 
         }
@@ -523,14 +593,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                     if (bub.needsUpdate) needsUpdate |= bub.update();
                 }
 
-
                 // Must kill remainder objects in independent loop to about iterator errors
                 for (int len = killQueue.size(), i = len - 1; i >= 0; i--) {
                     bubbles.remove(killQueue.get(i));
                 }
 
 //                count = bubbles.size();
-
                 return needsUpdate;
             }
 
