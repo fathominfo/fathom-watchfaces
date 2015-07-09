@@ -25,6 +25,7 @@ import android.view.SurfaceHolder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 public class TheDingDongFaceService extends CanvasWatchFaceService implements SensorEventListener {
     private static final String TAG = "TheDingDongFaceService";
@@ -32,11 +33,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
-    /**
-     * Update rate in milliseconds for interactive mode. We update once a second to advance the
-     * second hand.
-     */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
+//    private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
 
 
 
@@ -86,13 +84,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         final Handler mMainHandler = new Handler() {
             @Override
             public void handleMessage(Message message) {
+//                Log.v(TAG, "Handler tick");
                 switch (message.what) {
                     case MSG_UPDATE_TIMER:
                         invalidate();
                         if (shouldTimerBeRunning()) {
                             long timeMs = System.currentTimeMillis();
                             long delayMs = INTERACTIVE_UPDATE_RATE_MS
-                            - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
+                                    - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
                             mMainHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIMER, delayMs);
                         }
                         break;
@@ -290,6 +289,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
                 // draw bubbles
+                bubbleManager.update();
                 bubbleManager.render(canvas);
 
                 mTextDigitsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
@@ -325,6 +325,19 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             * so we may need to start or stop the timer.
             */
             updateTimer();
+        }
+
+        @Override
+        public void onPeekCardPositionUpdate(Rect rect) {
+            super.onPeekCardPositionUpdate(rect);
+//            mCardBounds.set(rect);
+        }
+
+        @Override
+        public void onPropertiesChanged(Bundle properties) {
+            super.onPropertiesChanged(properties);
+//            mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+//            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
         }
 
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -372,9 +385,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
 
         private void updateTimer() {
-            mMainHandler.removeMessages(R.id.message_update);
+            mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             if (shouldTimerBeRunning()) {
-                mMainHandler.sendEmptyMessage(R.id.message_update);
+                mMainHandler.sendEmptyMessage(MSG_UPDATE_TIMER);
             }
         }
 
@@ -386,18 +399,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             return isVisible() && !isInAmbientMode();
         }
 
-        @Override
-        public void onPeekCardPositionUpdate(Rect rect) {
-            super.onPeekCardPositionUpdate(rect);
-//            mCardBounds.set(rect);
-        }
 
-        @Override
-        public void onPropertiesChanged(Bundle properties) {
-            super.onPropertiesChanged(properties);
-//            mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
-//            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
-        }
 
 
 
@@ -416,13 +418,15 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         private class BubbleManager {
 
+            private final static float ANIMATION_RATE = 0.15f;
+
             private final static int STEP_RATIO_BIG = 1000;     // a BIG bubble represents this many steps
             private final static int STEP_RATIO_MEDIUM = 100;
             private final static int STEP_RATIO_SMALL = 10;
 
-            private final static int RADIUS_BIG = 60;
-            private final static int RADIUS_MEDIUM = 30;
-            private final static int RADIUS_SMALL = 10;
+            private final static int RADIUS_BIG = 50;
+            private final static int RADIUS_MEDIUM = 35;
+            private final static int RADIUS_SMALL = 20;
 
             private final int COLOR_BIG = Color.argb(200, 86, 40, 38);  // mustard
             private final int COLOR_MEDIUM = Color.argb(200, 36, 66, 80);  // dark blue
@@ -460,6 +464,13 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubblesSmall.render(canvas);
             }
 
+            public void update() {
+//                Log.v(TAG, "Manager update");
+                bubblesBig.update();
+                bubblesMedium.update();
+                bubblesSmall.update();
+            }
+
             public void updateSteps(int currentSteps_) {
                 int stepInc = currentSteps_ - currentSteps;
                 prevSteps = currentSteps;
@@ -475,18 +486,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubblesMedium.set(medC);
                 bubblesSmall.set(smlC);
 
+//                bubblesSmall.set(currentSteps_ / STEP_RATIO_SMALL);
 
-//                this.addSteps(stepInc);
             }
-
-//            public void addSteps(int newSteps) {
-//
-//                bubblesBig.add(newSteps / STEP_RATIO_BIG);
-//                bubblesMedium.add(newSteps / STEP_RATIO_MEDIUM);
-//                bubblesSmall.add(newSteps / STEP_RATIO_SMALL);
-//
-//                Log.v(TAG, "Adding " + newSteps + " steps");
-//            }
 
         }
 
@@ -494,16 +496,19 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             BubbleManager parent;
             List<Bubble> bubbles;
+            List<Bubble> killQueue;
             Paint paint;
             float radius;
-            int count;
+//            int count;
+            boolean needsUpdate;
 
             BubbleCollection(BubbleManager parent_, float radius_, Paint paint_) {
                 parent = parent_;
                 radius = radius_;
                 paint = paint_;
                 bubbles = new ArrayList<>();
-                count = 0;
+                killQueue = new ArrayList<>();
+//                count = 0;
             }
 
             public void render(Canvas canvas) {
@@ -512,28 +517,47 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 }
             }
 
+            public boolean update() {
+                needsUpdate = false;
+                for (Bubble bub : bubbles) {
+                    if (bub.needsUpdate) needsUpdate |= bub.update();
+                }
+
+
+                // Must kill remainder objects in independent loop to about iterator errors
+                for (int len = killQueue.size(), i = len - 1; i >= 0; i--) {
+                    bubbles.remove(killQueue.get(i));
+                }
+
+//                count = bubbles.size();
+
+                return needsUpdate;
+            }
+
             public void set(int count_) {
-                int diff = count_ - count;
+                int diff = count_ - bubbles.size();
                 if (diff > 0) {
                     this.add(diff);
                 } else if (diff < 0) {
                     this.remove(-diff);
                 }
-                count = count_;
+//                count = count_;
             }
 
             private void add(int count_) {
                 for (int i = 0; i < count_; i++) {
-                    bubbles.add(new Bubble(this, radius, paint));
+                    Bubble b = new Bubble(this, radius, paint);
+                    b.grow();
+                    bubbles.add(b);
                 }
-                count += count_;
+//                count += count_;
             }
 
             private void remove(int count_) {
                 for (int i = 0; i < count_; i++) {
-                    bubbles.remove(0);
+                    bubbles.get(i).kill();
                 }
-                count -= count_;
+//                count -= count_;
             }
 
         }
@@ -544,6 +568,11 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             float radius;
             Paint paint;
 
+            boolean needsUpdate;
+            boolean mustDie = false;
+            float currentRadius = 0;
+            float targetRadius = 0;
+
             Bubble(BubbleCollection parent_, float radius_, Paint paint_) {
                 parent = parent_;
                 x = (float) (mWidth * Math.random());
@@ -553,8 +582,31 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void render(Canvas canvas) {
-                canvas.drawCircle(x, y, radius, paint);
+                canvas.drawCircle(x, y, currentRadius, paint);
             }
+
+            public boolean update() {
+                currentRadius += (targetRadius - currentRadius) * BubbleManager.ANIMATION_RATE;
+                if (Math.abs(targetRadius - currentRadius) < 1) {
+                    needsUpdate = false;
+                    if (mustDie) {
+                        parent.killQueue.add(this);
+                    }
+                }
+                return needsUpdate;
+            }
+
+            public void grow() {
+                targetRadius = radius;
+                needsUpdate = true;
+            }
+
+            public void kill() {
+                targetRadius = 0;
+                mustDie = true;
+                needsUpdate = true;
+            }
+
         }
 
     }
