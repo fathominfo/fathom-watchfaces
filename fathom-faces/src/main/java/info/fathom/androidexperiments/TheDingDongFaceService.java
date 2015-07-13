@@ -25,7 +25,6 @@ import android.view.SurfaceHolder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 public class TheDingDongFaceService extends CanvasWatchFaceService implements SensorEventListener {
     private static final String TAG = "TheDingDongFaceService";
@@ -34,18 +33,27 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
-//    private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
 
+    private SensorManager mSensorManager;
 
+    // ACCELEROMETER SENSING
+    private Sensor mAccelSensor;
+    private boolean mAccelSensorIsRegistered;
+    // Compute gravisty and lin acc manually, since these sensors may not be available on the device
+    private float[] gravity = new float[3];
+    private float[] linear_acceleration = new float[3];
+    private float[] rotation = new float[3];
+
+    private Sensor mGyroscopeSensor;
+    private boolean mGyroscopeSensorIsRegistered;
 
     // STEP SENSING
-    private SensorManager mSensorManager;
     private Sensor mStepSensor;
     private boolean mStepSensorIsRegistered;
     private int mPrevSteps = 0;
     private int mCurrentSteps = 0;
-    private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int RANDOM_FAKE_STEPS = 1500;
+    private static final boolean GENERATE_FAKE_STEPS = false;
+    private static final int RANDOM_FAKE_STEPS = 500;
     private static final int MAX_STEP_THRESHOLD = 10000;
 
     @Override
@@ -55,12 +63,51 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
-            if (!GENERATE_FAKE_STEPS) {
-                Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
-                mCurrentSteps = Math.round(event.values[0]);
-            }
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_STEP_COUNTER:
+                if (!GENERATE_FAKE_STEPS) {
+                    Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
+                    mCurrentSteps = Math.round(event.values[0]);
+                }
+                break;
+            case Sensor.TYPE_ACCELEROMETER:
+                processAcceleration(event.values);
+//                Log.v(TAG, "Accel: [" + String.format("%.2f", linear_acceleration[0]) + ", "
+//                        + String.format("%.2f", linear_acceleration[1]) + ", "
+//                        + String.format("%.2f", linear_acceleration[2]) + "]");
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                rotation = event.values;
+//                Log.v(TAG, "Gyros: [" + String.format("%.2f", event.values[0]) + ", "
+//                        + String.format("%.2f", event.values[1]) + ", "
+//                        + String.format("%.2f", event.values[2]) + "]");
+                break;
         }
+
+//        Log.v(TAG, "Accel: [" + String.format("%.2f", linear_acceleration[0]) + ", "
+//                + String.format("%.2f", linear_acceleration[1]) + ", "
+//                + String.format("%.2f", linear_acceleration[2]) + "]; "
+//                + "Gyros: [" + String.format("%.2f", rotation[0]) + ", "
+//                + String.format("%.2f", rotation[1]) + ", "
+//                + String.format("%.2f", rotation[2]) + "]");
+    }
+
+
+    public void processAcceleration(float[] values) {
+        // In this example, alpha is calculated as t / (t + dT),
+        // where t is the low-pass filter's time-constant and
+        // dT is the event delivery rate.
+        final float alpha = 0.8f;
+
+        // Isolate the force of gravity with the low-pass filter.
+        gravity[0] = alpha * gravity[0] + (1 - alpha) * values[0];
+        gravity[1] = alpha * gravity[1] + (1 - alpha) * values[1];
+        gravity[2] = alpha * gravity[2] + (1 - alpha) * values[2];
+
+        // Remove the gravity contribution with the high-pass filter.
+        linear_acceleration[0] = values[0] - gravity[0];
+        linear_acceleration[1] = values[1] - gravity[1];
+        linear_acceleration[2] = values[2] - gravity[2];
     }
 
 
@@ -78,7 +125,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private class Engine extends CanvasWatchFaceService.Engine {
 
         private static final int MSG_UPDATE_TIMER = 0;
-
 
         /* Handler to update the screen depending on the message */
         final Handler mMainHandler = new Handler() {
@@ -129,6 +175,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private float mCenterY;
 
         private BubbleManager bubbleManager;
+        private static final float BUBBLE_FRICTION = 0.97f;
+        private static final float BUBBLE_ACCEL_FACTOR = 0.25f;
 
 
 
@@ -148,6 +196,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
              */
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+            mAccelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            mGyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
             mTextDigitsPaintInteractive = new Paint();
             mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
@@ -197,7 +247,20 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 invalidate();
             }
 
-            if (!mAmbient) {
+
+            if (mAmbient) {
+                unregisterTimeReceiver();
+                unregisterStepSensor();
+                unregisterAccelSensor();
+                unregisterGyroscopeSensor();
+
+                bubbleManager.resetMotion();
+            } else {
+                registerTimeReceiver();
+                registerStepSensor();
+                registerAccelSensor();
+                registerGyroscopeSensor();
+
                 updateStepCounts();
             }
 
@@ -231,13 +294,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
             }
 
-//            int newBubbles = stepInc / BUBBLE_SMALL_STEP_RATIO;  // @TODO implement something that accounts for the remainder of this division
-//            Log.v(TAG, "Adding " + newBubbles + " bubbles");
-//
-//            for (int i = 0; i < newBubbles; i++) {
-//                bubbles.add(new Bubble(5, mBublePaintSmall));
-//            }
-
             bubbleManager.updateSteps(mCurrentSteps);
 
         }
@@ -266,7 +322,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             mTime.setToNow();
 
-//            final String hours = String.format("%02d", mTime.hour % 12 == 0 ? 12 : mTime.hour % 12);
             final String hours = Integer.toString(mTime.hour % 12 == 0 ? 12 : mTime.hour % 12);
             final String minutes = String.format("%02d", mTime.minute);
 
@@ -310,6 +365,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             if (visible) {
                 registerTimeReceiver();
                 registerStepSensor();
+                registerAccelSensor();
+                registerGyroscopeSensor();
 
                 // Update time zone in case it changed while we weren't visible.
                 mTime.clear(TimeZone.getDefault().getID());
@@ -317,6 +374,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             } else {
                 unregisterTimeReceiver();
                 unregisterStepSensor();
+                unregisterAccelSensor();
+                unregisterGyroscopeSensor();
             }
 
             /*
@@ -378,7 +437,31 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 return;
             }
             mStepSensorIsRegistered = false;
-            mSensorManager.unregisterListener(TheDingDongFaceService.this);
+            mSensorManager.unregisterListener(TheDingDongFaceService.this, mStepSensor);
+        }
+
+        private void registerAccelSensor() {
+            if (mAccelSensorIsRegistered) return;
+            mAccelSensorIsRegistered = true;
+            mSensorManager.registerListener(TheDingDongFaceService.this, mAccelSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+        private void unregisterAccelSensor() {
+            if (!mAccelSensorIsRegistered) return;
+            mAccelSensorIsRegistered = false;
+            mSensorManager.unregisterListener(TheDingDongFaceService.this, mAccelSensor);
+        }
+
+        private void registerGyroscopeSensor() {
+            if (mGyroscopeSensorIsRegistered) return;
+            mGyroscopeSensorIsRegistered = true;
+            mSensorManager.registerListener(TheDingDongFaceService.this, mGyroscopeSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+
+        private void unregisterGyroscopeSensor() {
+            if (!mGyroscopeSensorIsRegistered) return;
+            mGyroscopeSensorIsRegistered = false;
+            mSensorManager.unregisterListener(TheDingDongFaceService.this, mGyroscopeSensor);
         }
 
 
@@ -414,8 +497,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         }
 
 
-
-
         private class BubbleManager {
 
             private final static float ANIMATION_RATE = 0.15f;
@@ -428,10 +509,16 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private final static int RADIUS_MEDIUM = 35;
             private final static int RADIUS_SMALL = 20;
 
-            private final int COLOR_BIG = Color.argb(200, 86, 40, 38);  // mustard
-            private final int COLOR_MEDIUM = Color.argb(200, 36, 66, 80);  // dark blue
+            private final static float WEIGHT_BIG = 3;
+            private final static float WEIGHT_MEDIUM = 2;
+            private final static float WEIGHT_SMALL = 1;
+
+            private final int COLOR_BIG = Color.argb(200, 172, 17, 64);  // red
+            private final int COLOR_MEDIUM = Color.argb(200, 0, 66, 156);  // dark blue
             private final int COLOR_SMALL = Color.argb(200, 200, 189, 8);  // mustard
-//            private final int COLOR_SMALL = Color.argb(200, 255, 219, 88);  // mustard
+            // private final int COLOR_BIG = Color.argb(200, 86, 40, 38);  // dark red
+            // private final int COLOR_MEDIUM = Color.argb(200, 36, 66, 80);  // dark blue
+            // private final int COLOR_SMALL = Color.argb(200, 255, 219, 88);  // mustard
 
             private BubbleCollection bubblesBig, bubblesMedium, bubblesSmall;
             private Paint paintBig, paintMedium, paintSmall;
@@ -452,9 +539,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 paintSmall.setColor(COLOR_SMALL);
                 paintSmall.setAntiAlias(true);
 
-                bubblesBig = new BubbleCollection(this, RADIUS_BIG, paintBig);
-                bubblesMedium = new BubbleCollection(this, RADIUS_MEDIUM, paintMedium);
-                bubblesSmall = new BubbleCollection(this, RADIUS_SMALL, paintSmall);
+                bubblesBig = new BubbleCollection(this, RADIUS_BIG, WEIGHT_BIG, paintBig);
+                bubblesMedium = new BubbleCollection(this, RADIUS_MEDIUM, WEIGHT_MEDIUM, paintMedium);
+                bubblesSmall = new BubbleCollection(this, RADIUS_SMALL, WEIGHT_SMALL, paintSmall);
 
                 prevSteps = 0;
                 currentSteps = 0;
@@ -469,14 +556,11 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void update() {
-////                Log.v(TAG, "Manager update");
-//                bubblesBig.update();
-//                bubblesMedium.update();
-//                bubblesSmall.update();
 
                 switch (updateStep) {
                     case 1:
-                        int stepInc = currentSteps - prevSteps;  // @TODO account for remainder
+                        int stepInc = currentSteps - prevSteps;
+                        currentSteps -= stepInc % STEP_RATIO_SMALL;  // account for the remainder of the division
                         bubblesSmall.add(stepInc / STEP_RATIO_SMALL);
                         updateStep++;
                         break;
@@ -535,31 +619,27 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         break;
                 }
 
+                updatePositions();
+
             }
 
             public void updateSteps(int currentSteps_) {
-//                int stepInc = currentSteps_ - currentSteps;
-//                prevSteps = currentSteps;
-//                currentSteps = currentSteps_;
-//
-//                Log.v(TAG, "Setting " + currentSteps + " steps");
-//
-//                int bigC = currentSteps / STEP_RATIO_BIG;
-//                int medC = (currentSteps - bigC * STEP_RATIO_BIG) / STEP_RATIO_MEDIUM;
-//                int smlC = (currentSteps - bigC * STEP_RATIO_BIG - medC * STEP_RATIO_MEDIUM) / STEP_RATIO_SMALL;
-//
-//                bubblesBig.set(bigC);
-//                bubblesMedium.set(medC);
-//                bubblesSmall.set(smlC);
-//
-////                bubblesSmall.set(currentSteps_ / STEP_RATIO_SMALL);
-
                 prevSteps = currentSteps;
                 currentSteps = currentSteps_;
-
-                updateStep = 1;
+                updateStep = 1;  // trigger size update chain
             }
 
+            public void updatePositions() {
+                bubblesBig.updatePositions();
+                bubblesMedium.updatePositions();
+                bubblesSmall.updatePositions();
+            }
+
+            public void resetMotion() {
+                bubblesBig.resetMotion();
+                bubblesMedium.resetMotion();
+                bubblesSmall.resetMotion();
+            }
         }
 
         private class BubbleCollection {
@@ -569,16 +649,16 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             List<Bubble> killQueue;
             Paint paint;
             float radius;
-//            int count;
+            float weight;
             boolean needsUpdate;
 
-            BubbleCollection(BubbleManager parent_, float radius_, Paint paint_) {
+            BubbleCollection(BubbleManager parent_, float radius_, float weight_, Paint paint_) {
                 parent = parent_;
                 radius = radius_;
+                weight = weight_;
                 paint = paint_;
                 bubbles = new ArrayList<>();
                 killQueue = new ArrayList<>();
-//                count = 0;
             }
 
             public void render(Canvas canvas) {
@@ -590,7 +670,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             public boolean update() {
                 needsUpdate = false;
                 for (Bubble bub : bubbles) {
-                    if (bub.needsUpdate) needsUpdate |= bub.update();
+                    if (bub.needsSizeUpdate) needsUpdate |= bub.updateSize();
                 }
 
                 // Must kill remainder objects in independent loop to about iterator errors
@@ -598,81 +678,134 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                     bubbles.remove(killQueue.get(i));
                 }
 
-//                count = bubbles.size();
                 return needsUpdate;
             }
 
-            public void set(int count_) {
-                int diff = count_ - bubbles.size();
-                if (diff > 0) {
-                    this.add(diff);
-                } else if (diff < 0) {
-                    this.remove(-diff);
+            public void updatePositions() {
+                for (Bubble bub : bubbles) {
+                    bub.updatePosition();
                 }
-//                count = count_;
             }
+
+//            public void set(int count_) {
+//                int diff = count_ - bubbles.size();
+//                if (diff > 0) {
+//                    this.add(diff);
+//                } else if (diff < 0) {
+//                    this.remove(-diff);
+//                }
+//            }
 
             private void add(int count_) {
                 for (int i = 0; i < count_; i++) {
-                    Bubble b = new Bubble(this, radius, paint);
+                    Bubble b = new Bubble(this, radius, weight, paint);
                     b.grow();
                     bubbles.add(b);
                 }
-//                count += count_;
             }
 
             private void remove(int count_) {
                 for (int i = 0; i < count_; i++) {
                     bubbles.get(i).kill();
                 }
-//                count -= count_;
+            }
+
+            private void resetMotion() {
+                for (Bubble bub : bubbles) {
+                    bub.resetMotion();
+                }
             }
 
         }
 
         private class Bubble {
-            BubbleCollection parent;
-            float x, y;
-            float radius;
-            Paint paint;
 
-            boolean needsUpdate;
-            boolean mustDie = false;
+            BubbleCollection parent;
+
+            float anchorX, anchorY;
+            float x, y;
+            float radius, weight;
+            boolean needsPositionUpdate = false;
+            float velX, velY;
+            float accX, accY;
+
+            boolean needsSizeUpdate = false;
             float currentRadius = 0;
             float targetRadius = 0;
+            boolean mustDie = false;
 
-            Bubble(BubbleCollection parent_, float radius_, Paint paint_) {
+            Paint paint;
+
+            Bubble(BubbleCollection parent_, float radius_, float weight_, Paint paint_) {
                 parent = parent_;
-                x = (float) (mWidth * Math.random());
-                y = (float) (mHeight * Math.random());
+                anchorX = (float) (mWidth * Math.random());
+                anchorY = (float) (mHeight * Math.random());
+                x = anchorX;
+                y = anchorY;
                 radius = radius_;
+                weight = weight_;
                 paint = paint_;
+                velX = velY = accX = accY = 0;
             }
 
             public void render(Canvas canvas) {
                 canvas.drawCircle(x, y, currentRadius, paint);
             }
 
-            public boolean update() {
+            public boolean updateSize() {
                 currentRadius += (targetRadius - currentRadius) * BubbleManager.ANIMATION_RATE;
                 if (Math.abs(targetRadius - currentRadius) < 1) {
-                    needsUpdate = false;
+                    needsSizeUpdate = false;
                     if (mustDie) {
                         parent.killQueue.add(this);
                     }
                 }
-                return needsUpdate;
+                return needsSizeUpdate;
+            }
+
+            public void updatePosition() {
+                velX += BUBBLE_ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0]) / weight;
+                velY += BUBBLE_ACCEL_FACTOR * linear_acceleration[1] * linear_acceleration[1] / weight;
+                velX *= BUBBLE_FRICTION;
+                velY *= BUBBLE_FRICTION;
+                x += velX;
+                y += velY;
+
+                if (x > mWidth) {
+                    x = mWidth - (x - mWidth);
+                    velX *= -1;
+                } else if (x < 0) {
+                    x = -x;
+                    velX *= -1;
+                }
+
+                if (y > mHeight) {
+                    y = mHeight - (y - mHeight);
+                    velY *= -1;
+                } else if (y < 0) {
+                    y = -y;
+                    velY *= -1;
+                }
+            }
+
+            public void shake(float accelX, float accelY) {
+                velX += BUBBLE_ACCEL_FACTOR * accelX;
+                velY += BUBBLE_ACCEL_FACTOR * accelY;
             }
 
             public void grow() {
                 targetRadius = radius;
-                needsUpdate = true;
+                needsSizeUpdate = true;
             }
 
             public void kill() {
                 targetRadius = 0;
                 mustDie = true;
-                needsUpdate = true;
+                needsSizeUpdate = true;
+            }
+
+            public void resetMotion() {
+                velX = velY = accX = accY = 0;
             }
 
         }
