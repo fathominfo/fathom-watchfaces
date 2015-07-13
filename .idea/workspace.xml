@@ -50,11 +50,13 @@
       <file leaf-file-name="TheTwinkieFaceService.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.31902984">
-              <caret line="222" column="9" selection-start-line="222" selection-start-column="9" selection-end-line="225" selection-end-column="2" />
+            <state vertical-scroll-proportion="0.60634327">
+              <caret line="380" column="9" selection-start-line="380" selection-start-column="9" selection-end-line="380" selection-end-column="9" />
               <folding>
-                <element signature="e#15975#15976#0" expanded="true" />
-                <element signature="e#16040#16041#0" expanded="true" />
+                <element signature="e#13042#13043#0" expanded="true" />
+                <element signature="e#13087#13088#0" expanded="true" />
+                <element signature="e#14837#14838#0" expanded="true" />
+                <element signature="e#14902#14903#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -2384,11 +2386,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.31902984">
-          <caret line="222" column="9" selection-start-line="222" selection-start-column="9" selection-end-line="225" selection-end-column="2" />
+        <state vertical-scroll-proportion="0.60634327">
+          <caret line="380" column="9" selection-start-line="380" selection-start-column="9" selection-end-line="380" selection-end-column="9" />
           <folding>
-            <element signature="e#15975#15976#0" expanded="true" />
-            <element signature="e#16040#16041#0" expanded="true" />
+            <element signature="e#13042#13043#0" expanded="true" />
+            <element signature="e#13087#13088#0" expanded="true" />
+            <element signature="e#14837#14838#0" expanded="true" />
+            <element signature="e#14902#14903#0" expanded="true" />
           </folding>
         </state>
       </provider>

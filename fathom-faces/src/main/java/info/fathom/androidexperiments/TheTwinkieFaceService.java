@@ -43,7 +43,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private Sensor mSensorAccelerometer;
     private boolean mSensorAccelerometerIsRegistered;
     private float[] gravity = new float[3];
-//    private float[] linear_acceleration = new float[3];
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -63,10 +62,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
             gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
 
-            // Remove the gravity contribution with the high-pass filter.
-//            linear_acceleration[0] = event.values[0] - gravity[0];
-//            linear_acceleration[1] = event.values[1] - gravity[1];
-//            linear_acceleration[2] = event.values[2] - gravity[2];
         }
     }
 
@@ -99,16 +94,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
         };
 
-        private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
+//        private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
+        private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
         private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
 
         private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
         private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
         private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
 
-//        private static final float FRICTION = 0.97f;
-//        private static final float ACCEL_FACTOR = 0.25f;
-//        private static final float RADIUS_FACTOR = 0.03f;     // as a ratio to screen width
 
         private boolean mRegisteredTimeZoneReceiver = false;
         //        private boolean mLowBitAmbient;
@@ -126,15 +119,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private float mCenterX;
         private float mCenterY;
 
-
-
-
-//        private float mBallRadius;
-//        private float mBallX, mBallY;
-//        private float mBallVelX, mBallVelY;
-//        private Paint mBallPaint;
-        private Ball ball;
-
+//        private Ball ball;
+        private Board board;
 
 
 
@@ -165,9 +151,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             mSensorManager.registerListener(TheTwinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
-            ball = new Ball();
-
-
+//            ball = new Ball();
+            board = new Board();
 
             mTime  = new Time();
         }
@@ -175,7 +160,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         @Override
         public void onDestroy() {
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
-            mSensorManager.unregisterListener(TheTwinkieFaceService.this);  // registering should prob go into onVisibilityChanged()
+            mSensorManager.unregisterListener(TheTwinkieFaceService.this);
             super.onDestroy();
         }
 
@@ -217,14 +202,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mHeight = height;
             mCenterX = mWidth / 2f;
             mCenterY = mHeight / 2f;
-//
-//            mBallRadius = BALL_RADIUS * width;
-//            mBallVelX = 0;
-//            mBallVelY = 0;
-//            mBallX = mCenterX;
-//            mBallY = mCenterY;
-//
-            ball.initialize();
+
+//            ball.initialize();
+            board.initialize(mWidth, mHeight);
 
             mTextHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextPaintInteractive.setTextSize(mTextHeight);
@@ -252,38 +232,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 drawTextVerticallyCentered(canvas, mTextPaintAmbient, minutes, mCenterX + 20, mCenterY);
 
             } else {
-                // update ball position
-//                mBallVelX += ACCEL_REDUCTION_FACTOR * -gravity[0];
-//                mBallVelY += ACCEL_REDUCTION_FACTOR * gravity[1];
-//
-//                mBallVelX *= FRICTION;
-//                mBallVelY *= FRICTION;
-//
-//                mBallX += mBallVelX;
-//                mBallY += mBallVelY;
-//
-//                if (mBallX > mWidth) {
-//                    mBallX = mWidth - (mBallX - mWidth);
-//                    mBallVelX = -mBallVelX;
-//                } else if (mBallX < 0) {
-//                    mBallX = -mBallX;
-//                    mBallVelX = -mBallVelX;
-//                }
-//
-//                if (mBallY > mHeight) {
-//                    mBallY = mHeight - (mBallY - mHeight);
-//                    mBallVelY = -mBallVelY;
-//                } else if (mBallY < 0) {
-//                    mBallY = -mBallY;
-//                    mBallVelY = -mBallVelY;
-//                }
-
-
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
-//                canvas.drawCircle(mBallX, mBallY, mBallRadius, mBallPaint);
-                ball.update();
-                ball.render(canvas);
+//                ball.update();
+//                ball.render(canvas);
+                board.update();
+                board.render(canvas);
 
                 mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
                 drawTextVerticallyCentered(canvas, mTextPaintInteractive, hours, mCenterX - 20, mCenterY);
@@ -399,6 +353,37 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         }
 
 
+
+
+
+        class Board {
+
+            int width, height;
+            Ball ball;
+
+            Board() {}
+
+            void initialize(int screenW, int  screenH) {
+                width = screenW;
+                height = screenH;
+                ball = new Ball(this);
+            }
+
+            void update() {
+                ball.update();
+            }
+
+            void render(Canvas canvas) {
+                // @TODO background is drawn before this call, change this at some point
+                ball.render(canvas);
+            }
+
+        }
+
+
+
+
+
         class Ball {
 
             private static final float FRICTION = 0.97f;
@@ -407,24 +392,22 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             private static final int COLOR = Color.WHITE;
 
+            Board parent;
             float x, y, r;
             float velX, velY;
             Paint paint;
 
-            Ball() {
-                x = y = 0;
-                r = 0;
+            Ball(Board parent_) {
+                parent = parent_;
+
+                x = 0.5f * parent.width;
+                y = 0.5f * parent.height;
+                r = RADIUS_FACTOR * parent.width;
                 velX = velY = 0;
 
                 paint = new Paint();
                 paint.setColor(COLOR);
                 paint.setAntiAlias(true);
-            }
-
-            void initialize() {
-                x = 0.5f * mWidth;
-                y = 0.5f * mHeight;
-                r = RADIUS_FACTOR * mWidth;
             }
 
             void update() {
@@ -457,7 +440,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             void render(Canvas canvas) {
                 canvas.drawCircle(x, y, r, paint);
             }
-
 
         }
 
