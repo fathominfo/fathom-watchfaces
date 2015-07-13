@@ -43,7 +43,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private Sensor mSensorAccelerometer;
     private boolean mSensorAccelerometerIsRegistered;
     private float[] gravity = new float[3];
-    private float[] linear_acceleration = new float[3];
+//    private float[] linear_acceleration = new float[3];
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -64,9 +64,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
 
             // Remove the gravity contribution with the high-pass filter.
-            linear_acceleration[0] = event.values[0] - gravity[0];
-            linear_acceleration[1] = event.values[1] - gravity[1];
-            linear_acceleration[2] = event.values[2] - gravity[2];
+//            linear_acceleration[0] = event.values[0] - gravity[0];
+//            linear_acceleration[1] = event.values[1] - gravity[1];
+//            linear_acceleration[2] = event.values[2] - gravity[2];
         }
     }
 
@@ -106,9 +106,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
         private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
 
-        private static final float FRICTION = 0.97f;
-        private static final float ACCEL_REDUCTION_FACTOR = 0.25f;
-        private static final float BALL_RADIUS = 0.03f;     // as a ratio to screen width
+//        private static final float FRICTION = 0.97f;
+//        private static final float ACCEL_FACTOR = 0.25f;
+//        private static final float RADIUS_FACTOR = 0.03f;     // as a ratio to screen width
 
         private boolean mRegisteredTimeZoneReceiver = false;
         //        private boolean mLowBitAmbient;
@@ -129,10 +129,11 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
 
-        private float mBallRadius;
-        private float mBallX, mBallY;
-        private float mBallVelX, mBallVelY;
-        private Paint mBallPaint;
+//        private float mBallRadius;
+//        private float mBallX, mBallY;
+//        private float mBallVelX, mBallVelY;
+//        private Paint mBallPaint;
+        private Ball ball;
 
 
 
@@ -164,10 +165,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             mSensorManager.registerListener(TheTwinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
+            ball = new Ball();
 
-            mBallPaint = new Paint();
-            mBallPaint.setColor(Color.WHITE);
-            mBallPaint.setAntiAlias(true);
+
 
             mTime  = new Time();
         }
@@ -194,6 +194,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 invalidate();
             }
 
+            if (mAmbient) {
+                unregisterTimeZoneReceiver();
+                unregisterAccelerometerSensor();
+            } else {
+                registerTimeZoneReceiver();
+                registerAccelerometerSensor();
+            }
+
             /*
              * Whether the timer should be running depends on whether we're visible (as well as
              * whether we're in ambient mode), so we may need to start or stop the timer.
@@ -209,12 +217,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mHeight = height;
             mCenterX = mWidth / 2f;
             mCenterY = mHeight / 2f;
-
-            mBallRadius = BALL_RADIUS * width;
-            mBallVelX = 0;
-            mBallVelY = 0;
-            mBallX = mCenterX;
-            mBallY = mCenterY;
+//
+//            mBallRadius = BALL_RADIUS * width;
+//            mBallVelX = 0;
+//            mBallVelY = 0;
+//            mBallX = mCenterX;
+//            mBallY = mCenterY;
+//
+            ball.initialize();
 
             mTextHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextPaintInteractive.setTextSize(mTextHeight);
@@ -243,34 +253,37 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             } else {
                 // update ball position
-                mBallVelX += ACCEL_REDUCTION_FACTOR * -gravity[0];
-                mBallVelY += ACCEL_REDUCTION_FACTOR * gravity[1];
+//                mBallVelX += ACCEL_REDUCTION_FACTOR * -gravity[0];
+//                mBallVelY += ACCEL_REDUCTION_FACTOR * gravity[1];
+//
+//                mBallVelX *= FRICTION;
+//                mBallVelY *= FRICTION;
+//
+//                mBallX += mBallVelX;
+//                mBallY += mBallVelY;
+//
+//                if (mBallX > mWidth) {
+//                    mBallX = mWidth - (mBallX - mWidth);
+//                    mBallVelX = -mBallVelX;
+//                } else if (mBallX < 0) {
+//                    mBallX = -mBallX;
+//                    mBallVelX = -mBallVelX;
+//                }
+//
+//                if (mBallY > mHeight) {
+//                    mBallY = mHeight - (mBallY - mHeight);
+//                    mBallVelY = -mBallVelY;
+//                } else if (mBallY < 0) {
+//                    mBallY = -mBallY;
+//                    mBallVelY = -mBallVelY;
+//                }
 
-                mBallVelX *= FRICTION;
-                mBallVelY *= FRICTION;
-
-                mBallX += mBallVelX;
-                mBallY += mBallVelY;
-
-                if (mBallX > mWidth) {
-                    mBallX = mWidth - (mBallX - mWidth);
-                    mBallVelX = -mBallVelX;
-                } else if (mBallX < 0) {
-                    mBallX = -mBallX;
-                    mBallVelX = -mBallVelX;
-                }
-
-                if (mBallY > mHeight) {
-                    mBallY = mHeight - (mBallY - mHeight);
-                    mBallVelY = -mBallVelY;
-                } else if (mBallY < 0) {
-                    mBallY = -mBallY;
-                    mBallVelY = -mBallVelY;
-                }
 
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
-                canvas.drawCircle(mBallX, mBallY, mBallRadius, mBallPaint);
+//                canvas.drawCircle(mBallX, mBallY, mBallRadius, mBallPaint);
+                ball.update();
+                ball.render(canvas);
 
                 mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
                 drawTextVerticallyCentered(canvas, mTextPaintInteractive, hours, mCenterX - 20, mCenterY);
@@ -385,27 +398,71 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
 
-    }
 
-    class Ball {
+        class Ball {
 
-        float x, y, r;
-        float velX, velY;
+            private static final float FRICTION = 0.97f;
+            private static final float ACCEL_FACTOR = 0.25f;
+            private static final float RADIUS_FACTOR = 0.03f;     // as a ratio to screen width
 
-        Ball() {
-            x = 0;
-            y = 0;
-            r = 0;
-            velX = 0;
-            velY = 0;
+            private static final int COLOR = Color.WHITE;
+
+            float x, y, r;
+            float velX, velY;
+            Paint paint;
+
+            Ball() {
+                x = y = 0;
+                r = 0;
+                velX = velY = 0;
+
+                paint = new Paint();
+                paint.setColor(COLOR);
+                paint.setAntiAlias(true);
+            }
+
+            void initialize() {
+                x = 0.5f * mWidth;
+                y = 0.5f * mHeight;
+                r = RADIUS_FACTOR * mWidth;
+            }
+
+            void update() {
+                velX += ACCEL_FACTOR * -gravity[0];
+                velY += ACCEL_FACTOR * gravity[1];
+
+                velX *= FRICTION;
+                velY *= FRICTION;
+
+                x += velX;
+                y += velY;
+
+                if (x > mWidth) {
+                    x = mWidth - (x - mWidth);
+                    velX = -velX;
+                } else if (x < 0) {
+                    x = -x;
+                    velX = -velX;
+                }
+
+                if (y > mHeight) {
+                    y = mHeight - (y - mHeight);
+                    velY = -velY;
+                } else if (y < 0) {
+                    y = -y;
+                    velY = -velY;
+                }
+            }
+
+            void render(Canvas canvas) {
+                canvas.drawCircle(x, y, r, paint);
+            }
+
+
         }
 
-        void set(float x_, float y_, float r_) {
-            x = x_;
-            y = y_;
-            r = r_;
-        }
-
     }
+
+
 
 }

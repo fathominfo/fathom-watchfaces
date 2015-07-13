@@ -28,7 +28,7 @@
         <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="670" column="36" selection-start-line="670" selection-start-column="36" selection-end-line="670" selection-end-column="36" />
+              <caret line="667" column="13" selection-start-line="667" selection-start-column="13" selection-end-line="667" selection-end-column="13" />
               <folding>
                 <element signature="e#4674#4675#0" expanded="true" />
                 <element signature="e#4709#4710#0" expanded="true" />
@@ -47,32 +47,15 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FitDataFaceService.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java">
+      <file leaf-file-name="TheTwinkieFaceService.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.41379312">
-              <caret line="97" column="31" selection-start-line="97" selection-start-column="31" selection-end-line="97" selection-end-column="31" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="BouncingBallFaceService.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/BouncingBallFaceService.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="59" column="0" selection-start-line="59" selection-start-column="0" selection-end-line="59" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AllSensorsFaceService.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/AllSensorsFaceService.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.8472803">
-              <caret line="345" column="0" selection-start-line="345" selection-start-column="0" selection-end-line="345" selection-end-column="0" />
-              <folding />
+            <state vertical-scroll-proportion="0.31902984">
+              <caret line="222" column="9" selection-start-line="222" selection-start-column="9" selection-end-line="225" selection-end-column="2" />
+              <folding>
+                <element signature="e#15975#15976#0" expanded="true" />
+                <element signature="e#16040#16041#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -1603,12 +1586,12 @@
         <option value="$PROJECT_DIR$/fathom-faces/src/main/AndroidManifest.xml" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TerrenceSimpleAnalog.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TimeAndMotionFaceService.java" />
-        <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/SensorFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/BouncingBallFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/AllSensorsFaceService.java" />
+        <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java" />
       </list>
     </option>
   </component>
@@ -2346,14 +2329,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3647059">
-          <caret line="244" column="39" selection-start-line="244" selection-start-column="39" selection-end-line="244" selection-end-column="39" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/SensorFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.40485075">
@@ -2362,10 +2337,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/AllSensorsFaceService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.1641791">
+          <caret line="320" column="0" selection-start-line="320" selection-start-column="0" selection-end-line="320" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/BouncingBallFaceService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.37686568">
+          <caret line="59" column="0" selection-start-line="59" selection-start-column="0" selection-end-line="59" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.050209206">
+          <caret line="97" column="31" selection-start-line="97" selection-start-column="31" selection-end-line="97" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="670" column="36" selection-start-line="670" selection-start-column="36" selection-end-line="670" selection-end-column="36" />
+          <caret line="667" column="13" selection-start-line="667" selection-start-column="13" selection-end-line="667" selection-end-column="13" />
           <folding>
             <element signature="e#4674#4675#0" expanded="true" />
             <element signature="e#4709#4710#0" expanded="true" />
@@ -2383,27 +2382,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java">
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.41379312">
-          <caret line="97" column="31" selection-start-line="97" selection-start-column="31" selection-end-line="97" selection-end-column="31" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/BouncingBallFaceService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="59" column="0" selection-start-line="59" selection-start-column="0" selection-end-line="59" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/AllSensorsFaceService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.8472803">
-          <caret line="345" column="0" selection-start-line="345" selection-start-column="0" selection-end-line="345" selection-end-column="0" />
-          <folding />
+        <state vertical-scroll-proportion="0.31902984">
+          <caret line="222" column="9" selection-start-line="222" selection-start-column="9" selection-end-line="225" selection-end-column="2" />
+          <folding>
+            <element signature="e#15975#15976#0" expanded="true" />
+            <element signature="e#16040#16041#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
