@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AndroidLogFilters">
-    <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="Show only selected application" />
-  </component>
   <component name="ChangeListManager">
     <list default="true" id="33a2f52f-6f97-4c8d-a19e-b3200be781ed" name="Default" comment="" />
     <ignored path="fathom-watchfaces.iws" />
@@ -27,14 +24,14 @@
       <file leaf-file-name="TheTwinkieFaceService.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="1.0690298">
-              <caret line="424" column="108" selection-start-line="424" selection-start-column="108" selection-end-line="424" selection-end-column="108" />
+            <state vertical-scroll-proportion="1.2350746">
+              <caret line="196" column="81" selection-start-line="196" selection-start-column="81" selection-end-line="196" selection-end-column="81" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#13897#13898#0" expanded="true" />
-                <element signature="e#13942#13943#0" expanded="true" />
-                <element signature="e#18088#18089#0" expanded="true" />
-                <element signature="e#18153#18154#0" expanded="true" />
+                <element signature="e#14305#14306#0" expanded="true" />
+                <element signature="e#14350#14351#0" expanded="true" />
+                <element signature="e#18617#18618#0" expanded="true" />
+                <element signature="e#18682#18683#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -1875,8 +1872,8 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1066" extended-state="6" />
-    <editor active="false" />
+    <frame x="-8" y="-8" width="1936" height="1066" extended-state="7" />
+    <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -2364,14 +2361,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.0690298">
-          <caret line="424" column="108" selection-start-line="424" selection-start-column="108" selection-end-line="424" selection-end-column="108" />
+        <state vertical-scroll-proportion="1.2350746">
+          <caret line="196" column="81" selection-start-line="196" selection-start-column="81" selection-end-line="196" selection-end-column="81" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#13897#13898#0" expanded="true" />
-            <element signature="e#13942#13943#0" expanded="true" />
-            <element signature="e#18088#18089#0" expanded="true" />
-            <element signature="e#18153#18154#0" expanded="true" />
+            <element signature="e#14305#14306#0" expanded="true" />
+            <element signature="e#14350#14351#0" expanded="true" />
+            <element signature="e#18617#18618#0" expanded="true" />
+            <element signature="e#18682#18683#0" expanded="true" />
           </folding>
         </state>
       </provider>

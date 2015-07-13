@@ -103,6 +103,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
         private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
 
+        private static final int RESET_CRACK_THRESHOLD = 5;  // very nth glance, cracks will be reset (0 makes does no resetting)
+
 
         private boolean mRegisteredTimeZoneReceiver = false;
         //        private boolean mLowBitAmbient;
@@ -122,6 +124,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 //        private Ball ball;
         private Board board;
+
+        private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
 
 
@@ -186,6 +190,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             } else {
                 registerTimeZoneReceiver();
                 registerAccelerometerSensor();
+
+                glances++;
+
+                if (RESET_CRACK_THRESHOLD > 0) {
+                    if (glances % RESET_CRACK_THRESHOLD == 0) board.resetBoard();
+                }
             }
 
             /*
@@ -433,6 +443,11 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 if (bounceCount >= bounces.length) {
                     bounces = Arrays.copyOf(bounces, 2 * bounces.length);
                 }
+            }
+
+            void resetBoard() {
+                bounces = new Bounce[4];
+                bounceCount = 0;
             }
 
         }
