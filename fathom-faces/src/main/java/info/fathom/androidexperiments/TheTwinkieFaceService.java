@@ -24,6 +24,7 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.TimeZone;
+import java.util.Arrays;
 
 
 public class TheTwinkieFaceService extends CanvasWatchFaceService implements SensorEventListener {
@@ -226,6 +227,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
+                board.render(canvas, true);
+
                 mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
                 drawTextVerticallyCentered(canvas, mTextPaintAmbient, hours, mCenterX - 20, mCenterY);  // @TODO: be screen programmatic here
                 mTextPaintAmbient.setTextAlign(Paint.Align.LEFT);
@@ -234,10 +237,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             } else {
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
-//                ball.update();
-//                ball.render(canvas);
                 board.update();
-                board.render(canvas);
+                board.render(canvas, false);
 
                 mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
                 drawTextVerticallyCentered(canvas, mTextPaintInteractive, hours, mCenterX - 20, mCenterY);
@@ -358,8 +359,16 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         class Board {
 
+            static final boolean AVOID_DUPLICATE_SIDES = true;
+
             int width, height;
             Ball ball;
+            int bounceCount;
+            Bounce[] bounces;
+
+            Paint linePaintAmbient;
+            Paint linePaintInteractive;
+
 
             Board() {}
 
@@ -367,20 +376,66 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 width = screenW;
                 height = screenH;
                 ball = new Ball(this);
+                bounceCount = 0;
+                bounces = new Bounce[4];
+
+                linePaintAmbient = new Paint();
+                linePaintAmbient.setColor(Color.GRAY);
+                linePaintAmbient.setStrokeWidth(1.0f);
+                linePaintAmbient.setAntiAlias(false);
+                linePaintAmbient.setStrokeCap(Paint.Cap.ROUND);
+
+                linePaintInteractive = new Paint();
+                linePaintInteractive.setColor(Color.WHITE);
+                linePaintInteractive.setStrokeWidth(1.0f);
+                linePaintInteractive.setAntiAlias(true);
+                linePaintInteractive.setStrokeCap(Paint.Cap.ROUND);
+
             }
 
             void update() {
                 ball.update();
             }
 
-            void render(Canvas canvas) {
+            void render(Canvas canvas, boolean ambientMode) {
                 // @TODO background is drawn before this call, change this at some point
-                ball.render(canvas);
+
+                if (ambientMode) {
+                    for (int i = 0; i < bounceCount - 1; i++) {
+                        canvas.drawLine(bounces[i].x, bounces[i].y,
+                                bounces[i + 1].x, bounces[i + 1].y, linePaintAmbient);
+                    }
+
+                } else {
+                    for (int i = 0; i < bounceCount - 1; i++) {
+                        canvas.drawLine(bounces[i].x, bounces[i].y,
+                                bounces[i + 1].x, bounces[i + 1].y, linePaintInteractive);
+                    }
+
+                    ball.render(canvas);
+                }
+
+            }
+
+            void addBounce(int xpos, int ypos) {
+
+                Bounce bounce = new Bounce(xpos, ypos);
+
+                // If repeating bouncing side, do not add it to the list
+                if (AVOID_DUPLICATE_SIDES && bounceCount > 0 && bounce.side == bounces[bounceCount - 1].side) {
+                    return;
+                }
+
+                // Otherwise, add it to the array
+                bounces[bounceCount++] = bounce;
+
+                // Double the side of the array if necessary
+                if (bounceCount >= bounces.length) {
+                    bounces = Arrays.copyOf(bounces, 2 * bounces.length);
+                }
             }
 
         }
-
-
 
 
 
@@ -420,27 +475,68 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 x += velX;
                 y += velY;
 
-                if (x > mWidth) {
-                    x = mWidth - (x - mWidth);
+
+                // @TODO fix case where ball is out of two bounds simultaneously (bounce coords override)
+                // @TODO in general, make this check more programmatic
+                boolean bounce = false;
+                int bounceX = 0, bounceY = 0;
+                if (x > parent.width) {
+                    bounce = true;
+                    bounceX = parent.width;
+                    bounceY = Math.round( y - velY + velY * x / parent.width );  // proportional height at bounce
+                    x = parent.width - (x - parent.width);
                     velX = -velX;
+
                 } else if (x < 0) {
+                    bounce = true;
+                    bounceX = 0;
+                    bounceY = Math.round( y - velY + velY * x / parent.width );  // proportional height at bounce
                     x = -x;
                     velX = -velX;
                 }
 
                 if (y > mHeight) {
+                    bounce = true;
+                    bounceX = Math.round( x - velX + velX * y / parent.height );  // proportional height at bounce
+                    bounceY = parent.height;
                     y = mHeight - (y - mHeight);
                     velY = -velY;
+
                 } else if (y < 0) {
+                    bounce = true;
+                    bounceX = Math.round( x - velX + velX * y / parent.height );  // proportional height at bounce
+                    bounceY = 0;
                     y = -y;
                     velY = -velY;
                 }
+
+                if (bounce) {
+                    parent.addBounce(bounceX, bounceY);
+                }
+
+
+
             }
 
             void render(Canvas canvas) {
                 canvas.drawCircle(x, y, r, paint);
             }
 
+        }
+
+        class Bounce {
+            int x, y;
+            int side;  // 0 for top... 3 for left (clockwise)
+
+            Bounce(int x_, int y_) {
+                x = x_;
+                y = y_;
+
+                if (x == 0)            side = 3;
+                else if (x == mWidth)  side = 1;
+                else if (y == 0)       side = 0;
+                else if (y == mHeight) side = 2;
+            }
         }
 
     }
