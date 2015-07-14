@@ -24,6 +24,8 @@ import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.Arrays;
 
@@ -463,6 +465,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             Triangle[] triangles;
             int bounceCount, triangleCount;
 
+            List<Triangle> updateList = new ArrayList<>();
+
             Paint linePaint;
             Paint trianglePaint;
 
@@ -495,6 +499,17 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             void update() {
                 ball.update();
+
+                for (Triangle tt : updateList) {
+                    tt.update();
+                }
+
+                for (int i = updateList.size() - 1; i >= 0; i--) {
+                    if (!updateList.get(i).animate) {
+                        updateList.remove(i);
+//                        Log.v(TAG, "Removed triangle " + i);
+                    }
+                }
             }
 
             void render(Canvas canvas, boolean ambientMode) {
@@ -528,8 +543,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 bounces[bounceCount++] = bounce;
 
                 if (bounceCount > 2) {
-                    triangles[triangleCount++] = new Triangle(bounces[bounceCount - 3],
+                    Triangle t = new Triangle(bounces[bounceCount - 3],
                             bounces[bounceCount - 2], bounces[bounceCount - 1]);
+                    triangles[triangleCount++] = t;
+                    updateList.add(t);
                 }
 
                 // Double the side of the arrays if necessary
@@ -544,6 +561,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             void resetBoard() {
                 bounces = new Bounce[4];
                 bounceCount = 0;
+                triangles = new Triangle[4];
+                triangleCount = 0;
             }
 
         }
@@ -555,9 +574,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
         class Triangle {
+            private final static float ANIM_SPEED = 0.25f;
+            private final static int END_THRESHOLD = 5;
+
             Bounce start, middle, end;
             Path path;
             int color;
+            boolean animate;
+            float endX, endY;
 
             Triangle(Bounce start_, Bounce middle_, Bounce end_) {
                 start = start_;
@@ -566,11 +590,40 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 color = end.color;
 
+                animate = true;
+                endX = middle.x;
+                endY = middle.y;
+
                 path = new Path();
                 path.moveTo(start.x, start.y);
                 path.lineTo(middle.x, middle.y);
-                path.lineTo(end.x, end.y);
+                path.lineTo(endX, endY);
 
+            }
+
+            boolean update() {
+
+                float diffX = end.x - endX,
+                        diffY = end.y - endY;
+
+                if (diffX < END_THRESHOLD && diffY < END_THRESHOLD) {
+                    endX = end.x;
+                    endY = end.y;
+                    animate = false;
+                } else {
+                    endX += ANIM_SPEED * diffX;
+                    endY += ANIM_SPEED * diffY;
+                }
+
+//                path.rewind();
+//                path.lineTo(endX, endY);
+                path.reset();
+                path.moveTo(start.x, start.y);
+                path.lineTo(middle.x, middle.y);
+                path.lineTo(endX, endY);
+
+//                Log.v(TAG, "Updated triangle " + this.toString() + ", needs update: " + animate);
+                return animate;
             }
 
             void render(Canvas canvas, Paint paint) {
