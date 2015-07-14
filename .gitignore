@@ -27,4 +27,4 @@ proguard/
 *.log
 
 # workspace?
-/.idea
+.idea/
