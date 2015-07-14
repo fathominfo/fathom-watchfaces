@@ -26,5 +26,5 @@ proguard/
 # Log Files
 *.log
 
-# workspace?
-.idea/
+# IDE (also did this: http://stackoverflow.com/a/18162552/1934487)
+.idea/*
