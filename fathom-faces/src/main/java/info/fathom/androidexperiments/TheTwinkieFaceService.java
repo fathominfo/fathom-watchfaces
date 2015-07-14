@@ -49,9 +49,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private float[] gravity = new float[3];
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-//        Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -110,7 +108,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
         private boolean mRegisteredTimeZoneReceiver = false;
-        //        private boolean mLowBitAmbient;
+//        private boolean mLowBitAmbient;
 //        private boolean mBurnInProtection;
         private boolean mAmbient;
 
@@ -159,7 +157,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             mSensorManager.registerListener(TheTwinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
-//            ball = new Ball();
             board = new Board();
 
             mTime  = new Time();
@@ -217,7 +214,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mCenterX = mWidth / 2f;
             mCenterY = mHeight / 2f;
 
-//            ball.initialize();
             board.initialize(mWidth, mHeight);
 
             mTextHeight = TEXT_DIGITS_HEIGHT * mHeight;
@@ -492,9 +488,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 trianglePaint.setColor(Color.WHITE);
                 trianglePaint.setStyle(Paint.Style.FILL);
                 trianglePaint.setAntiAlias(true);
-//                trianglePaint.setStrokeWidth(1.0f);
-//                trianglePaint.setStrokeCap(Paint.Cap.ROUND);
-
             }
 
             void update() {
@@ -507,7 +500,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 for (int i = updateList.size() - 1; i >= 0; i--) {
                     if (!updateList.get(i).animate) {
                         updateList.remove(i);
-//                        Log.v(TAG, "Removed triangle " + i);
                     }
                 }
             }
@@ -598,7 +590,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 path.moveTo(start.x, start.y);
                 path.lineTo(middle.x, middle.y);
                 path.lineTo(endX, endY);
-
             }
 
             boolean update() {
@@ -615,14 +606,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     endY += ANIM_SPEED * diffY;
                 }
 
-//                path.rewind();
-//                path.lineTo(endX, endY);
-                path.reset();
+//                path.reset();
+                path.rewind();  // better performance
                 path.moveTo(start.x, start.y);
                 path.lineTo(middle.x, middle.y);
                 path.lineTo(endX, endY);
 
-//                Log.v(TAG, "Updated triangle " + this.toString() + ", needs update: " + animate);
                 return animate;
             }
 
