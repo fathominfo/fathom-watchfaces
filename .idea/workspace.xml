@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AndroidLogFilters">
+    <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="Show only selected application" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="33a2f52f-6f97-4c8d-a19e-b3200be781ed" name="Default" comment="" />
     <ignored path="fathom-watchfaces.iws" />
@@ -24,14 +27,21 @@
       <file leaf-file-name="TheTwinkieFaceService.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="1.2350746">
-              <caret line="196" column="81" selection-start-line="196" selection-start-column="81" selection-end-line="196" selection-end-column="81" />
+            <state vertical-scroll-proportion="0.26369864">
+              <caret line="490" column="0" selection-start-line="490" selection-start-column="0" selection-end-line="491" selection-end-column="62" />
               <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#14305#14306#0" expanded="true" />
-                <element signature="e#14350#14351#0" expanded="true" />
-                <element signature="e#18617#18618#0" expanded="true" />
-                <element signature="e#18682#18683#0" expanded="true" />
+                <element signature="e#2511#2512#0" expanded="true" />
+                <element signature="e#2546#2547#0" expanded="true" />
+                <element signature="e#2780#3458#0" expanded="true" />
+                <element signature="e#3457#3458#0" expanded="true" />
+                <element signature="e#10268#10506#0" expanded="true" />
+                <element signature="e#10505#10506#0" expanded="true" />
+                <element signature="e#12285#12286#0" expanded="true" />
+                <element signature="e#12349#12350#0" expanded="true" />
+                <element signature="e#15874#15875#0" expanded="true" />
+                <element signature="e#15939#15940#0" expanded="true" />
+                <element signature="e#17218#17219#0" expanded="true" />
+                <element signature="e#17263#17264#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -1604,8 +1614,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
-      <pane id="ProjectPane" />
       <pane id="AndroidView">
         <subPane>
           <PATH>
@@ -1649,6 +1657,8 @@
         </subPane>
       </pane>
       <pane id="Scratches" />
+      <pane id="Scope" />
+      <pane id="ProjectPane" />
       <pane id="PackagesPane" />
     </panes>
   </component>
@@ -1872,7 +1882,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1066" extended-state="7" />
+    <frame x="-8" y="-8" width="1936" height="1066" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -1886,7 +1896,7 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3108407" sideWeight="0.48507464" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Android" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3761062" sideWeight="0.6151386" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.35730088" sideWeight="0.6151386" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21481876" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -2222,13 +2232,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="jar://$PROJECT_DIR$/fathom-faces/build/intermediates/exploded-aar/com.google.android.support/wearable/1.1.0/classes.jar!/android/support/wearable/watchface/WatchFaceService.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.34621578">
-          <caret line="183" column="29" selection-start-line="183" selection-start-column="29" selection-end-line="183" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://C:/android-sdk/platforms/android-21/android.jar!/android/util/Log.class">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.096618354">
@@ -2338,37 +2341,39 @@
         </state>
       </provider>
     </entry>
+    <entry file="jar://$PROJECT_DIR$/fathom-faces/build/intermediates/exploded-aar/com.google.android.support/wearable/1.1.0/classes.jar!/android/support/wearable/watchface/WatchFaceService.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-129.6">
+          <caret line="248" column="60" selection-start-line="248" selection-start-column="60" selection-end-line="248" selection-end-column="60" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.38356164">
-          <caret line="775" column="31" selection-start-line="775" selection-start-column="31" selection-end-line="775" selection-end-column="31" />
-          <folding>
-            <element signature="e#4674#4675#0" expanded="true" />
-            <element signature="e#4709#4710#0" expanded="true" />
-            <element signature="e#4939#5663#0" expanded="true" />
-            <element signature="e#5662#5663#0" expanded="true" />
-            <element signature="e#15740#15978#0" expanded="true" />
-            <element signature="e#15977#15978#0" expanded="true" />
-            <element signature="e#18719#18720#0" expanded="true" />
-            <element signature="e#18783#18784#0" expanded="true" />
-            <element signature="e#28725#28726#0" expanded="true" />
-            <element signature="e#28802#28803#0" expanded="true" />
-            <element signature="e#30602#30603#0" expanded="true" />
-            <element signature="e#30663#30664#0" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="0.6238698">
+          <caret line="139" column="76" selection-start-line="139" selection-start-column="76" selection-end-line="139" selection-end-column="76" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.2350746">
-          <caret line="196" column="81" selection-start-line="196" selection-start-column="81" selection-end-line="196" selection-end-column="81" />
+        <state vertical-scroll-proportion="0.26369864">
+          <caret line="490" column="0" selection-start-line="490" selection-start-column="0" selection-end-line="491" selection-end-column="62" />
           <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#14305#14306#0" expanded="true" />
-            <element signature="e#14350#14351#0" expanded="true" />
-            <element signature="e#18617#18618#0" expanded="true" />
-            <element signature="e#18682#18683#0" expanded="true" />
+            <element signature="e#2511#2512#0" expanded="true" />
+            <element signature="e#2546#2547#0" expanded="true" />
+            <element signature="e#2780#3458#0" expanded="true" />
+            <element signature="e#3457#3458#0" expanded="true" />
+            <element signature="e#10268#10506#0" expanded="true" />
+            <element signature="e#10505#10506#0" expanded="true" />
+            <element signature="e#12285#12286#0" expanded="true" />
+            <element signature="e#12349#12350#0" expanded="true" />
+            <element signature="e#15874#15875#0" expanded="true" />
+            <element signature="e#15939#15940#0" expanded="true" />
+            <element signature="e#17218#17219#0" expanded="true" />
+            <element signature="e#17263#17264#0" expanded="true" />
           </folding>
         </state>
       </provider>

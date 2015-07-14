@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
@@ -47,7 +48,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
+//        Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
     }
 
     @Override
@@ -365,95 +366,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
 
-
-
-        class Board {
-
-            static final boolean AVOID_DUPLICATE_SIDES = true;
-
-            int width, height;
-            Ball ball;
-            int bounceCount;
-            Bounce[] bounces;
-
-            Paint linePaintAmbient;
-            Paint linePaintInteractive;
-
-
-            Board() {}
-
-            void initialize(int screenW, int  screenH) {
-                width = screenW;
-                height = screenH;
-                ball = new Ball(this);
-                bounceCount = 0;
-                bounces = new Bounce[4];
-
-                linePaintAmbient = new Paint();
-                linePaintAmbient.setColor(Color.GRAY);
-                linePaintAmbient.setStrokeWidth(1.0f);
-                linePaintAmbient.setAntiAlias(false);
-                linePaintAmbient.setStrokeCap(Paint.Cap.ROUND);
-
-                linePaintInteractive = new Paint();
-                linePaintInteractive.setColor(Color.WHITE);
-                linePaintInteractive.setStrokeWidth(1.0f);
-                linePaintInteractive.setAntiAlias(true);
-                linePaintInteractive.setStrokeCap(Paint.Cap.ROUND);
-
-            }
-
-            void update() {
-                ball.update();
-            }
-
-            void render(Canvas canvas, boolean ambientMode) {
-                // @TODO background is drawn before this call, change this at some point
-
-                if (ambientMode) {
-                    for (int i = 0; i < bounceCount - 1; i++) {
-                        canvas.drawLine(bounces[i].x, bounces[i].y,
-                                bounces[i + 1].x, bounces[i + 1].y, linePaintAmbient);
-                    }
-
-                } else {
-                    for (int i = 0; i < bounceCount - 1; i++) {
-                        canvas.drawLine(bounces[i].x, bounces[i].y,
-                                bounces[i + 1].x, bounces[i + 1].y, linePaintInteractive);
-                    }
-
-                    ball.render(canvas);
-                }
-
-            }
-
-            void addBounce(int xpos, int ypos) {
-
-                Bounce bounce = new Bounce(xpos, ypos);
-
-                // If repeating bouncing side, do not add it to the list
-                if (AVOID_DUPLICATE_SIDES && bounceCount > 0 && bounce.side == bounces[bounceCount - 1].side) {
-                    return;
-                }
-
-                // Otherwise, add it to the array
-                bounces[bounceCount++] = bounce;
-
-                // Double the side of the array if necessary
-                if (bounceCount >= bounces.length) {
-                    bounces = Arrays.copyOf(bounces, 2 * bounces.length);
-                }
-            }
-
-            void resetBoard() {
-                bounces = new Bounce[4];
-                bounceCount = 0;
-            }
-
-        }
-
-
-
         class Ball {
 
             private static final float FRICTION = 0.97f;
@@ -536,12 +448,144 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             void render(Canvas canvas) {
                 canvas.drawCircle(x, y, r, paint);
             }
+        }
+
+
+
+        class Board {
+
+            static final boolean AVOID_DUPLICATE_SIDES = true;
+
+            int width, height;
+            Ball ball;
+
+            Bounce[] bounces;
+            Triangle[] triangles;
+            int bounceCount, triangleCount;
+
+            Paint linePaint;
+            Paint trianglePaint;
+
+            Board() {}
+
+            void initialize(int screenW, int  screenH) {
+                width = screenW;
+                height = screenH;
+                ball = new Ball(this);
+
+                bounces = new Bounce[4];
+                bounceCount = 0;
+                triangles = new Triangle[4];
+                triangleCount = 0;
+
+                linePaint = new Paint();
+                linePaint.setColor(Color.GRAY);
+                linePaint.setStrokeWidth(1.0f);
+                linePaint.setAntiAlias(false);
+                linePaint.setStrokeCap(Paint.Cap.ROUND);
+
+                trianglePaint = new Paint();
+                trianglePaint.setColor(Color.WHITE);
+                trianglePaint.setStyle(Paint.Style.FILL);
+                trianglePaint.setAntiAlias(true);
+//                trianglePaint.setStrokeWidth(1.0f);
+//                trianglePaint.setStrokeCap(Paint.Cap.ROUND);
+
+            }
+
+            void update() {
+                ball.update();
+            }
+
+            void render(Canvas canvas, boolean ambientMode) {
+                // @TODO background is drawn before this call, change this at some point
+
+                if (ambientMode) {
+                    for (int i = 0; i < bounceCount - 1; i++) {
+                        canvas.drawLine(bounces[i].x, bounces[i].y,
+                                bounces[i + 1].x, bounces[i + 1].y, linePaint);
+                    }
+
+                } else {
+                    for (int i = 0; i < triangleCount; i++) {
+                        triangles[i].render(canvas, trianglePaint);
+                    }
+                    ball.render(canvas);
+                }
+            }
+
+            void addBounce(int xpos, int ypos) {
+                Bounce bounce = new Bounce(xpos, ypos);
+
+                // If repeating bouncing side, do not add it to the list
+                if (AVOID_DUPLICATE_SIDES
+                        && bounceCount > 0
+                        && bounce.side == bounces[bounceCount - 1].side) {
+                    return;
+                }
+
+                // Otherwise, add it to the array
+                bounces[bounceCount++] = bounce;
+
+                if (bounceCount > 2) {
+                    triangles[triangleCount++] = new Triangle(bounces[bounceCount - 3],
+                            bounces[bounceCount - 2], bounces[bounceCount - 1]);
+                }
+
+                // Double the side of the arrays if necessary
+                if (bounceCount >= bounces.length) {
+                    bounces = Arrays.copyOf(bounces, 2 * bounces.length);
+                }
+                if (triangleCount >= triangles.length) {
+                    triangles = Arrays.copyOf(triangles, 2 * triangles.length);
+                }
+            }
+
+            void resetBoard() {
+                bounces = new Bounce[4];
+                bounceCount = 0;
+            }
 
         }
+
+
+
+
+
+
+
+        class Triangle {
+            Bounce start, middle, end;
+            Path path;
+            int color;
+
+            Triangle(Bounce start_, Bounce middle_, Bounce end_) {
+                start = start_;
+                middle = middle_;
+                end = end_;
+
+                color = end.color;
+
+                path = new Path();
+                path.moveTo(start.x, start.y);
+                path.lineTo(middle.x, middle.y);
+                path.lineTo(end.x, end.y);
+
+            }
+
+            void render(Canvas canvas, Paint paint) {
+                paint.setColor(color);
+                canvas.drawPath(path, paint);
+            }
+
+        }
+
+
 
         class Bounce {
             int x, y;
             int side;  // 0 for top... 3 for left (clockwise)
+            int color;
 
             Bounce(int x_, int y_) {
                 x = x_;
@@ -551,7 +595,18 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 else if (x == mWidth)  side = 1;
                 else if (y == 0)       side = 0;
                 else if (y == mHeight) side = 2;
+
+                newColor();
             }
+
+            void newColor() {
+                color = Color.argb(63,
+                        (int) (255 * Math.random()),
+                        (int) (255 * Math.random()),
+                        (int) (255 * Math.random())
+                        );
+            }
+
         }
 
     }
