@@ -159,9 +159,30 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
 //            eyeBig = new Eye(0, 0, 100, 50, 1);
 //            eyeSmall = new Eye(50, -50, 50, 25, 1);
+
             eyeMosaic = new EyeMosaic();
             eyeMosaic.addEye(0, 0, 100, 50, 1);
-            eyeMosaic.addEye(50, -50, 50, 25, 1);
+
+            eyeMosaic.addEye( 50, -40, 50, 25, 1);
+            eyeMosaic.addEye(-50, -40, 50, 25, 1);
+            eyeMosaic.addEye(-50,  40, 50, 25, 1);
+            eyeMosaic.addEye( 50,  40, 50, 25, 1);
+
+            eyeMosaic.addEye( 25, -60, 25, 13, 1);  // around topright eye
+            eyeMosaic.addEye( 75, -60, 25, 13, 1);
+            eyeMosaic.addEye( 75, -20, 25, 13, 1);
+
+            eyeMosaic.addEye( 25,  60, 25, 13, 1);  // around bottomright eye
+            eyeMosaic.addEye( 75,  60, 25, 13, 1);
+            eyeMosaic.addEye( 75,  20, 25, 13, 1);
+
+            eyeMosaic.addEye(-25,  60, 25, 13, 1);  // around bottomleft eye
+            eyeMosaic.addEye(-75,  60, 25, 13, 1);
+            eyeMosaic.addEye(-75,  20, 25, 13, 1);
+
+            eyeMosaic.addEye(-25, -60, 25, 13, 1);  // around topleft eye
+            eyeMosaic.addEye(-75, -60, 25, 13, 1);
+            eyeMosaic.addEye(-75, -20, 25, 13, 1);
 
             mTime  = new Time();
         }
@@ -197,8 +218,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 registerAccelerometerSensor();
 
                 glances++;
-                eyeMosaic.addEye();
-
+//                eyeMosaic.addEye();
+                eyeMosaic.setBlinkChance(glances);
             }
 
             /*
@@ -246,6 +267,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 canvas.translate(mCenterX, mCenterY);
                 canvas.rotate(screenRotation);
+                canvas.scale(1.5f, 1.5f);
 //                canvas.drawLine(0, 0, 0, 100, mLinePaint);
 //                canvas.drawLine(-50, 0, 50, 0, mLinePaint);
 //                eyeBig.render(canvas);
@@ -358,7 +380,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         class EyeMosaic {
 
-            static final float BLINK_PROBABILITY = 0.05f;  // 0 is never, 1 every frame
+//            static final float BLINK_PROBABILITY = 0.05f;  // 0 is never, 1 every frame
+            float blinkChance;
 
             Eye[] eyes;
             int eyeCount;
@@ -368,13 +391,15 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             EyeMosaic() {
                 eyes = new Eye[8];
                 eyeCount = 0;
+                blinkChance = 0;
             }
 
             void update() {
 
                 // trigger a random eye to blink
-                if (Math.random() < BLINK_PROBABILITY) {
-                    int id = (int) (eyeCount * Math.random());
+//                if (Math.random() < BLINK_PROBABILITY) {
+                if (Math.random() < blinkChance) {
+                    int id = (int) (eyeCount * Math.random());  //@TODO change to always hitting an eye to blink?
                     if (!eyes[id].blinking) {
                         eyes[id].blink();
                         updateList.add(eyes[id]);
@@ -424,6 +449,10 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 if (eyeCount == eyes.length) {
                     eyes = Arrays.copyOf(eyes, 2 * eyes.length);
                 }
+            }
+
+            void setBlinkChance(float glances) {
+                blinkChance = glances / eyeCount;  //@TODO account for changes in blinkChance when an eye is added
             }
 
 
