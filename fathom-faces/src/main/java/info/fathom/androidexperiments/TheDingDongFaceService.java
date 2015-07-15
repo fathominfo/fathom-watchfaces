@@ -326,7 +326,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             final String minutes = String.format("%02d", mTime.minute);
 
             // Start drawing watch elements
-            canvas.save();
+//            canvas.save();
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background

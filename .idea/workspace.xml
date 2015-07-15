@@ -24,22 +24,63 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="TheTwinkieFaceService.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="TheDingDongFaceService.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-10.24138">
+              <caret line="329" column="0" selection-start-line="329" selection-start-column="0" selection-end-line="329" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TheTwinkieFaceService.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.34246576">
-              <caret line="46" column="40" selection-start-line="32" selection-start-column="26" selection-end-line="46" selection-end-column="40" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="383" column="16" selection-start-line="383" selection-start-column="16" selection-end-line="385" selection-end-column="41" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AndroidManifest.xml" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/AndroidManifest.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="147" column="59" selection-start-line="147" selection-start-column="59" selection-end-line="147" selection-end-column="59" />
               <folding>
-                <element signature="e#2490#2491#0" expanded="true" />
-                <element signature="e#2525#2526#0" expanded="true" />
-                <element signature="e#2759#3437#0" expanded="true" />
-                <element signature="e#3436#3437#0" expanded="true" />
-                <element signature="e#10173#10411#0" expanded="true" />
-                <element signature="e#10410#10411#0" expanded="true" />
-                <element signature="e#12190#12191#0" expanded="true" />
-                <element signature="e#12254#12255#0" expanded="true" />
-                <element signature="e#15779#15780#0" expanded="true" />
-                <element signature="e#15844#15845#0" expanded="true" />
+                <element signature="e#1333#1351#0" expanded="true" />
+                <element signature="e#1551#1580#0" expanded="true" />
+                <element signature="e#2498#2528#0" expanded="true" />
+                <element signature="e#3439#3460#0" expanded="true" />
+                <element signature="e#4361#4389#0" expanded="true" />
+                <element signature="e#5297#5320#0" expanded="true" />
+                <element signature="e#6200#6226#0" expanded="true" />
+                <element signature="e#7125#7149#0" expanded="true" />
+                <element signature="e#8049#8071#0" expanded="true" />
+                <element signature="e#8969#8991#0" expanded="true" />
+                <element signature="e#9899#9938#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TheBlinkieFaceService.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheBlinkieFaceService.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.6682927">
+              <caret line="383" column="31" selection-start-line="383" selection-start-column="31" selection-end-line="383" selection-end-column="31" />
+              <folding>
+                <element signature="imports" expanded="true" />
+                <element signature="e#2544#2545#0" expanded="true" />
+                <element signature="e#2579#2580#0" expanded="true" />
+                <element signature="e#2813#3491#0" expanded="true" />
+                <element signature="e#3490#3491#0" expanded="true" />
+                <element signature="e#9914#10152#0" expanded="true" />
+                <element signature="e#10151#10152#0" expanded="true" />
+                <element signature="e#11931#11932#0" expanded="true" />
+                <element signature="e#11995#11996#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -1567,16 +1608,17 @@
       <list>
         <option value="$PROJECT_DIR$/fathom-faces/src/main/res/values/dimens.xml" />
         <option value="$PROJECT_DIR$/fathom-faces/build.gradle" />
-        <option value="$PROJECT_DIR$/fathom-faces/src/main/res/values/strings.xml" />
-        <option value="$PROJECT_DIR$/fathom-faces/src/main/AndroidManifest.xml" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TerrenceSimpleAnalog.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TimeAndMotionFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/SensorFaceService.java" />
-        <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/BouncingBallFaceService.java" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/AllSensorsFaceService.java" />
+        <option value="$PROJECT_DIR$/fathom-faces/src/main/res/values/strings.xml" />
         <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java" />
+        <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java" />
+        <option value="$PROJECT_DIR$/fathom-faces/src/main/AndroidManifest.xml" />
+        <option value="$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheBlinkieFaceService.java" />
       </list>
     </option>
   </component>
@@ -1612,6 +1654,8 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scratches" />
+      <pane id="ProjectPane" />
       <pane id="AndroidView">
         <subPane>
           <PATH>
@@ -1633,6 +1677,28 @@
               <option name="myItemId" value="fathom-faces" />
               <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
             </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="res" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidResFolderNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="fathom-watchfaces" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="fathom-faces" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="res" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidResFolderNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="values" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidResFolderTypeNode" />
+            </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
@@ -1652,11 +1718,23 @@
               <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidPsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="fathom-watchfaces" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="fathom-faces" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidModuleNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="manifests" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidManifestsGroupNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
       <pane id="Scope" />
-      <pane id="ProjectPane" />
       <pane id="PackagesPane" />
     </panes>
   </component>
@@ -1891,14 +1969,13 @@
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3108407" sideWeight="0.48507464" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.22013274" sideWeight="0.48507464" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.35730088" sideWeight="0.6151386" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Android" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.28871682" sideWeight="0.6151386" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21481876" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -1909,6 +1986,7 @@
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32964602" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -1932,14 +2010,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/FitDataFaceService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="8" selection-start-line="0" selection-start-column="8" selection-end-line="0" selection-end-column="38" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/build.gradle">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1974,9 +2044,10 @@
             <element signature="e#4361#4389#0" expanded="true" />
             <element signature="e#5297#5320#0" expanded="true" />
             <element signature="e#6200#6226#0" expanded="true" />
-            <element signature="e#7107#7131#0" expanded="true" />
-            <element signature="e#8031#8053#0" expanded="true" />
-            <element signature="e#8943#8982#0" expanded="true" />
+            <element signature="e#7125#7149#0" expanded="true" />
+            <element signature="e#8049#8071#0" expanded="true" />
+            <element signature="e#8969#8991#0" expanded="true" />
+            <element signature="e#9899#9938#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -2015,9 +2086,10 @@
             <element signature="e#4361#4389#0" expanded="true" />
             <element signature="e#5297#5320#0" expanded="true" />
             <element signature="e#6200#6226#0" expanded="true" />
-            <element signature="e#7107#7131#0" expanded="true" />
-            <element signature="e#8031#8053#0" expanded="true" />
-            <element signature="e#8943#8982#0" expanded="true" />
+            <element signature="e#7125#7149#0" expanded="true" />
+            <element signature="e#8049#8071#0" expanded="true" />
+            <element signature="e#8969#8991#0" expanded="true" />
+            <element signature="e#9899#9938#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -2056,9 +2128,10 @@
             <element signature="e#4361#4389#0" expanded="true" />
             <element signature="e#5297#5320#0" expanded="true" />
             <element signature="e#6200#6226#0" expanded="true" />
-            <element signature="e#7107#7131#0" expanded="true" />
-            <element signature="e#8031#8053#0" expanded="true" />
-            <element signature="e#8943#8982#0" expanded="true" />
+            <element signature="e#7125#7149#0" expanded="true" />
+            <element signature="e#8049#8071#0" expanded="true" />
+            <element signature="e#8969#8991#0" expanded="true" />
+            <element signature="e#9899#9938#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -2097,9 +2170,10 @@
             <element signature="e#4361#4389#0" expanded="true" />
             <element signature="e#5297#5320#0" expanded="true" />
             <element signature="e#6200#6226#0" expanded="true" />
-            <element signature="e#7107#7131#0" expanded="true" />
-            <element signature="e#8031#8053#0" expanded="true" />
-            <element signature="e#8943#8982#0" expanded="true" />
+            <element signature="e#7125#7149#0" expanded="true" />
+            <element signature="e#8049#8071#0" expanded="true" />
+            <element signature="e#8969#8991#0" expanded="true" />
+            <element signature="e#9899#9938#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -2265,32 +2339,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/res/values/strings.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.44065806">
-          <caret line="25" column="46" selection-start-line="25" selection-start-column="46" selection-end-line="25" selection-end-column="46" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/AndroidManifest.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.48630136">
-          <caret line="172" column="0" selection-start-line="172" selection-start-column="0" selection-end-line="172" selection-end-column="0" />
-          <folding>
-            <element signature="e#1333#1351#0" expanded="true" />
-            <element signature="e#1551#1580#0" expanded="true" />
-            <element signature="e#2498#2528#0" expanded="true" />
-            <element signature="e#3439#3460#0" expanded="true" />
-            <element signature="e#4361#4389#0" expanded="true" />
-            <element signature="e#5297#5320#0" expanded="true" />
-            <element signature="e#6200#6226#0" expanded="true" />
-            <element signature="e#7107#7131#0" expanded="true" />
-            <element signature="e#8031#8053#0" expanded="true" />
-            <element signature="e#8943#8982#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TerrenceSimpleAnalog.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.30565372">
@@ -2343,33 +2391,67 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-129.6">
           <caret line="248" column="60" selection-start-line="248" selection-start-column="60" selection-end-line="248" selection-end-column="60" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/res/values/strings.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.45828438">
+          <caret line="26" column="46" selection-start-line="26" selection-start-column="46" selection-end-line="26" selection-end-column="46" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheDingDongFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6238698">
-          <caret line="139" column="76" selection-start-line="139" selection-start-column="76" selection-end-line="139" selection-end-column="76" />
+        <state vertical-scroll-proportion="-10.24138">
+          <caret line="329" column="0" selection-start-line="329" selection-start-column="0" selection-end-line="329" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/AndroidManifest.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="147" column="59" selection-start-line="147" selection-start-column="59" selection-end-line="147" selection-end-column="59" />
+          <folding>
+            <element signature="e#1333#1351#0" expanded="true" />
+            <element signature="e#1551#1580#0" expanded="true" />
+            <element signature="e#2498#2528#0" expanded="true" />
+            <element signature="e#3439#3460#0" expanded="true" />
+            <element signature="e#4361#4389#0" expanded="true" />
+            <element signature="e#5297#5320#0" expanded="true" />
+            <element signature="e#6200#6226#0" expanded="true" />
+            <element signature="e#7125#7149#0" expanded="true" />
+            <element signature="e#8049#8071#0" expanded="true" />
+            <element signature="e#8969#8991#0" expanded="true" />
+            <element signature="e#9899#9938#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheTwinkieFaceService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.34246576">
-          <caret line="46" column="40" selection-start-line="32" selection-start-column="26" selection-end-line="46" selection-end-column="40" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="383" column="16" selection-start-line="383" selection-start-column="16" selection-end-line="385" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fathom-faces/src/main/java/info/fathom/androidexperiments/TheBlinkieFaceService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.6682927">
+          <caret line="383" column="31" selection-start-line="383" selection-start-column="31" selection-end-line="383" selection-end-column="31" />
           <folding>
-            <element signature="e#2490#2491#0" expanded="true" />
-            <element signature="e#2525#2526#0" expanded="true" />
-            <element signature="e#2759#3437#0" expanded="true" />
-            <element signature="e#3436#3437#0" expanded="true" />
-            <element signature="e#10173#10411#0" expanded="true" />
-            <element signature="e#10410#10411#0" expanded="true" />
-            <element signature="e#12190#12191#0" expanded="true" />
-            <element signature="e#12254#12255#0" expanded="true" />
-            <element signature="e#15779#15780#0" expanded="true" />
-            <element signature="e#15844#15845#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+            <element signature="e#2544#2545#0" expanded="true" />
+            <element signature="e#2579#2580#0" expanded="true" />
+            <element signature="e#2813#3491#0" expanded="true" />
+            <element signature="e#3490#3491#0" expanded="true" />
+            <element signature="e#9914#10152#0" expanded="true" />
+            <element signature="e#10151#10152#0" expanded="true" />
+            <element signature="e#11931#11932#0" expanded="true" />
+            <element signature="e#11995#11996#0" expanded="true" />
           </folding>
         </state>
       </provider>

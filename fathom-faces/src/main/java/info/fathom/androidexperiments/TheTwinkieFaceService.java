@@ -42,7 +42,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
-
     private SensorManager mSensorManager;
     private Sensor mSensorAccelerometer;
     private boolean mSensorAccelerometerIsRegistered;
@@ -231,7 +230,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             final String minutes = String.format("%02d", mTime.minute);
 
             // Start drawing watch elements
-            canvas.save();
+//            canvas.save();
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
@@ -362,15 +361,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
 
-
-
         class Ball {
 
+            private static final int COLOR = Color.WHITE;
             private static final float FRICTION = 0.97f;
             private static final float ACCEL_FACTOR = 0.25f;
             private static final float RADIUS_FACTOR = 0.03f;     // as a ratio to screen width
-
-            private static final int COLOR = Color.WHITE;
 
             Board parent;
             float x, y, r;

@@ -24,4 +24,5 @@
     <string name="all_sensors_name">Fathom All Sensors</string>
     <string name="ding_dong_name">Fathom Ding Dong</string>
     <string name="twinkie_name">Fathom Twinkie</string>
+    <string name="blinkie_name">Fathom Blinkie</string>
 </resources>
