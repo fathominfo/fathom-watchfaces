@@ -31,6 +31,7 @@ import java.util.Arrays;
 
 
 public class TheTwinkieFaceService extends CanvasWatchFaceService implements SensorEventListener {
+
     private static final String TAG = "TheTwinkieFaceService";
 
     private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
@@ -593,7 +594,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 float diffX = end.x - endX,
                         diffY = end.y - endY;
 
-                if (diffX < END_THRESHOLD && diffY < END_THRESHOLD) {
+                if (Math.abs(diffX) < END_THRESHOLD && Math.abs(diffY) < END_THRESHOLD) {
                     endX = end.x;
                     endY = end.y;
                     animate = false;

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 public class TheDingDongFaceService extends CanvasWatchFaceService implements SensorEventListener {
+
     private static final String TAG = "TheDingDongFaceService";
 
     private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
