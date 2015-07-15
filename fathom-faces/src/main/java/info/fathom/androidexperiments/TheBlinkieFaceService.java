@@ -31,12 +31,16 @@ import java.util.Arrays;
 
 public class TheBlinkieFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
+    private static final String TAG = "TheBlinkieFaceService";
+
     private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
     private static final float TAU = (float) (2 * Math.PI);
     private static final float QUARTER_TAU = TAU / 4;
     private static final float TO_DEGS = 360.0f / TAU;
+
+    private static final float GRAVITY_THRESHOLD = 1.0f;
 
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
@@ -59,9 +63,10 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
             gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
 
-//            screenRotation = (float) (-(Math.atan2(gravity[1], gravity[0]) - QUARTER_TAU) * TO_DEGS);
-            screenRotation = alpha * screenRotation + (1 - alpha) * (float) (-(Math.atan2(gravity[1], gravity[0]) - QUARTER_TAU) * TO_DEGS);
-            Log.v("FOO", "Rotation: " + screenRotation);
+            if (Math.abs(gravity[0]) > GRAVITY_THRESHOLD && Math.abs(gravity[1]) > GRAVITY_THRESHOLD) {
+                screenRotation = alpha * screenRotation + (1 - alpha) * (float) (-(Math.atan2(gravity[1], gravity[0]) - QUARTER_TAU) * TO_DEGS);
+//                Log.v("FOO", "Rotation: " + screenRotation);
+            }
         }
     }
 
@@ -123,8 +128,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
 //        private Paint mLinePaint;
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
-        private Eye eyeBig, eyeSmall;
-
+//        private Eye eyeBig, eyeSmall;
+        private EyeMosaic eyeMosaic;
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -152,8 +157,32 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             mSensorManager.registerListener(TheBlinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 
-            eyeBig = new Eye(0, 0, 100, 50, 1);
-            eyeSmall = new Eye(50, -50, 50, 25, 1);
+//            eyeBig = new Eye(0, 0, 100, 50, 1);
+//            eyeSmall = new Eye(50, -50, 50, 25, 1);
+
+            eyeMosaic = new EyeMosaic();
+            eyeMosaic.addEye(0, 0, 100, 50, 1);
+
+            eyeMosaic.addEye( 50, -40, 50, 25, 1);
+            eyeMosaic.addEye(-50, -40, 50, 25, 1);
+            eyeMosaic.addEye(-50,  40, 50, 25, 1);
+            eyeMosaic.addEye( 50,  40, 50, 25, 1);
+
+            eyeMosaic.addEye( 25, -60, 25, 13, 1);  // around topright eye
+            eyeMosaic.addEye( 75, -60, 25, 13, 1);
+            eyeMosaic.addEye( 75, -20, 25, 13, 1);
+
+            eyeMosaic.addEye( 25,  60, 25, 13, 1);  // around bottomright eye
+            eyeMosaic.addEye( 75,  60, 25, 13, 1);
+            eyeMosaic.addEye( 75,  20, 25, 13, 1);
+
+            eyeMosaic.addEye(-25,  60, 25, 13, 1);  // around bottomleft eye
+            eyeMosaic.addEye(-75,  60, 25, 13, 1);
+            eyeMosaic.addEye(-75,  20, 25, 13, 1);
+
+            eyeMosaic.addEye(-25, -60, 25, 13, 1);  // around topleft eye
+            eyeMosaic.addEye(-75, -60, 25, 13, 1);
+            eyeMosaic.addEye(-75, -20, 25, 13, 1);
 
             mTime  = new Time();
         }
@@ -189,7 +218,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 registerAccelerometerSensor();
 
                 glances++;
-
+//                eyeMosaic.addEye();
+                eyeMosaic.setBlinkChance(glances);
             }
 
             /*
@@ -237,10 +267,13 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 canvas.translate(mCenterX, mCenterY);
                 canvas.rotate(screenRotation);
+                canvas.scale(1.5f, 1.5f);
 //                canvas.drawLine(0, 0, 0, 100, mLinePaint);
 //                canvas.drawLine(-50, 0, 50, 0, mLinePaint);
-                eyeBig.render(canvas);
-                eyeSmall.render(canvas);
+//                eyeBig.render(canvas);
+//                eyeSmall.render(canvas);
+                eyeMosaic.update();
+                eyeMosaic.render(canvas);
             }
 
             canvas.restore();
@@ -345,20 +378,105 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         }
 
 
+        class EyeMosaic {
 
+//            static final float BLINK_PROBABILITY = 0.05f;  // 0 is never, 1 every frame
+            float blinkChance;
+
+            Eye[] eyes;
+            int eyeCount;
+
+            List<Eye> updateList = new ArrayList<>();
+
+            EyeMosaic() {
+                eyes = new Eye[8];
+                eyeCount = 0;
+                blinkChance = 0;
+            }
+
+            void update() {
+
+                // trigger a random eye to blink
+//                if (Math.random() < BLINK_PROBABILITY) {
+                if (Math.random() < blinkChance) {
+                    int id = (int) (eyeCount * Math.random());  //@TODO change to always hitting an eye to blink?
+                    if (!eyes[id].blinking) {
+                        eyes[id].blink();
+                        updateList.add(eyes[id]);
+                    }
+                }
+
+                for (Eye eye : updateList) {
+//                    Log.v(TAG, "Updating eye " + eye.id);
+                    eye.update();
+                }
+
+                for (int i = updateList.size() - 1; i >= 0; i--) {
+                    if (!updateList.get(i).blinking) updateList.remove(updateList.get(i));
+                }
+
+            }
+
+            void render(Canvas canvas) {
+                for (int i = 0; i < eyeCount; i++) {
+                    eyes[i].render(canvas);
+                }
+            }
+
+
+            void addEye(float x_, float y_, float width_, float height_, float scale_) {
+                eyes[eyeCount++] = new Eye(eyeCount, x_, y_, width_, height_, scale_);
+
+                // double the array size if necessary
+                if (eyeCount == eyes.length) {
+                    eyes = Arrays.copyOf(eyes, 2 * eyes.length);
+                }
+            }
+
+            void addEye() {
+                // add some algorithm to compute new eye position and sizes
+                float w = (float) (50 + 50 * Math.random());
+                eyes[eyeCount++] = new Eye(
+                        eyeCount,
+                        (float) (-110 + 220 * Math.random()),
+                        (float) (-110 + 220 * Math.random()),
+                        w,
+                        0.5f * w,
+                        1
+                );
+
+                // double the array size if necessary
+                if (eyeCount == eyes.length) {
+                    eyes = Arrays.copyOf(eyes, 2 * eyes.length);
+                }
+            }
+
+            void setBlinkChance(float glances) {
+                blinkChance = glances / eyeCount;  //@TODO account for changes in blinkChance when an eye is added
+            }
+
+
+        }
 
 
         class Eye {
 
             static final int EYELID_COLOR = Color.GRAY;
+            static final float BLINK_SPEED = 0.25f;
+            static final int END_THRESHOLD = 2;
 
+            int id;
             float x, y;
             float width, height;
             float scale;
             Path eyelid;
             Paint eyelidPaint, corneaPaint, irisPaint;
 
-            Eye(float x_, float y_, float width_, float height_, float scale_) {
+            boolean blinking;
+            float currentAperture, targetAperture;
+
+            Eye(int id_, float x_, float y_, float width_, float height_, float scale_) {
+                id = id_;
                 x = x_;
                 y = y_;
                 width = width_;
@@ -378,16 +496,51 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 irisPaint.setAntiAlias(true);
 
                 eyelid = new Path();
-                eyelid.moveTo(x - 0.5f * width, y);
-                eyelid.quadTo(x, y - height, x + 0.5f * width, y);
-                eyelid.quadTo(x, y + height, x - 0.5f * width, y);
-                eyelid.close();
+                resetEyelid(height);
             }
 
             void render(Canvas canvas) {
                 canvas.drawPath(eyelid, eyelidPaint);
                 canvas.drawCircle(x, y, 0.375f * height, corneaPaint);
                 canvas.drawCircle(x, y, 0.187f * height, irisPaint);
+            }
+
+            boolean update() {
+                float diff = targetAperture - currentAperture;
+                if (Math.abs(diff) < END_THRESHOLD) {
+                    switchBlink();
+                    return blinking;
+                }
+                currentAperture += BLINK_SPEED * (diff);
+                resetEyelid(currentAperture);
+                return blinking;
+            }
+
+            void switchBlink() {
+                // if eye was closing
+                if (targetAperture == 0) {
+                    targetAperture = height;
+//                    blinking = true;
+
+                } else {
+                    resetEyelid(height);
+                    blinking = false;
+                }
+            }
+
+            void resetEyelid(float newHeight) {
+                eyelid.rewind();
+                eyelid.moveTo(x - 0.5f * width, y);
+                eyelid.quadTo(x, y - newHeight, x + 0.5f * width, y);
+                eyelid.quadTo(x, y + newHeight, x - 0.5f * width, y);
+                eyelid.close();
+            }
+
+
+            void blink() {
+                currentAperture = height;
+                targetAperture = 0;
+                blinking = true;
             }
 
             int randomColor() {
