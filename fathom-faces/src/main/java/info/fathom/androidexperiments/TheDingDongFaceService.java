@@ -387,7 +387,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 mTextDigitsPaintInteractive.setTextAlign(Paint.Align.CENTER);
                 drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, ":", 1.35f * mCenterX, 0.35f * mCenterY);
 
-                canvas.drawText(mCurrentSteps + " steps", mCenterX, mCenterY, mTextStepsPaintInteractive);
+//                canvas.drawText(mCurrentSteps + " steps", mCenterX, mCenterY, mTextStepsPaintInteractive);
+                canvas.drawText("" + mCurrentSteps, 1.35f * mCenterX, 0.65f * mCenterY, mTextStepsPaintInteractive);
+
             }
         }
 
