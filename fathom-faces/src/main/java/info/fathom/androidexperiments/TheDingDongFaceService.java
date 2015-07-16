@@ -177,7 +177,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         private BubbleManager bubbleManager;
 //        private static final float FRICTION = 0.97f;
-//        private static final float ACCEL_FACTOR = 0.25f;
+//        private static final float PLANE_ACCEL_FACTOR = 0.25f;
 
 
 
@@ -736,18 +736,29 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         private class Bubble {
 
-            private static final float FRICTION = 0.90f;
-            private static final float ACCEL_FACTOR = 0.25f;
-            private static final float RANDOM_WEIGHT_FACTOR = 0.20f;
+            private static final boolean BOUNCE_FROM_BORDER     = true;
+            private static final boolean DEPTH_BOUNCING         = true;
+
+            private static final float FRICTION                 = 0.95f;
+            private static final float PLANE_ACCEL_FACTOR       = 0.25f;
+            private static final float GRAVITY_FACTOR           = 1.00f;
+            private static final float ANCHOR_SPRING_FACTOR     = 0.03f;
+
+            private static final float DEPTH_ACCEL_FACTOR       = 0.50f;
+            private static final float DEPTH_SPRING_FACTOR      = 0.20f;
+
+            private static final float RANDOM_WEIGHT_FACTOR     = 0.20f;
 
             BubbleCollection parent;
 
-            float anchorX, anchorY;
+            float anchorX, anchorY, baseRadius;
             float x, y;
-            float radius, weight;
-            boolean needsPositionUpdate = false;
+//            boolean needsPositionUpdate = false;
             float velX, velY;
             float accX, accY;
+
+            float radius, weight;
+            float velR, accR;
 
             boolean needsSizeUpdate = false;
             float currentRadius = 0;
@@ -768,6 +779,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 weight = weight_ + (float) (weight_ * RANDOM_WEIGHT_FACTOR * Math.random());  // slight random weight variation
                 paint = paint_;
                 velX = velY = accX = accY = 0;
+                velR = accR = 0;
             }
 
             public void render(Canvas canvas) {
@@ -788,30 +800,68 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             public void updatePosition() {
 //                if (needsSizeUpdate) return;
 
-//                velX += ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0]) / weight;
-//                velY += ACCEL_FACTOR * linear_acceleration[1] * linear_acceleration[1] / weight;
-                velX += ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0] + ACCEL_FACTOR * (anchorX - x)) / weight;
-                velY += ACCEL_FACTOR * ( linear_acceleration[1] * linear_acceleration[1] + ACCEL_FACTOR * (anchorY - y)) / weight;
+//                velX += PLANE_ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0]) / weight;
+//                velY += PLANE_ACCEL_FACTOR * linear_acceleration[1] * linear_acceleration[1] / weight;
+//                velX += PLANE_ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0] + PLANE_ACCEL_FACTOR * (anchorX - x)) / weight;
+//                velY += PLANE_ACCEL_FACTOR * ( linear_acceleration[1] * linear_acceleration[1] + PLANE_ACCEL_FACTOR * (anchorY - y)) / weight;
+//                velX += PLANE_ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0] - gravity[0] + 0.03f * (anchorX - x)) / weight;
+//                velY += PLANE_ACCEL_FACTOR * ( linear_acceleration[1] * linear_acceleration[1] + gravity[1] + 0.03f * (anchorY - y)) / weight;
+
+                accX = (PLANE_ACCEL_FACTOR * -linear_acceleration[0] * linear_acceleration[0] - GRAVITY_FACTOR * gravity[0] + ANCHOR_SPRING_FACTOR * (anchorX - x)) / weight;
+                accY = (PLANE_ACCEL_FACTOR *  linear_acceleration[1] * linear_acceleration[1] + GRAVITY_FACTOR * gravity[1] + ANCHOR_SPRING_FACTOR * (anchorY - y)) / weight;
+
+                velX += accX;
+                velY += accY;
                 velX *= FRICTION;
                 velY *= FRICTION;
                 x += velX;
                 y += velY;
 
-                if (x > mWidth) {
-                    x = mWidth - (x - mWidth);
-                    velX *= -1;
-                } else if (x < 0) {
-                    x = -x;
-                    velX *= -1;
+                if (DEPTH_BOUNCING && !needsSizeUpdate) {
+                    accR = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (radius - currentRadius)) / weight;
+                    velR += accR;
+                    velR *= FRICTION;
+                    currentRadius += velR;
                 }
 
-                if (y > mHeight) {
-                    y = mHeight - (y - mHeight);
-                    velY *= -1;
-                } else if (y < 0) {
-                    y = -y;
-                    velY *= -1;
+
+
+                if (BOUNCE_FROM_BORDER) {
+                    if (x + radius > mWidth) {
+                        x = 2 * mWidth - 2 * radius - x;
+                        velX *= -1;
+                    } else if (x < radius) {
+                        x = 2 * radius - x;
+                        velX *= -1;
+                    }
+
+                    if (y + radius > mHeight) {
+                        y = 2 * mHeight - 2 * radius - y;
+                        velY *= -1;
+                    } else if (y < radius) {
+                        y = 2 * radius - y;
+                        velY *= -1;
+                    }
+
+                } else {
+                    if (x > mWidth) {
+                        x = mWidth - (x - mWidth);
+                        velX *= -1;
+                    } else if (x < 0) {
+                        x = -x;
+                        velX *= -1;
+                    }
+
+                    if (y > mHeight) {
+                        y = mHeight - (y - mHeight);
+                        velY *= -1;
+                    } else if (y < 0) {
+                        y = -y;
+                        velY *= -1;
+                    }
                 }
+
+
             }
 
             public void grow() {
