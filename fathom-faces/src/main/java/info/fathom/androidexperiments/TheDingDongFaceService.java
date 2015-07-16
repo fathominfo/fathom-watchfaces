@@ -54,12 +54,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private int mPrevSteps = 0;
     private int mCurrentSteps = 0;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int RANDOM_FAKE_STEPS = 5000;
+    private static final int RANDOM_FAKE_STEPS = 500;
     private static final int MAX_STEP_THRESHOLD = 50000;
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
+//        Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
     }
 
     @Override
@@ -176,8 +176,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private float mCenterY;
 
         private BubbleManager bubbleManager;
-//        private static final float BUBBLE_FRICTION = 0.97f;
-//        private static final float BUBBLE_ACCEL_FACTOR = 0.25f;
+//        private static final float FRICTION = 0.97f;
+//        private static final float ACCEL_FACTOR = 0.25f;
 
 
 
@@ -653,12 +653,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void updatePositions() {
+                bubblesXBig.updatePositions();
                 bubblesBig.updatePositions();
                 bubblesMedium.updatePositions();
                 bubblesSmall.updatePositions();
             }
 
             public void resetMotion() {
+                bubblesXBig.resetMotion();
                 bubblesBig.resetMotion();
                 bubblesMedium.resetMotion();
                 bubblesSmall.resetMotion();
@@ -734,8 +736,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         private class Bubble {
 
-            private static final float BUBBLE_FRICTION = 0.97f;
-            private static final float BUBBLE_ACCEL_FACTOR = 0.25f;
+            private static final float FRICTION = 0.90f;
+            private static final float ACCEL_FACTOR = 0.25f;
+            private static final float RANDOM_WEIGHT_FACTOR = 0.20f;
 
             BubbleCollection parent;
 
@@ -757,10 +760,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 parent = parent_;
                 anchorX = (float) (mWidth * Math.random());
                 anchorY = (float) (mHeight * Math.random());
-                x = anchorX;
-                y = anchorY;
+//                x = anchorX;
+//                y = anchorY;
+                x = mCenterX;
+                y = mCenterY;
                 radius = radius_;
-                weight = weight_;
+                weight = weight_ + (float) (weight_ * RANDOM_WEIGHT_FACTOR * Math.random());  // slight random weight variation
                 paint = paint_;
                 velX = velY = accX = accY = 0;
             }
@@ -781,10 +786,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void updatePosition() {
-                velX += BUBBLE_ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0]) / weight;
-                velY += BUBBLE_ACCEL_FACTOR * linear_acceleration[1] * linear_acceleration[1] / weight;
-                velX *= BUBBLE_FRICTION;
-                velY *= BUBBLE_FRICTION;
+//                if (needsSizeUpdate) return;
+
+//                velX += ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0]) / weight;
+//                velY += ACCEL_FACTOR * linear_acceleration[1] * linear_acceleration[1] / weight;
+                velX += ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0] + ACCEL_FACTOR * (anchorX - x)) / weight;
+                velY += ACCEL_FACTOR * ( linear_acceleration[1] * linear_acceleration[1] + ACCEL_FACTOR * (anchorY - y)) / weight;
+                velX *= FRICTION;
+                velY *= FRICTION;
                 x += velX;
                 y += velY;
 
@@ -805,11 +814,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 }
             }
 
-            public void shake(float accelX, float accelY) {
-                velX += BUBBLE_ACCEL_FACTOR * accelX;
-                velY += BUBBLE_ACCEL_FACTOR * accelY;
-            }
-
             public void grow() {
                 targetRadius = radius;
                 needsSizeUpdate = true;
@@ -817,6 +821,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             public void kill() {
                 targetRadius = 0;
+                anchorX = mCenterX;
+                anchorY = mCenterY;
                 mustDie = true;
                 needsSizeUpdate = true;
             }
