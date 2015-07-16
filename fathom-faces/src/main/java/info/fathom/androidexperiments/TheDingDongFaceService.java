@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
@@ -502,25 +503,31 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             private final static float ANIMATION_RATE = 0.25f;
 
-            private final static int STEP_RATIO_XBIG = 10000;
-            private final static int STEP_RATIO_BIG = 1000;     // a BIG bubble represents this many steps
-            private final static int STEP_RATIO_MEDIUM = 100;
-            private final static int STEP_RATIO_SMALL = 10;
+            private final static int STEP_RATIO_XBIG    = 10000;
+            private final static int STEP_RATIO_BIG     = 1000;     // a BIG bubble represents this many steps
+            private final static int STEP_RATIO_MEDIUM  = 100;
+            private final static int STEP_RATIO_SMALL   = 10;
 
-            private final static int RADIUS_XBIG = 75;
-            private final static int RADIUS_BIG = 50;
-            private final static int RADIUS_MEDIUM = 35;
-            private final static int RADIUS_SMALL = 20;
+            private final static int RADIUS_XBIG    = 75;
+            private final static int RADIUS_BIG     = 50;
+            private final static int RADIUS_MEDIUM  = 35;
+            private final static int RADIUS_SMALL   = 20;
 
-            private final static float WEIGHT_XBIG = 4;
-            private final static float WEIGHT_BIG = 3;
-            private final static float WEIGHT_MEDIUM = 2;
-            private final static float WEIGHT_SMALL = 1;
+            private final static float WEIGHT_XBIG      = 4;
+            private final static float WEIGHT_BIG       = 3;
+            private final static float WEIGHT_MEDIUM    = 2;
+            private final static float WEIGHT_SMALL     = 1;
 
-            private final int COLOR_XBIG = Color.argb(204, 236, 0, 140);  // pink
-            private final int COLOR_BIG = Color.argb(204, 239, 65, 54);  // red
-            private final int COLOR_MEDIUM = Color.argb(204, 39, 170, 225);  // blue
-            private final int COLOR_SMALL = Color.argb(204, 215, 223, 35);  // yellow
+            private final int COLOR_XBIG    = Color.argb(204, 236, 0, 140);  // pink
+            private final int COLOR_BIG     = Color.argb(204, 239, 65, 54);  // red
+            private final int COLOR_MEDIUM  = Color.argb(204, 39, 170, 225);  // blue
+            private final int COLOR_SMALL   = Color.argb(204, 215, 223, 35);  // yellow
+
+            private final static float GAP_ANGLE_XBIG   = (float) (-0.75f * Math.PI);
+            private final static float GAP_ANGLE_BIG    = (float) (-0.50f * Math.PI);
+            private final static float GAP_ANGLE_MEDIUM = (float) (-1.00f * Math.PI);
+            private final static float GAP_ANGLE_SMALL  = (float) (-0.75f * Math.PI);
+
 
             private BubbleCollection bubblesXBig, bubblesBig, bubblesMedium, bubblesSmall;
             private Paint paintXBig, paintBig, paintMedium, paintSmall;
@@ -532,23 +539,27 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 paintXBig = new Paint();
                 paintXBig.setColor(COLOR_XBIG);
                 paintXBig.setAntiAlias(true);
+                paintXBig.setStyle(Paint.Style.FILL_AND_STROKE);
 
                 paintBig = new Paint();
                 paintBig.setColor(COLOR_BIG);
                 paintBig.setAntiAlias(true);
+                paintBig.setStyle(Paint.Style.FILL_AND_STROKE);
 
                 paintMedium = new Paint();
                 paintMedium.setColor(COLOR_MEDIUM);
                 paintMedium.setAntiAlias(true);
+                paintMedium.setStyle(Paint.Style.FILL_AND_STROKE);
 
                 paintSmall = new Paint();
                 paintSmall.setColor(COLOR_SMALL);
                 paintSmall.setAntiAlias(true);
+                paintSmall.setStyle(Paint.Style.FILL_AND_STROKE);
 
-                bubblesXBig = new BubbleCollection(this, RADIUS_XBIG, WEIGHT_XBIG, paintXBig);
-                bubblesBig = new BubbleCollection(this, RADIUS_BIG, WEIGHT_BIG, paintBig);
-                bubblesMedium = new BubbleCollection(this, RADIUS_MEDIUM, WEIGHT_MEDIUM, paintMedium);
-                bubblesSmall = new BubbleCollection(this, RADIUS_SMALL, WEIGHT_SMALL, paintSmall);
+                bubblesXBig = new BubbleCollection(this, RADIUS_XBIG, WEIGHT_XBIG, GAP_ANGLE_XBIG, paintXBig);
+                bubblesBig = new BubbleCollection(this, RADIUS_BIG, WEIGHT_BIG, GAP_ANGLE_BIG, paintBig);
+                bubblesMedium = new BubbleCollection(this, RADIUS_MEDIUM, WEIGHT_MEDIUM, GAP_ANGLE_MEDIUM, paintMedium);
+                bubblesSmall = new BubbleCollection(this, RADIUS_SMALL, WEIGHT_SMALL, GAP_ANGLE_SMALL, paintSmall);
 
                 prevSteps = 0;
                 currentSteps = 0;
@@ -675,12 +686,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             Paint paint;
             float radius;
             float weight;
+            float gapAngle;
             boolean needsUpdate;
 
-            BubbleCollection(BubbleManager parent_, float radius_, float weight_, Paint paint_) {
+            BubbleCollection(BubbleManager parent_, float radius_, float weight_, float gapAngle_, Paint paint_) {
                 parent = parent_;
                 radius = radius_;
                 weight = weight_;
+                gapAngle = gapAngle_;
                 paint = paint_;
                 bubbles = new ArrayList<>();
                 killQueue = new ArrayList<>();
@@ -714,7 +727,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             private void add(int count_) {
                 for (int i = 0; i < count_; i++) {
-                    Bubble b = new Bubble(this, radius, weight, paint);
+                    Bubble b = new Bubble(this, radius, weight, gapAngle, paint);
                     b.grow();
                     bubbles.add(b);
                 }
@@ -765,9 +778,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             float targetRadius = 0;
             boolean mustDie = false;
 
-            Paint paint;
+            float gapAngle;
 
-            Bubble(BubbleCollection parent_, float radius_, float weight_, Paint paint_) {
+            Paint paint;
+            Path path;
+
+            Bubble(BubbleCollection parent_, float radius_, float weight_, float gapAngle_, Paint paint_) {
                 parent = parent_;
                 anchorX = (float) (mWidth * Math.random());
                 anchorY = (float) (mHeight * Math.random());
@@ -780,10 +796,24 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 paint = paint_;
                 velX = velY = accX = accY = 0;
                 velR = accR = 0;
+
+                gapAngle = gapAngle_;
+
+                path = new Path();
+                path.addCircle(0, 0, 1.0f, Path.Direction.CW);
+                path.close();
+                path.addCircle(0.1f * (float) Math.cos(gapAngle), 0.1f * (float) Math.sin(gapAngle), 0.8f, Path.Direction.CW);
+                path.close();
+                path.setFillType(Path.FillType.EVEN_ODD);
             }
 
             public void render(Canvas canvas) {
-                canvas.drawCircle(x, y, currentRadius, paint);
+//                canvas.drawCircle(x, y, currentRadius, paint);
+                canvas.save();
+                canvas.translate(x, y);
+                canvas.scale(currentRadius, currentRadius);
+                canvas.drawPath(path, paint);
+                canvas.restore();
             }
 
             public boolean updateSize() {
@@ -824,8 +854,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                     currentRadius += velR;
                 }
 
-
-
                 if (BOUNCE_FROM_BORDER) {
                     if (x + radius > mWidth) {
                         x = 2 * mWidth - 2 * radius - x;
@@ -860,8 +888,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         velY *= -1;
                     }
                 }
-
-
             }
 
             public void grow() {
