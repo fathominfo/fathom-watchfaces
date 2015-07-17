@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.AssetManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -54,7 +55,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private boolean mStepSensorIsRegistered;
     private int mPrevSteps = 0;
     private int mCurrentSteps = 0;
-    private static final boolean GENERATE_FAKE_STEPS = true;
+    private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int RANDOM_FAKE_STEPS = 500;
     private static final int MAX_STEP_THRESHOLD = 50000;
 
@@ -152,10 +153,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
         private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
-        private static final float TEXT_DIGITS_HEIGHT = 0.25f;  // as a factor of screen height
+        private static final float TEXT_DIGITS_HEIGHT = 0.20f;  // as a factor of screen height
 
-        private static final int   TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
-        private static final int   TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
+        private static final int   TEXT_STEPS_COLOR_INTERACTIVE = Color.GRAY;
+        private static final int   TEXT_STEPS_COLOR_AMBIENT = Color.GRAY;
         private static final float TEXT_STEPS_HEIGHT = 0.05f;  // as a factor of screen height
 
         private boolean mRegisteredTimeZoneReceiver = false;
@@ -180,6 +181,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 //        private static final float FRICTION = 0.97f;
 //        private static final float PLANE_ACCEL_FACTOR = 0.25f;
 
+        private Typeface RALEWAY_REGULAR_TYPEFACE;
+
 
 
 
@@ -193,6 +196,13 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                     .setShowSystemUiTime(false)
                     .build());
 
+            Context context = getApplicationContext();
+//            Log.v(TAG, context.toString());
+            AssetManager mgr = context.getAssets();
+//            Log.v(TAG, mgr.toString());
+            RALEWAY_REGULAR_TYPEFACE = Typeface.createFromAsset(mgr, "fonts/raleway-regular.ttf");
+//            Log.v(TAG, RALEWAY_REGULAR_TYPEFACE.toString());
+
             /**
              * STEP SENSING
              */
@@ -203,29 +213,35 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             mTextDigitsPaintInteractive = new Paint();
             mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
-            mTextDigitsPaintInteractive.setTypeface(NORMAL_TYPEFACE);
+//            mTextDigitsPaintInteractive.setTypeface(NORMAL_TYPEFACE);
+            mTextDigitsPaintInteractive.setTypeface(RALEWAY_REGULAR_TYPEFACE);
             mTextDigitsPaintInteractive.setAntiAlias(true);
 
             mTextDigitsPaintAmbient = new Paint();
             mTextDigitsPaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
-            mTextDigitsPaintAmbient.setTypeface(NORMAL_TYPEFACE);
+//            mTextDigitsPaintAmbient.setTypeface(NORMAL_TYPEFACE);
+            mTextDigitsPaintAmbient.setTypeface(RALEWAY_REGULAR_TYPEFACE);
             mTextDigitsPaintAmbient.setAntiAlias(false);
 
             mTextStepsPaintInteractive = new Paint();
             mTextStepsPaintInteractive.setColor(TEXT_STEPS_COLOR_INTERACTIVE);
             mTextStepsPaintInteractive.setTypeface(BOLD_TYPEFACE);
             mTextStepsPaintInteractive.setAntiAlias(true);
-            mTextStepsPaintInteractive.setTextAlign(Paint.Align.CENTER);
+//            mTextStepsPaintInteractive.setTextAlign(Paint.Align.CENTER);
+            mTextStepsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
 
             mTextStepsPaintAmbient = new Paint();
             mTextStepsPaintAmbient.setColor(TEXT_STEPS_COLOR_AMBIENT);
             mTextStepsPaintAmbient.setTypeface(BOLD_TYPEFACE);
             mTextStepsPaintAmbient.setAntiAlias(false);
-            mTextStepsPaintAmbient.setTextAlign(Paint.Align.CENTER);
+//            mTextStepsPaintAmbient.setTextAlign(Paint.Align.CENTER);
+            mTextStepsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
 
             bubbleManager = new BubbleManager(){};
 
             mTime  = new Time();
+
+
         }
 
         @Override
@@ -333,14 +349,22 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
-                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, hours, mCenterX - 20, 0.5f * mCenterY);  // @TODO: be screen programmatic here
-                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, minutes, mCenterX + 20, 0.5f * mCenterY);
-                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.CENTER);
-                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, ":", mCenterX, 0.5f * mCenterY);
+//                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, hours, mCenterX - 20, 0.5f * mCenterY);  // @TODO: be screen programmatic here
+//                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.LEFT);
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, minutes, mCenterX + 20, 0.5f * mCenterY);
+//                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.CENTER);
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, ":", mCenterX, 0.5f * mCenterY);
 
-                canvas.drawText(mCurrentSteps + " steps", mCenterX, mCenterY, mTextStepsPaintAmbient);
+                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, hours, 1.35f * mCenterX - 10, 0.35f * mCenterY);  // @TODO: be screen programmatic here
+                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.LEFT);
+                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, minutes, 1.35f * mCenterX + 10, 0.35f * mCenterY);  // @TODO: be screen programmatic here
+                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.CENTER);
+                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, ":", 1.35f * mCenterX, 0.35f * mCenterY);
+
+//                canvas.drawText(mCurrentSteps + " steps", mCenterX, mCenterY, mTextStepsPaintAmbient);
+                canvas.drawText("" + mCurrentSteps, 1.35f * mCenterX, 0.65f * mCenterY, mTextStepsPaintAmbient);
 
             } else {
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
@@ -349,14 +373,23 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubbleManager.update();
                 bubbleManager.render(canvas);
 
-                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, hours, mCenterX - 20, 0.5f * mCenterY);
-                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, minutes, mCenterX + 20, 0.5f * mCenterY);
-                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.CENTER);
-                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, ":", mCenterX, 0.5f * mCenterY);
+//                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, hours, mCenterX - 20, 0.5f * mCenterY);
+//                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.LEFT);
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, minutes, mCenterX + 20, 0.5f * mCenterY);
+//                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.CENTER);
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, ":", mCenterX, 0.5f * mCenterY);
 
-                canvas.drawText(mCurrentSteps + " steps", mCenterX, mCenterY, mTextStepsPaintInteractive);
+                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, hours, 1.35f * mCenterX - 10, 0.35f * mCenterY);  // @TODO: be screen programmatic here
+                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.LEFT);
+                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, minutes, 1.35f * mCenterX + 10, 0.35f * mCenterY);  // @TODO: be screen programmatic here
+                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.CENTER);
+                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, ":", 1.35f * mCenterX, 0.35f * mCenterY);
+
+//                canvas.drawText(mCurrentSteps + " steps", mCenterX, mCenterY, mTextStepsPaintInteractive);
+                canvas.drawText("" + mCurrentSteps, 1.35f * mCenterX, 0.65f * mCenterY, mTextStepsPaintInteractive);
+
             }
         }
 
@@ -828,17 +861,11 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void updatePosition() {
-//                if (needsSizeUpdate) return;
 
-//                velX += PLANE_ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0]) / weight;
-//                velY += PLANE_ACCEL_FACTOR * linear_acceleration[1] * linear_acceleration[1] / weight;
-//                velX += PLANE_ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0] + PLANE_ACCEL_FACTOR * (anchorX - x)) / weight;
-//                velY += PLANE_ACCEL_FACTOR * ( linear_acceleration[1] * linear_acceleration[1] + PLANE_ACCEL_FACTOR * (anchorY - y)) / weight;
-//                velX += PLANE_ACCEL_FACTOR * (-linear_acceleration[0] * linear_acceleration[0] - gravity[0] + 0.03f * (anchorX - x)) / weight;
-//                velY += PLANE_ACCEL_FACTOR * ( linear_acceleration[1] * linear_acceleration[1] + gravity[1] + 0.03f * (anchorY - y)) / weight;
-
-                accX = (PLANE_ACCEL_FACTOR * -linear_acceleration[0] * linear_acceleration[0] - GRAVITY_FACTOR * gravity[0] + ANCHOR_SPRING_FACTOR * (anchorX - x)) / weight;
-                accY = (PLANE_ACCEL_FACTOR *  linear_acceleration[1] * linear_acceleration[1] + GRAVITY_FACTOR * gravity[1] + ANCHOR_SPRING_FACTOR * (anchorY - y)) / weight;
+                accX = (PLANE_ACCEL_FACTOR * -linear_acceleration[0] * linear_acceleration[0]
+                        - GRAVITY_FACTOR * gravity[0] + ANCHOR_SPRING_FACTOR * (anchorX - x)) / weight;
+                accY = (PLANE_ACCEL_FACTOR *  linear_acceleration[1] * linear_acceleration[1]
+                        + GRAVITY_FACTOR * gravity[1] + ANCHOR_SPRING_FACTOR * (anchorY - y)) / weight;
 
                 velX += accX;
                 velY += accY;
