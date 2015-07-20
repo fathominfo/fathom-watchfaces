@@ -111,6 +111,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
         private static final boolean DRAW_BALL = false;
         private static final boolean USE_TRIANGLE_CURSOR = true;
+        private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = false;
+        private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
 
 
 
@@ -544,10 +546,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
 
                 for (int i = updateList.size() - 1; i >= 0; i--) {
-                    if (!updateList.get(i).animate) {
+                    if (!updateList.get(i).needsUpdate) {
                         updateList.remove(i);
                     }
                 }
+
+
             }
 
             void render(Canvas canvas, boolean ambientMode) {
@@ -636,13 +640,17 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
         class Triangle {
-            private final static float ANIM_SPEED = 0.25f;
-            private final static int END_THRESHOLD = 5;
+            private final static float VERTICES_ANIM_SPEED = 0.25f;
+            private final static int   VERTICES_ANIM_END_THRESHOLD = 5;
+
+            private final static float COLOR_ANIM_SPEED = 0.10f;
+            private final static int   COLOR_ANIM_END_THRESHOLD = 100;
 
             Bounce start, middle, end;
             Path path;
-            int color;
-            boolean animate;
+            int baseColor, currentColor;
+            boolean animateVertices, animateColor;
+            boolean needsUpdate;
             float endX, endY;
 
             Triangle(Bounce start_, Bounce middle_, Bounce end_) {
@@ -650,43 +658,105 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 middle = middle_;
                 end = end_;
 
-                color = end.color;
+                baseColor = end.color;
 
-                animate = true;
-                endX = middle.x;
-                endY = middle.y;
+                if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION) {
+                    animateVertices = true;
+                    endX = middle.x;
+                    endY = middle.y;
+                    path = new Path();
+                    path.moveTo(start.x, start.y);
+                    path.lineTo(middle.x, middle.y);
+                    path.lineTo(endX, endY);
+                } else {
+                    animateVertices = false;
+                    endX = 0;
+                    endY = 0;
+                    path = new Path();
+                    path.moveTo(start.x, start.y);
+                    path.lineTo(middle.x, middle.y);
+                    path.lineTo(end.x, end.y);
+                }
 
-                path = new Path();
-                path.moveTo(start.x, start.y);
-                path.lineTo(middle.x, middle.y);
-                path.lineTo(endX, endY);
+                if (TRIANGLES_ANIMATE_COLOR_ON_CREATION) {
+                    animateColor = true;
+                    currentColor = Color.argb(127, 255, 255, 255);
+                } else {
+                    animateColor = false;
+                    currentColor = baseColor;
+                }
+
+                needsUpdate = animateColor || animateVertices;
             }
 
             boolean update() {
-                float diffX = end.x - endX,
-                        diffY = end.y - endY;
 
-                if (Math.abs(diffX) < END_THRESHOLD && Math.abs(diffY) < END_THRESHOLD) {
-                    endX = end.x;
-                    endY = end.y;
-                    animate = false;
-                } else {
-                    endX += ANIM_SPEED * diffX;
-                    endY += ANIM_SPEED * diffY;
+                Log.v(TAG, "Updating T:" + this.toString());
+
+                if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION && animateVertices) {
+                    float diffX = end.x - endX,
+                            diffY = end.y - endY;
+
+                    if (Math.abs(diffX) < VERTICES_ANIM_END_THRESHOLD && Math.abs(diffY) < VERTICES_ANIM_END_THRESHOLD) {
+                        endX = end.x;
+                        endY = end.y;
+                        animateVertices = false;
+                    } else {
+                        endX += VERTICES_ANIM_SPEED * diffX;
+                        endY += VERTICES_ANIM_SPEED * diffY;
+                    }
+
+                    path.rewind();
+                    path.moveTo(start.x, start.y);
+                    path.lineTo(middle.x, middle.y);
+                    path.lineTo(endX, endY);
                 }
 
-//                path.reset();
-                path.rewind();  // better performance
-                path.moveTo(start.x, start.y);
-                path.lineTo(middle.x, middle.y);
-                path.lineTo(endX, endY);
+                if (TRIANGLES_ANIMATE_COLOR_ON_CREATION && animateColor) {
+//                    float diff = COLOR_ANIM_SPEED * (currentColor - baseColor);
+//                    if (Math.abs(diff) < COLOR_ANIM_END_THRESHOLD) {
+//                        currentColor = baseColor;
+//                        animateColor = false;
+//                    } else {
+//                        currentColor += (int) diff;
+//                    }
 
-                return animate;
+                    int prevColor = currentColor;
+                    currentColor = interpolateColor(currentColor, baseColor, COLOR_ANIM_SPEED);
+
+                    if (prevColor == currentColor) {
+                        animateColor = false;
+                    }
+
+                }
+
+                Log.v(TAG, "animateVertices: " + animateVertices);
+                Log.v(TAG, "animateColor: " + animateColor);
+
+                needsUpdate = animateColor || animateVertices;
+
+                return needsUpdate;
             }
 
             void render(Canvas canvas, Paint paint) {
-                paint.setColor(color);
+                paint.setColor(currentColor);
                 canvas.drawPath(path, paint);
+            }
+
+            /**
+             * This can be optimized with bitwise operators: http://stackoverflow.com/a/18037185/1934487
+             * @param sourceColor
+             * @param targetColor
+             * @param parameter
+             * @return
+             */
+            int interpolateColor(int sourceColor, int targetColor, float parameter) {
+                int r = Color.red(sourceColor)   + (int) (parameter * (Color.red(targetColor)   - Color.red(sourceColor)));
+                int g = Color.green(sourceColor) + (int) (parameter * (Color.green(targetColor) - Color.green(sourceColor)));
+                int b = Color.blue(sourceColor)  + (int) (parameter * (Color.blue(targetColor)  - Color.blue(sourceColor)));
+                int a = Color.alpha(sourceColor) + (int) (parameter * (Color.alpha(targetColor) - Color.alpha(sourceColor)));
+
+                return Color.argb(a, r, g, b);
             }
 
         }
