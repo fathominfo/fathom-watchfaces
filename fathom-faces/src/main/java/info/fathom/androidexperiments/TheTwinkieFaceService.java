@@ -501,15 +501,17 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         class Board {
 
             static final boolean AVOID_DUPLICATE_SIDES = true;
+            static final int     MAX_TRIANGLE_COUNT = 15;
 
             int width, height;
             Ball ball;
 
             Bounce[] bounces;
-            Triangle[] triangles;
-            int bounceCount, triangleCount;
+            int bounceCount, bounceIterator;
 
-            List<Triangle> updateList = new ArrayList<>();
+            Triangle[] triangles;
+            int triangleCount, triangleIterator;
+            List<Triangle> triangleUpdateBuffer = new ArrayList<>();
 
             Paint linePaint;
             Paint trianglePaint;
@@ -521,10 +523,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 height = screenH;
                 ball = new Ball(this);
 
-                bounces = new Bounce[4];
+                bounces = new Bounce[MAX_TRIANGLE_COUNT + 2];
                 bounceCount = 0;
-                triangles = new Triangle[4];
+                bounceIterator = 0;
+
+                triangles = new Triangle[MAX_TRIANGLE_COUNT];
                 triangleCount = 0;
+                triangleIterator = 0;
 
                 linePaint = new Paint();
                 linePaint.setColor(Color.GRAY);
@@ -541,17 +546,15 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             void update() {
                 ball.update();
 
-                for (Triangle tt : updateList) {
+                for (Triangle tt : triangleUpdateBuffer) {
                     tt.update();
                 }
 
-                for (int i = updateList.size() - 1; i >= 0; i--) {
-                    if (!updateList.get(i).needsUpdate) {
-                        updateList.remove(i);
+                for (int i = triangleUpdateBuffer.size() - 1; i >= 0; i--) {
+                    if (!triangleUpdateBuffer.get(i).needsUpdate) {
+                        triangleUpdateBuffer.remove(i);
                     }
                 }
-
-
             }
 
             void render(Canvas canvas, boolean ambientMode) {
@@ -561,15 +564,26 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     for (int i = 0; i < bounceCount - 1; i++) {
                         canvas.drawLine(bounces[i].x, bounces[i].y,
                                 bounces[i + 1].x, bounces[i + 1].y, linePaint);
+                        Log.v(TAG, "bounceCount: " + bounceCount + " bounceIterator: "
+                                + bounceIterator + " i: " + i);
                     }
+
+                    // Close the polyline
                     if (bounceCount > 2) {
                         canvas.drawLine(bounces[bounceCount - 1].x, bounces[bounceCount - 1].y,
                                 bounces[0].x, bounces[0].y, linePaint);
                     }
 
                 } else {
+//                    for (int i = 0; i < triangleCount; i++) {
+//                        triangles[i].render(canvas, trianglePaint);
+//                    }
+
                     for (int i = 0; i < triangleCount; i++) {
-                        triangles[i].render(canvas, trianglePaint);
+                        int pos = (triangleIterator + i) % triangleCount;
+                        Log.v(TAG, "triangleCount: " + triangleCount + " triangleIterator: "
+                                + triangleIterator + " i: " + i + " pos: " + pos);
+                        triangles[pos].render(canvas, trianglePaint);
                     }
                     if (DRAW_BALL) ball.render(canvas);
                     if (USE_TRIANGLE_CURSOR) renderTriangleCursor(canvas);
@@ -582,8 +596,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     a = new Bounce((int) mCenterX, 0);
                     b = new Bounce((int) mCenterX, mHeight);
                 } else {
-                    a = bounces[bounceCount - 2];
-                    b = bounces[bounceCount - 1];
+                    int posA = (bounceIterator - 2) % bounceCount;
+                    if (posA < 0) posA += bounceCount;
+                    int posB = (bounceIterator - 1) % bounceCount;
+                    if (posB < 0) posB += bounceCount;
+                    Log.v(TAG, "posA: " + posA + " posB: " + posB);
+
+                    a = bounces[posA];
+                    b = bounces[posB];
                 }
 
                 Path path = new Path();
@@ -598,37 +618,70 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             void addBounce(int xpos, int ypos) {
                 Bounce bounce = new Bounce(xpos, ypos);
 
-                // If repeating bouncing side, do not add it to the list
                 if (AVOID_DUPLICATE_SIDES
-                        && bounceCount > 0
-                        && bounce.side == bounces[bounceCount - 1].side) {
-                    return;
+                        && bounceCount > 0) {
+                    // If repeating bouncing side, do not add it to the list
+                    int lastBounce = (bounceIterator - 1) % bounceCount;
+                    if (lastBounce < 0) lastBounce += bounceCount;
+                    if (bounce.side == bounces[lastBounce].side) return;
                 }
 
                 // Otherwise, add it to the array
-                bounces[bounceCount++] = bounce;
+                bounces[bounceIterator++] = bounce;
+
+                if (bounceIterator >= MAX_TRIANGLE_COUNT + 2) {
+                    bounceIterator = 0;
+                }
+                if (bounceCount < MAX_TRIANGLE_COUNT + 2) {
+                    bounceCount++;
+                }
+
+
 
                 if (bounceCount > 2) {
-                    Triangle t = new Triangle(bounces[bounceCount - 3],
-                            bounces[bounceCount - 2], bounces[bounceCount - 1]);
-                    triangles[triangleCount++] = t;
-                    updateList.add(t);
+                    int posA = (bounceIterator - 3) % bounceCount;
+                    if (posA < 0) posA += bounceCount;
+                    int posB = (bounceIterator - 2) % bounceCount;
+                    if (posB < 0) posB += bounceCount;
+                    int posC = (bounceIterator - 1) % bounceCount;
+                    if (posC < 0) posC += bounceCount;
+
+//                    Triangle t = new Triangle(bounces[bounceCount - 3],
+//                            bounces[bounceCount - 2], bounces[bounceCount - 1]);
+                    Triangle t = new Triangle(bounces[posA], bounces[posB], bounces[posC]);
+
+//                    triangles[triangleCount++] = t;
+                    triangles[triangleIterator++] = t;
+
+                    if (triangleIterator >= MAX_TRIANGLE_COUNT) {
+                        triangleIterator = 0;
+                    }
+                    if (triangleCount < MAX_TRIANGLE_COUNT) {
+                        triangleCount++;
+                    }
+
+//                    triangleCount++;
+//                    if (triangleCount > MAX_TRIANGLE_COUNT) triangleCount = MAX_TRIANGLE_COUNT;
+
+                    triangleUpdateBuffer.add(t);
                 }
 
                 // Double the side of the arrays if necessary
-                if (bounceCount >= bounces.length) {
-                    bounces = Arrays.copyOf(bounces, 2 * bounces.length);
-                }
-                if (triangleCount >= triangles.length) {
-                    triangles = Arrays.copyOf(triangles, 2 * triangles.length);
-                }
+//                if (bounceCount >= bounces.length) {
+//                    bounces = Arrays.copyOf(bounces, 2 * bounces.length);
+//                }
+//                if (triangleCount >= triangles.length) {
+//                    triangles = Arrays.copyOf(triangles, 2 * triangles.length);
+//                }
             }
 
             void resetBoard() {
-                bounces = new Bounce[4];
+                bounces = new Bounce[MAX_TRIANGLE_COUNT + 2];
                 bounceCount = 0;
-                triangles = new Triangle[4];
+                bounceIterator = 0;
+                triangles = new Triangle[MAX_TRIANGLE_COUNT];
                 triangleCount = 0;
+                triangleIterator = 0;
             }
 
         }
@@ -691,7 +744,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             boolean update() {
 
-                Log.v(TAG, "Updating T:" + this.toString());
+//                Log.v(TAG, "Updating T:" + this.toString());
 
                 if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION && animateVertices) {
                     float diffX = end.x - endX,
@@ -713,25 +766,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
 
                 if (TRIANGLES_ANIMATE_COLOR_ON_CREATION && animateColor) {
-//                    float diff = COLOR_ANIM_SPEED * (currentColor - baseColor);
-//                    if (Math.abs(diff) < COLOR_ANIM_END_THRESHOLD) {
-//                        currentColor = baseColor;
-//                        animateColor = false;
-//                    } else {
-//                        currentColor += (int) diff;
-//                    }
-
                     int prevColor = currentColor;
                     currentColor = interpolateColor(currentColor, baseColor, COLOR_ANIM_SPEED);
 
-                    if (prevColor == currentColor) {
+                    if (prevColor == currentColor) {  // @TODO improve this check to accept some threshold
                         animateColor = false;
                     }
-
                 }
-
-                Log.v(TAG, "animateVertices: " + animateVertices);
-                Log.v(TAG, "animateColor: " + animateColor);
 
                 needsUpdate = animateColor || animateVertices;
 
