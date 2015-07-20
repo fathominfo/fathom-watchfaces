@@ -48,6 +48,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private boolean mSensorAccelerometerIsRegistered;
     private float[] gravity = new float[3];
 
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
@@ -62,7 +63,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             // Isolate the force of gravity with the low-pass filter.
             gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
             gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-            gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+            // gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
 
         }
     }
@@ -97,14 +98,21 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         };
 
 //        private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
-        private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
+        //private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
         private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
+        private final int[] backgroundColors = new int[24];
 
         private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
         private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
         private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
 
-        private static final int RESET_CRACK_THRESHOLD = 5;  // very nth glance, cracks will be reset (0 makes does no resetting)
+        // DEBUG
+        private static final int RESET_CRACK_THRESHOLD = 5;  // every nth glance, cracks will be reset (0 makes does no resetting)
+        private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
+        private static final boolean DRAW_BALL = false;
+        private static final boolean USE_TRIANGLE_CURSOR = true;
+
+
 
 
         private boolean mRegisteredTimeZoneReceiver = false;
@@ -160,6 +168,32 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             board = new Board();
 
             mTime  = new Time();
+
+            // Initialize hardcoded day colors
+            backgroundColors[0] = Color.rgb(0, 85, 255);
+            backgroundColors[1] = Color.rgb(0, 21, 255);
+            backgroundColors[2] = Color.rgb(42, 0, 255);
+            backgroundColors[3] = Color.rgb(106, 0, 255);
+            backgroundColors[4] = Color.rgb(170, 0, 255);
+            backgroundColors[5] = Color.rgb(234, 0, 255);
+            backgroundColors[6] = Color.rgb(255, 0, 212);
+            backgroundColors[7] = Color.rgb(255, 0, 149);
+            backgroundColors[8] = Color.rgb(255, 0, 85);
+            backgroundColors[9] = Color.rgb(255, 0, 21);
+            backgroundColors[10] = Color.rgb(255, 43, 0);
+            backgroundColors[11] = Color.rgb(255, 106, 0);
+            backgroundColors[12] = Color.rgb(255, 170, 0);
+            backgroundColors[13] = Color.rgb(255, 234, 0);
+            backgroundColors[14] = Color.rgb(212, 255, 0);
+            backgroundColors[15] = Color.rgb(149, 255, 0);
+            backgroundColors[16] = Color.rgb(85, 255, 0);
+            backgroundColors[17] = Color.rgb(21, 255, 0);
+            backgroundColors[18] = Color.rgb(0, 255, 43);
+            backgroundColors[19] = Color.rgb(0, 255, 106);
+            backgroundColors[20] = Color.rgb(0, 255, 170);
+            backgroundColors[21] = Color.rgb(0, 255, 234);
+            backgroundColors[22] = Color.rgb(0, 212, 255);
+            backgroundColors[23] = Color.rgb(0, 149, 255);
         }
 
         @Override
@@ -227,32 +261,44 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             mTime.setToNow();
 
-            final String hours = String.format("%02d", mTime.hour % 12 == 0 ? 12 : mTime.hour % 12);
-            final String minutes = String.format("%02d", mTime.minute);
+            int hour = mTime.hour;
+            if (NEW_HOUR_PER_GLANCE) {
+                hour = (hour + glances) % 24;
+            }
+
+            String hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
+            String minuteStr = String.format("%02d", mTime.minute);
 
             // Start drawing watch elements
 //            canvas.save();
 
             if (mAmbient) {
+
+                // if on debug, show real time on ambient
+                if (NEW_HOUR_PER_GLANCE) {
+                    hour = mTime.hour;
+                    hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
+                }
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
                 board.render(canvas, true);
 
                 mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hours, mCenterX - 20, mCenterY);  // @TODO: be screen programmatic here
+                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr, mCenterX - 20, mCenterY);  // @TODO: be screen programmatic here
                 mTextPaintAmbient.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextPaintAmbient, minutes, mCenterX + 20, mCenterY);
+                drawTextVerticallyCentered(canvas, mTextPaintAmbient, minuteStr, mCenterX + 20, mCenterY);
 
             } else {
-                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
+//                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
+                canvas.drawColor(backgroundColors[hour]);
 
                 board.update();
                 board.render(canvas, false);
 
                 mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hours, mCenterX - 20, mCenterY);
+                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr, mCenterX - 20, mCenterY);
                 mTextPaintInteractive.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, minutes, mCenterX + 20, mCenterY);
+                drawTextVerticallyCentered(canvas, mTextPaintInteractive, minuteStr, mCenterX + 20, mCenterY);
             }
         }
 
@@ -350,17 +396,20 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
         }
 
-
-
-
-
-
-
         // http://stackoverflow.com/a/24969713/1934487
         private void drawTextVerticallyCentered(Canvas canvas, Paint paint, String text, float cx, float cy) {
             paint.getTextBounds(text, 0, text.length(), textBounds);
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
+
+
+
+
+
+
+
+
+
 
         class Ball {
 
@@ -509,13 +558,37 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                         canvas.drawLine(bounces[i].x, bounces[i].y,
                                 bounces[i + 1].x, bounces[i + 1].y, linePaint);
                     }
+                    if (bounceCount > 2) {
+                        canvas.drawLine(bounces[bounceCount - 1].x, bounces[bounceCount - 1].y,
+                                bounces[0].x, bounces[0].y, linePaint);
+                    }
 
                 } else {
                     for (int i = 0; i < triangleCount; i++) {
                         triangles[i].render(canvas, trianglePaint);
                     }
-                    ball.render(canvas);
+                    if (DRAW_BALL) ball.render(canvas);
+                    if (USE_TRIANGLE_CURSOR) renderTriangleCursor(canvas);
                 }
+            }
+
+            void renderTriangleCursor(Canvas canvas) {
+                Bounce a, b;
+                if (bounceCount < 2) {
+                    a = new Bounce((int) mCenterX, 0);
+                    b = new Bounce((int) mCenterX, mHeight);
+                } else {
+                    a = bounces[bounceCount - 2];
+                    b = bounces[bounceCount - 1];
+                }
+
+                Path path = new Path();
+                path.moveTo(a.x, a.y);
+                path.lineTo(b.x, b.y);
+                path.lineTo(ball.x, ball.y);
+
+                trianglePaint.setColor(Color.argb(127, 255, 255, 255));
+                canvas.drawPath(path, trianglePaint);
             }
 
             void addBounce(int xpos, int ypos) {
@@ -590,7 +663,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             boolean update() {
-
                 float diffX = end.x - endX,
                         diffY = end.y - endY;
 
