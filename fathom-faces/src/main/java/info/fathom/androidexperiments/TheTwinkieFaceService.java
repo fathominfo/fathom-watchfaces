@@ -105,9 +105,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
         private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
         private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
+        private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
 
         // DEBUG
-        private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 makes does no resetting)
+        private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
         private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
         private static final boolean DRAW_BALL = false;
         private static final boolean USE_TRIANGLE_CURSOR = true;
@@ -126,7 +127,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         private Paint mTextPaintInteractive, mTextPaintAmbient;
         private float mTextHeight;
+        private float mTextRightMargin;
         private final Rect textBounds = new Rect();
+        private Typeface RALEWAY_REGULAR_TYPEFACE;
 
         private int mWidth;
         private int mHeight;
@@ -153,14 +156,19 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     .setShowSystemUiTime(false)
                     .build());
 
+            RALEWAY_REGULAR_TYPEFACE = Typeface.createFromAsset(getApplicationContext().getAssets(),
+                    "fonts/raleway-regular.ttf");
+
             mTextPaintInteractive = new Paint();
             mTextPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
-            mTextPaintInteractive.setTypeface(NORMAL_TYPEFACE);
+            mTextPaintInteractive.setTypeface(RALEWAY_REGULAR_TYPEFACE);
+            mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
             mTextPaintInteractive.setAntiAlias(true);
 
             mTextPaintAmbient = new Paint();
             mTextPaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
-            mTextPaintAmbient.setTypeface(NORMAL_TYPEFACE);
+            mTextPaintAmbient.setTypeface(RALEWAY_REGULAR_TYPEFACE);
+            mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
             mTextPaintAmbient.setAntiAlias(false);
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -253,6 +261,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             board.initialize(mWidth, mHeight);
 
             mTextHeight = TEXT_DIGITS_HEIGHT * mHeight;
+            mTextRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
             mTextPaintInteractive.setTextSize(mTextHeight);
             mTextPaintAmbient.setTextSize(mTextHeight);
 
@@ -268,7 +277,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 hour = (hour + glances) % 24;
             }
 
-            String hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
+//            String hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
+            String hourStr = Integer.toString(hour % 12 == 0 ? 12 : hour % 12);
             String minuteStr = String.format("%02d", mTime.minute);
 
             // Start drawing watch elements
@@ -279,16 +289,19 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 // if on debug, show real time on ambient
                 if (NEW_HOUR_PER_GLANCE) {
                     hour = mTime.hour;
-                    hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
+                    hourStr = Integer.toString(hour % 12 == 0 ? 12 : hour % 12);
                 }
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
                 board.render(canvas, true);
 
-                mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr, mCenterX - 20, mCenterY);  // @TODO: be screen programmatic here
-                mTextPaintAmbient.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextPaintAmbient, minuteStr, mCenterX + 20, mCenterY);
+                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr + ":" + minuteStr,
+                        mWidth - mTextRightMargin, mCenterY);
+
+//                mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+//                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr, mCenterX - 20, mCenterY);  // @TODO: be screen programmatic here
+//                mTextPaintAmbient.setTextAlign(Paint.Align.LEFT);
+//                drawTextVerticallyCentered(canvas, mTextPaintAmbient, minuteStr, mCenterX + 20, mCenterY);
 
             } else {
 //                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
@@ -297,10 +310,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 board.update();
                 board.render(canvas, false);
 
-                mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr, mCenterX - 20, mCenterY);
-                mTextPaintInteractive.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, minuteStr, mCenterX + 20, mCenterY);
+                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr + ":" + minuteStr,
+                        mWidth - mTextRightMargin, mCenterY);
+
+//                mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+//                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr, mCenterX - 20, mCenterY);
+//                mTextPaintInteractive.setTextAlign(Paint.Align.LEFT);
+//                drawTextVerticallyCentered(canvas, mTextPaintInteractive, minuteStr, mCenterX + 20, mCenterY);
             }
         }
 
