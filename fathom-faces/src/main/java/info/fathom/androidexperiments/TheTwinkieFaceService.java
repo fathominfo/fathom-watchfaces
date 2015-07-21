@@ -563,8 +563,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 trianglePaint.setAntiAlias(true);
 
                 // Initialize two bounces for an initial triangle cursor
-                addBounce(0, 0);
-                addBounce(mWidth, 0);
+                addBounce(1, 0);
+                addBounce(mWidth, 1);  // the 1's are a small trick to avoid closed outline
             }
 
             void update() {
