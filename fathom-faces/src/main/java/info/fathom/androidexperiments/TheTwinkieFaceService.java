@@ -559,6 +559,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 trianglePaint = new Paint();
                 trianglePaint.setColor(Color.WHITE);
+//                trianglePaint.setColor(Color.rgb(0,0,0));
                 trianglePaint.setStyle(Paint.Style.FILL);
                 trianglePaint.setAntiAlias(true);
 
@@ -977,7 +978,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             void newColor() {
+                
                 color = Color.argb(COLOR_TRIANGLE_ALPHA,
+
                         (int) (255 * Math.random()),
                         (int) (255 * Math.random()),
                         (int) (255 * Math.random())
