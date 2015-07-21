@@ -112,7 +112,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         // DEBUG
         private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-        private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
+        private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
         private static final boolean DRAW_BALL = false;
         private static final boolean USE_TRIANGLE_CURSOR = true;
         private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
@@ -310,7 +310,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //                drawTestGrays(canvas);
 
                 drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr + ":" + minuteStr,
-                        mWidth - mTextRightMargin, mCenterY);
+                        mWidth - mTextRightMargin, 0.33f * mHeight);
 
             } else {
 //                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
@@ -320,7 +320,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 board.render(canvas, false);
 
                 drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr + ":" + minuteStr,
-                        mWidth - mTextRightMargin, mCenterY);
+                        mWidth - mTextRightMargin, 0.33f * mHeight);
             }
         }
 
