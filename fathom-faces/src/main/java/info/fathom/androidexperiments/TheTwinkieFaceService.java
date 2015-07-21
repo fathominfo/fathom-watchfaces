@@ -111,7 +111,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
 
         // DEBUG
-        private static final int     RESET_CRACK_THRESHOLD = 5;  // every nth glance, cracks will be reset (0 does no resetting)
+        private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
         private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
         private static final boolean DRAW_BALL = false;
         private static final boolean USE_TRIANGLE_CURSOR = true;
