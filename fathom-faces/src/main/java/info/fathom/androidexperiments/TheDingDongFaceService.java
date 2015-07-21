@@ -548,26 +548,31 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private final static int STEP_RATIO_MEDIUM  = 100;
             private final static int STEP_RATIO_SMALL   = 10;
 
-            private final static int RADIUS_XBIG    = 75;
-            private final static int RADIUS_BIG     = 50;
-            private final static int RADIUS_MEDIUM  = 35;
-            private final static int RADIUS_SMALL   = 20;
 
-            private final static float WEIGHT_XBIG      = 4;
-            private final static float WEIGHT_BIG       = 3;
-            private final static float WEIGHT_MEDIUM    = 2;
-            private final static float WEIGHT_SMALL     = 1;
+//            private final static int RADIUS_XBIG = 75;
+//            private final static int RADIUS_BIG = 50;
+//            private final static int RADIUS_MEDIUM = 35;
+//            private final static int RADIUS_SMALL = 20;
 
-            private final int COLOR_XBIG    = Color.argb(204, 236, 0, 140);  // pink
-            private final int COLOR_BIG     = Color.argb(204, 239, 65, 54);  // red
+            private final static int RADIUS_XBIG = 70;
+            private final static int RADIUS_BIG = 45;
+            private final static int RADIUS_MEDIUM = 25;
+            private final static int RADIUS_SMALL = 15;
+
+            private final static float WEIGHT_XBIG      = 5;
+            private final static float WEIGHT_BIG       = 4;
+            private final static float WEIGHT_MEDIUM    = 3;
+            private final static float WEIGHT_SMALL     = 3;
+
+            private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);  // pink
+            private final int COLOR_BIG     = Color.argb(204, 146, 39, 143);  // red
             private final int COLOR_MEDIUM  = Color.argb(204, 39, 170, 225);  // blue
-            private final int COLOR_SMALL   = Color.argb(204, 215, 223, 35);  // yellow
+            private final int COLOR_SMALL   = Color.argb(204, 141, 198, 63);  // yellow
 
             private final static float GAP_ANGLE_XBIG   = (float) (-0.75f * Math.PI);
             private final static float GAP_ANGLE_BIG    = (float) (-0.50f * Math.PI);
             private final static float GAP_ANGLE_MEDIUM = (float) (-1.00f * Math.PI);
             private final static float GAP_ANGLE_SMALL  = (float) (-0.75f * Math.PI);
-
 
             private BubbleCollection bubblesXBig, bubblesBig, bubblesMedium, bubblesSmall;
             private Paint paintXBig, paintBig, paintMedium, paintSmall;
@@ -792,15 +797,26 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private static final boolean BOUNCE_FROM_BORDER     = true;
             private static final boolean DEPTH_BOUNCING         = true;
 
-            private static final float FRICTION                 = 0.95f;
-            private static final float PLANE_ACCEL_FACTOR       = 0.25f;
-            private static final float GRAVITY_FACTOR           = 1.00f;
-            private static final float ANCHOR_SPRING_FACTOR     = 0.03f;
+            // Originals
+//            private static final float FRICTION                 = 0.95f;
+//            private static final float PLANE_ACCEL_FACTOR       = 0.25f;
+//            private static final float GRAVITY_FACTOR           = 1.00f;
+//            private static final float ANCHOR_SPRING_FACTOR     = 0.03f;
+//
+//            private static final float DEPTH_ACCEL_FACTOR       = 0.50f;
+//            private static final float DEPTH_SPRING_FACTOR      = 0.20f;
+//
+//            private static final float RANDOM_WEIGHT_FACTOR     = 0.20f;
 
-            private static final float DEPTH_ACCEL_FACTOR       = 0.50f;
-            private static final float DEPTH_SPRING_FACTOR      = 0.20f;
+            private static final float FRICTION                 = 0.95f; // 0 - 1, 0 is total friction
+            private static final float PLANE_ACCEL_FACTOR       = 0.25f; // when level, how much shake?
+            private static final float GRAVITY_FACTOR           = 1.00f; //
+            private static final float ANCHOR_SPRING_FACTOR     = 0.02f; // how much spring from lock position
 
-            private static final float RANDOM_WEIGHT_FACTOR     = 0.20f;
+            private static final float DEPTH_ACCEL_FACTOR       = 0.40f;
+            private static final float DEPTH_SPRING_FACTOR      = 0.15f;
+
+            private static final float RANDOM_WEIGHT_FACTOR     = 0.50f; // how much variation between balls in the same category
 
             BubbleCollection parent;
 
