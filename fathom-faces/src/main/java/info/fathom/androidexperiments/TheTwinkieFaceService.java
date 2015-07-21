@@ -48,6 +48,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private boolean mSensorAccelerometerIsRegistered;
     private float[] gravity = new float[3];
 
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
@@ -62,7 +63,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             // Isolate the force of gravity with the low-pass filter.
             gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
             gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-            gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+            // gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
 
         }
     }
@@ -97,14 +98,24 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         };
 
 //        private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
-        private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
+        //private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
         private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
+        private final int[] backgroundColors = new int[24];
 
         private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
         private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
         private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
+        private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
 
-        private static final int RESET_CRACK_THRESHOLD = 5;  // very nth glance, cracks will be reset (0 makes does no resetting)
+        // DEBUG
+        private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
+        private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
+        private static final boolean DRAW_BALL = false;
+        private static final boolean USE_TRIANGLE_CURSOR = true;
+        private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = false;
+        private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
+
+
 
 
         private boolean mRegisteredTimeZoneReceiver = false;
@@ -116,7 +127,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         private Paint mTextPaintInteractive, mTextPaintAmbient;
         private float mTextHeight;
+        private float mTextRightMargin;
         private final Rect textBounds = new Rect();
+        private Typeface RALEWAY_REGULAR_TYPEFACE;
 
         private int mWidth;
         private int mHeight;
@@ -143,14 +156,19 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     .setShowSystemUiTime(false)
                     .build());
 
+            RALEWAY_REGULAR_TYPEFACE = Typeface.createFromAsset(getApplicationContext().getAssets(),
+                    "fonts/raleway-regular.ttf");
+
             mTextPaintInteractive = new Paint();
             mTextPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
-            mTextPaintInteractive.setTypeface(NORMAL_TYPEFACE);
+            mTextPaintInteractive.setTypeface(RALEWAY_REGULAR_TYPEFACE);
+            mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
             mTextPaintInteractive.setAntiAlias(true);
 
             mTextPaintAmbient = new Paint();
             mTextPaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
-            mTextPaintAmbient.setTypeface(NORMAL_TYPEFACE);
+            mTextPaintAmbient.setTypeface(RALEWAY_REGULAR_TYPEFACE);
+            mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
             mTextPaintAmbient.setAntiAlias(false);
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -160,6 +178,32 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             board = new Board();
 
             mTime  = new Time();
+
+            // Initialize hardcoded day colors
+            backgroundColors[0] = Color.rgb(0, 85, 255);
+            backgroundColors[1] = Color.rgb(0, 21, 255);
+            backgroundColors[2] = Color.rgb(42, 0, 255);
+            backgroundColors[3] = Color.rgb(106, 0, 255);
+            backgroundColors[4] = Color.rgb(170, 0, 255);
+            backgroundColors[5] = Color.rgb(234, 0, 255);
+            backgroundColors[6] = Color.rgb(255, 0, 212);
+            backgroundColors[7] = Color.rgb(255, 0, 149);
+            backgroundColors[8] = Color.rgb(255, 0, 85);
+            backgroundColors[9] = Color.rgb(255, 0, 21);
+            backgroundColors[10] = Color.rgb(255, 43, 0);
+            backgroundColors[11] = Color.rgb(255, 106, 0);
+            backgroundColors[12] = Color.rgb(255, 170, 0);
+            backgroundColors[13] = Color.rgb(255, 234, 0);
+            backgroundColors[14] = Color.rgb(212, 255, 0);
+            backgroundColors[15] = Color.rgb(149, 255, 0);
+            backgroundColors[16] = Color.rgb(85, 255, 0);
+            backgroundColors[17] = Color.rgb(21, 255, 0);
+            backgroundColors[18] = Color.rgb(0, 255, 43);
+            backgroundColors[19] = Color.rgb(0, 255, 106);
+            backgroundColors[20] = Color.rgb(0, 255, 170);
+            backgroundColors[21] = Color.rgb(0, 255, 234);
+            backgroundColors[22] = Color.rgb(0, 212, 255);
+            backgroundColors[23] = Color.rgb(0, 149, 255);
         }
 
         @Override
@@ -217,6 +261,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             board.initialize(mWidth, mHeight);
 
             mTextHeight = TEXT_DIGITS_HEIGHT * mHeight;
+            mTextRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
             mTextPaintInteractive.setTextSize(mTextHeight);
             mTextPaintAmbient.setTextSize(mTextHeight);
 
@@ -227,32 +272,51 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             mTime.setToNow();
 
-            final String hours = String.format("%02d", mTime.hour % 12 == 0 ? 12 : mTime.hour % 12);
-            final String minutes = String.format("%02d", mTime.minute);
+            int hour = mTime.hour;
+            if (NEW_HOUR_PER_GLANCE) {
+                hour = (hour + glances) % 24;
+            }
+
+//            String hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
+            String hourStr = Integer.toString(hour % 12 == 0 ? 12 : hour % 12);
+            String minuteStr = String.format("%02d", mTime.minute);
 
             // Start drawing watch elements
 //            canvas.save();
 
             if (mAmbient) {
+
+                // if on debug, show real time on ambient
+                if (NEW_HOUR_PER_GLANCE) {
+                    hour = mTime.hour;
+                    hourStr = Integer.toString(hour % 12 == 0 ? 12 : hour % 12);
+                }
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
                 board.render(canvas, true);
 
-                mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hours, mCenterX - 20, mCenterY);  // @TODO: be screen programmatic here
-                mTextPaintAmbient.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextPaintAmbient, minutes, mCenterX + 20, mCenterY);
+                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr + ":" + minuteStr,
+                        mWidth - mTextRightMargin, mCenterY);
+
+//                mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+//                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr, mCenterX - 20, mCenterY);  // @TODO: be screen programmatic here
+//                mTextPaintAmbient.setTextAlign(Paint.Align.LEFT);
+//                drawTextVerticallyCentered(canvas, mTextPaintAmbient, minuteStr, mCenterX + 20, mCenterY);
 
             } else {
-                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
+//                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
+                canvas.drawColor(backgroundColors[hour]);
 
                 board.update();
                 board.render(canvas, false);
 
-                mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hours, mCenterX - 20, mCenterY);
-                mTextPaintInteractive.setTextAlign(Paint.Align.LEFT);
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, minutes, mCenterX + 20, mCenterY);
+                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr + ":" + minuteStr,
+                        mWidth - mTextRightMargin, mCenterY);
+
+//                mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+//                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr, mCenterX - 20, mCenterY);
+//                mTextPaintInteractive.setTextAlign(Paint.Align.LEFT);
+//                drawTextVerticallyCentered(canvas, mTextPaintInteractive, minuteStr, mCenterX + 20, mCenterY);
             }
         }
 
@@ -350,17 +414,20 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
         }
 
-
-
-
-
-
-
         // http://stackoverflow.com/a/24969713/1934487
         private void drawTextVerticallyCentered(Canvas canvas, Paint paint, String text, float cx, float cy) {
             paint.getTextBounds(text, 0, text.length(), textBounds);
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
+
+
+
+
+
+
+
+
+
 
         class Ball {
 
@@ -450,15 +517,17 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         class Board {
 
             static final boolean AVOID_DUPLICATE_SIDES = true;
+            static final int     MAX_TRIANGLE_COUNT = 15;
 
             int width, height;
             Ball ball;
 
             Bounce[] bounces;
-            Triangle[] triangles;
-            int bounceCount, triangleCount;
+            int bounceCount, bounceIterator;
 
-            List<Triangle> updateList = new ArrayList<>();
+            Triangle[] triangles;
+            int triangleCount, triangleIterator;
+            List<Triangle> triangleUpdateBuffer = new ArrayList<>();
 
             Paint linePaint;
             Paint trianglePaint;
@@ -470,10 +539,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 height = screenH;
                 ball = new Ball(this);
 
-                bounces = new Bounce[4];
+                bounces = new Bounce[MAX_TRIANGLE_COUNT + 2];
                 bounceCount = 0;
-                triangles = new Triangle[4];
+                bounceIterator = 0;
+
+                triangles = new Triangle[MAX_TRIANGLE_COUNT];
                 triangleCount = 0;
+                triangleIterator = 0;
 
                 linePaint = new Paint();
                 linePaint.setColor(Color.GRAY);
@@ -490,13 +562,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             void update() {
                 ball.update();
 
-                for (Triangle tt : updateList) {
+                for (Triangle tt : triangleUpdateBuffer) {
                     tt.update();
                 }
 
-                for (int i = updateList.size() - 1; i >= 0; i--) {
-                    if (!updateList.get(i).animate) {
-                        updateList.remove(i);
+                for (int i = triangleUpdateBuffer.size() - 1; i >= 0; i--) {
+                    if (!triangleUpdateBuffer.get(i).needsUpdate) {
+                        triangleUpdateBuffer.remove(i);
                     }
                 }
             }
@@ -508,50 +580,124 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     for (int i = 0; i < bounceCount - 1; i++) {
                         canvas.drawLine(bounces[i].x, bounces[i].y,
                                 bounces[i + 1].x, bounces[i + 1].y, linePaint);
+                        Log.v(TAG, "bounceCount: " + bounceCount + " bounceIterator: "
+                                + bounceIterator + " i: " + i);
+                    }
+
+                    // Close the polyline
+                    if (bounceCount > 2) {
+                        canvas.drawLine(bounces[bounceCount - 1].x, bounces[bounceCount - 1].y,
+                                bounces[0].x, bounces[0].y, linePaint);
                     }
 
                 } else {
+//                    for (int i = 0; i < triangleCount; i++) {
+//                        triangles[i].render(canvas, trianglePaint);
+//                    }
+
                     for (int i = 0; i < triangleCount; i++) {
-                        triangles[i].render(canvas, trianglePaint);
+                        int pos = (triangleIterator + i) % triangleCount;
+                        Log.v(TAG, "triangleCount: " + triangleCount + " triangleIterator: "
+                                + triangleIterator + " i: " + i + " pos: " + pos);
+                        triangles[pos].render(canvas, trianglePaint);
                     }
-                    ball.render(canvas);
+                    if (DRAW_BALL) ball.render(canvas);
+                    if (USE_TRIANGLE_CURSOR) renderTriangleCursor(canvas);
                 }
+            }
+
+            void renderTriangleCursor(Canvas canvas) {
+                Bounce a, b;
+                if (bounceCount < 2) {
+                    a = new Bounce((int) mCenterX, 0);
+                    b = new Bounce((int) mCenterX, mHeight);
+                } else {
+                    int posA = (bounceIterator - 2) % bounceCount;
+                    if (posA < 0) posA += bounceCount;
+                    int posB = (bounceIterator - 1) % bounceCount;
+                    if (posB < 0) posB += bounceCount;
+                    Log.v(TAG, "posA: " + posA + " posB: " + posB);
+
+                    a = bounces[posA];
+                    b = bounces[posB];
+                }
+
+                Path path = new Path();
+                path.moveTo(a.x, a.y);
+                path.lineTo(b.x, b.y);
+                path.lineTo(ball.x, ball.y);
+
+                trianglePaint.setColor(Color.argb(127, 255, 255, 255));
+                canvas.drawPath(path, trianglePaint);
             }
 
             void addBounce(int xpos, int ypos) {
                 Bounce bounce = new Bounce(xpos, ypos);
 
-                // If repeating bouncing side, do not add it to the list
                 if (AVOID_DUPLICATE_SIDES
-                        && bounceCount > 0
-                        && bounce.side == bounces[bounceCount - 1].side) {
-                    return;
+                        && bounceCount > 0) {
+                    // If repeating bouncing side, do not add it to the list
+                    int lastBounce = (bounceIterator - 1) % bounceCount;
+                    if (lastBounce < 0) lastBounce += bounceCount;
+                    if (bounce.side == bounces[lastBounce].side) return;
                 }
 
                 // Otherwise, add it to the array
-                bounces[bounceCount++] = bounce;
+                bounces[bounceIterator++] = bounce;
+
+                if (bounceIterator >= MAX_TRIANGLE_COUNT + 2) {
+                    bounceIterator = 0;
+                }
+                if (bounceCount < MAX_TRIANGLE_COUNT + 2) {
+                    bounceCount++;
+                }
+
+
 
                 if (bounceCount > 2) {
-                    Triangle t = new Triangle(bounces[bounceCount - 3],
-                            bounces[bounceCount - 2], bounces[bounceCount - 1]);
-                    triangles[triangleCount++] = t;
-                    updateList.add(t);
+                    int posA = (bounceIterator - 3) % bounceCount;
+                    if (posA < 0) posA += bounceCount;
+                    int posB = (bounceIterator - 2) % bounceCount;
+                    if (posB < 0) posB += bounceCount;
+                    int posC = (bounceIterator - 1) % bounceCount;
+                    if (posC < 0) posC += bounceCount;
+
+//                    Triangle t = new Triangle(bounces[bounceCount - 3],
+//                            bounces[bounceCount - 2], bounces[bounceCount - 1]);
+                    Triangle t = new Triangle(bounces[posA], bounces[posB], bounces[posC]);
+
+//                    triangles[triangleCount++] = t;
+                    triangles[triangleIterator++] = t;
+
+                    if (triangleIterator >= MAX_TRIANGLE_COUNT) {
+                        triangleIterator = 0;
+                    }
+                    if (triangleCount < MAX_TRIANGLE_COUNT) {
+                        triangleCount++;
+                    }
+
+//                    triangleCount++;
+//                    if (triangleCount > MAX_TRIANGLE_COUNT) triangleCount = MAX_TRIANGLE_COUNT;
+
+                    triangleUpdateBuffer.add(t);
                 }
 
                 // Double the side of the arrays if necessary
-                if (bounceCount >= bounces.length) {
-                    bounces = Arrays.copyOf(bounces, 2 * bounces.length);
-                }
-                if (triangleCount >= triangles.length) {
-                    triangles = Arrays.copyOf(triangles, 2 * triangles.length);
-                }
+//                if (bounceCount >= bounces.length) {
+//                    bounces = Arrays.copyOf(bounces, 2 * bounces.length);
+//                }
+//                if (triangleCount >= triangles.length) {
+//                    triangles = Arrays.copyOf(triangles, 2 * triangles.length);
+//                }
             }
 
             void resetBoard() {
-                bounces = new Bounce[4];
+                bounces = new Bounce[MAX_TRIANGLE_COUNT + 2];
                 bounceCount = 0;
-                triangles = new Triangle[4];
+                bounceIterator = 0;
+                triangles = new Triangle[MAX_TRIANGLE_COUNT];
                 triangleCount = 0;
+                triangleIterator = 0;
             }
 
         }
@@ -563,13 +709,17 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
         class Triangle {
-            private final static float ANIM_SPEED = 0.25f;
-            private final static int END_THRESHOLD = 5;
+            private final static float VERTICES_ANIM_SPEED = 0.25f;
+            private final static int   VERTICES_ANIM_END_THRESHOLD = 5;
+
+            private final static float COLOR_ANIM_SPEED = 0.10f;
+            private final static int   COLOR_ANIM_END_THRESHOLD = 100;
 
             Bounce start, middle, end;
             Path path;
-            int color;
-            boolean animate;
+            int baseColor, currentColor;
+            boolean animateVertices, animateColor;
+            boolean needsUpdate;
             float endX, endY;
 
             Triangle(Bounce start_, Bounce middle_, Bounce end_) {
@@ -577,44 +727,93 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 middle = middle_;
                 end = end_;
 
-                color = end.color;
+                baseColor = end.color;
 
-                animate = true;
-                endX = middle.x;
-                endY = middle.y;
+                if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION) {
+                    animateVertices = true;
+                    endX = middle.x;
+                    endY = middle.y;
+                    path = new Path();
+                    path.moveTo(start.x, start.y);
+                    path.lineTo(middle.x, middle.y);
+                    path.lineTo(endX, endY);
+                } else {
+                    animateVertices = false;
+                    endX = 0;
+                    endY = 0;
+                    path = new Path();
+                    path.moveTo(start.x, start.y);
+                    path.lineTo(middle.x, middle.y);
+                    path.lineTo(end.x, end.y);
+                }
 
-                path = new Path();
-                path.moveTo(start.x, start.y);
-                path.lineTo(middle.x, middle.y);
-                path.lineTo(endX, endY);
+                if (TRIANGLES_ANIMATE_COLOR_ON_CREATION) {
+                    animateColor = true;
+                    currentColor = Color.argb(127, 255, 255, 255);
+                } else {
+                    animateColor = false;
+                    currentColor = baseColor;
+                }
+
+                needsUpdate = animateColor || animateVertices;
             }
 
             boolean update() {
 
-                float diffX = end.x - endX,
-                        diffY = end.y - endY;
+//                Log.v(TAG, "Updating T:" + this.toString());
 
-                if (Math.abs(diffX) < END_THRESHOLD && Math.abs(diffY) < END_THRESHOLD) {
-                    endX = end.x;
-                    endY = end.y;
-                    animate = false;
-                } else {
-                    endX += ANIM_SPEED * diffX;
-                    endY += ANIM_SPEED * diffY;
+                if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION && animateVertices) {
+                    float diffX = end.x - endX,
+                            diffY = end.y - endY;
+
+                    if (Math.abs(diffX) < VERTICES_ANIM_END_THRESHOLD && Math.abs(diffY) < VERTICES_ANIM_END_THRESHOLD) {
+                        endX = end.x;
+                        endY = end.y;
+                        animateVertices = false;
+                    } else {
+                        endX += VERTICES_ANIM_SPEED * diffX;
+                        endY += VERTICES_ANIM_SPEED * diffY;
+                    }
+
+                    path.rewind();
+                    path.moveTo(start.x, start.y);
+                    path.lineTo(middle.x, middle.y);
+                    path.lineTo(endX, endY);
                 }
 
-//                path.reset();
-                path.rewind();  // better performance
-                path.moveTo(start.x, start.y);
-                path.lineTo(middle.x, middle.y);
-                path.lineTo(endX, endY);
+                if (TRIANGLES_ANIMATE_COLOR_ON_CREATION && animateColor) {
+                    int prevColor = currentColor;
+                    currentColor = interpolateColor(currentColor, baseColor, COLOR_ANIM_SPEED);
 
-                return animate;
+                    if (prevColor == currentColor) {  // @TODO improve this check to accept some threshold
+                        animateColor = false;
+                    }
+                }
+
+                needsUpdate = animateColor || animateVertices;
+
+                return needsUpdate;
             }
 
             void render(Canvas canvas, Paint paint) {
-                paint.setColor(color);
+                paint.setColor(currentColor);
                 canvas.drawPath(path, paint);
+            }
+
+            /**
+             * This can be optimized with bitwise operators: http://stackoverflow.com/a/18037185/1934487
+             * @param sourceColor
+             * @param targetColor
+             * @param parameter
+             * @return
+             */
+            int interpolateColor(int sourceColor, int targetColor, float parameter) {
+                int r = Color.red(sourceColor)   + (int) (parameter * (Color.red(targetColor)   - Color.red(sourceColor)));
+                int g = Color.green(sourceColor) + (int) (parameter * (Color.green(targetColor) - Color.green(sourceColor)));
+                int b = Color.blue(sourceColor)  + (int) (parameter * (Color.blue(targetColor)  - Color.blue(sourceColor)));
+                int a = Color.alpha(sourceColor) + (int) (parameter * (Color.alpha(targetColor) - Color.alpha(sourceColor)));
+
+                return Color.argb(a, r, g, b);
             }
 
         }
