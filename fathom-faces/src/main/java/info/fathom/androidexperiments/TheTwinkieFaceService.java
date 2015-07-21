@@ -110,11 +110,11 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
 
         // DEBUG
-        private static final int     RESET_CRACK_THRESHOLD = 3;  // every nth glance, cracks will be reset (0 does no resetting)
+        private static final int     RESET_CRACK_THRESHOLD = 5;  // every nth glance, cracks will be reset (0 does no resetting)
         private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
         private static final boolean DRAW_BALL = false;
         private static final boolean USE_TRIANGLE_CURSOR = true;
-        private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = false;
+        private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
         private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
 
 
@@ -289,14 +289,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
                 board.render(canvas, true);
+//                drawTestGrays(canvas);
 
                 drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr + ":" + minuteStr,
                         mWidth - mTextRightMargin, mCenterY);
-
-//                mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
-//                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr, mCenterX - 20, mCenterY);  // @TODO: be screen programmatic here
-//                mTextPaintAmbient.setTextAlign(Paint.Align.LEFT);
-//                drawTextVerticallyCentered(canvas, mTextPaintAmbient, minuteStr, mCenterX + 20, mCenterY);
 
             } else {
 //                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
@@ -307,11 +303,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr + ":" + minuteStr,
                         mWidth - mTextRightMargin, mCenterY);
-
-//                mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-//                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr, mCenterX - 20, mCenterY);
-//                mTextPaintInteractive.setTextAlign(Paint.Align.LEFT);
-//                drawTextVerticallyCentered(canvas, mTextPaintInteractive, minuteStr, mCenterX + 20, mCenterY);
             }
         }
 
@@ -622,6 +613,49 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 path.lineTo(b.x, b.y);
                 path.lineTo(ball.x, ball.y);
 
+
+                // CURSOR TRIANGLE FOLLOWS NEW TRIANGULATION ALGORITHM
+//                Bounce a, b;
+//                Bounce start, corner, middle;
+//                boolean threeV = false;
+//                if (bounceCount < 2) {
+//                    start = new Bounce((int) mCenterX, 0);
+//                    middle = new Bounce((int) mCenterX, mHeight);
+//                    corner = middle;  // fake initialization for compile
+//                } else {
+//                    int posA = (bounceIterator - 2) % bounceCount;
+//                    if (posA < 0) posA += bounceCount;
+//                    int posB = (bounceIterator - 1) % bounceCount;
+//                    if (posB < 0) posB += bounceCount;
+//                                        a = bounces[posA];
+//                    b = bounces[posB];
+//
+//                    if (a.side < b.side) {
+//                        start = a;
+//                        middle = b;
+//                    } else if (a.side == 3 && b.side == 0) {
+//                        start = a;
+//                        middle = b;
+//                    } else {
+//                        start = b;
+//                        middle = a;
+//                    }
+//                    if (middle.side - start.side != 2) {
+//                        corner = generateCornerBounce(start);
+//                        threeV = true;
+//                    } else {
+//                        corner = middle;  // fake initialization for compile
+//                    }
+//                }
+//
+//                Path path = new Path();
+//                path.moveTo(start.x, start.y);
+//                if (threeV) {
+//                    path.lineTo(corner.x, corner.y);
+//                }
+//                path.lineTo(middle.x, middle.y);
+//                path.lineTo(ball.x, ball.y);
+
                 trianglePaint.setColor(Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 255, 255));
                 canvas.drawPath(path, trianglePaint);
             }
@@ -695,6 +729,20 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 triangleIterator = 0;
             }
 
+            Bounce generateCornerBounce(Bounce startBounce) {
+                switch (startBounce.side) {
+                    case 0:
+                        return new Bounce(mWidth, 0);
+                    case 1:
+                        return new Bounce(mWidth, mHeight);
+                    case 2:
+                        return new Bounce(0, mHeight);
+                    case 3:
+                    default:
+                        return new Bounce(0, 0);
+                }
+            }
+
         }
 
 
@@ -716,7 +764,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             boolean animateVertices, animateColor;
             boolean needsUpdate;
             boolean containsCornerBounce = false;
-            float endX, endY;
+//            float endX, endY;
+            float cornerX, cornerY;
 
             Triangle(Bounce start_, Bounce middle_, Bounce end_) {
                 if (start_.side < middle_.side) {
@@ -745,23 +794,25 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION) {
                     animateVertices = true;
-                    endX = middle.x;
-                    endY = middle.y;
-                    path = new Path();
-                    path.moveTo(start.x, start.y);
-                    if (containsCornerBounce) path.lineTo(corner.x, corner.y);
-                    path.lineTo(middle.x, middle.y);
-                    path.lineTo(endX, endY);
+//                    endX = middle.x;
+//                    endY = middle.y;
+                    cornerX = Math.min(start.x, middle.x) + 0.5f * Math.abs(start.x - middle.x);
+                    cornerY = Math.min(start.y, middle.y) + 0.5f * Math.abs(start.y - middle.y);
                 } else {
                     animateVertices = false;
-                    endX = 0;
-                    endY = 0;
-                    path = new Path();
-                    path.moveTo(start.x, start.y);
-                    if (containsCornerBounce) path.lineTo(corner.x, corner.y);
-                    path.lineTo(middle.x, middle.y);
-                    path.lineTo(end.x, end.y);
+//                    endX = end.x;
+//                    endY = end.y;
+                    cornerX = corner.x;
+                    cornerY = corner.y;
                 }
+
+                path = new Path();
+                path.moveTo(start.x, start.y);
+//                if (containsCornerBounce) path.lineTo(corner.x, corner.y);
+                if (containsCornerBounce) path.lineTo(cornerX, cornerY);
+                path.lineTo(middle.x, middle.y);
+//                path.lineTo(endX, endY);
+                path.lineTo(end.x, end.y);
 
                 if (TRIANGLES_ANIMATE_COLOR_ON_CREATION) {
                     animateColor = true;
@@ -777,24 +828,32 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             boolean update() {
 //                Log.v(TAG, "Updating T:" + this.toString());
 
-                if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION && animateVertices) {
-                    float diffX = end.x - endX,
-                            diffY = end.y - endY;
+                if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION && animateVertices && containsCornerBounce) {
+//                    float diffX = end.x - endX,
+//                            diffY = end.y - endY;
+                    float diffX = corner.x - cornerX,
+                            diffY = corner.y - cornerY;
 
                     if (Math.abs(diffX) < VERTICES_ANIM_END_THRESHOLD && Math.abs(diffY) < VERTICES_ANIM_END_THRESHOLD) {
-                        endX = end.x;
-                        endY = end.y;
+//                        endX = end.x;
+//                        endY = end.y;
+                        cornerX = corner.x;
+                        cornerY = corner.y;
                         animateVertices = false;
                     } else {
-                        endX += VERTICES_ANIM_SPEED * diffX;
-                        endY += VERTICES_ANIM_SPEED * diffY;
+//                        endX += VERTICES_ANIM_SPEED * diffX;
+//                        endY += VERTICES_ANIM_SPEED * diffY;
+                        cornerX += VERTICES_ANIM_SPEED * diffX;
+                        cornerY += VERTICES_ANIM_SPEED * diffY;
                     }
 
                     path.rewind();
                     path.moveTo(start.x, start.y);
-                    if (containsCornerBounce) path.lineTo(corner.x, corner.y);
+//                    if (containsCornerBounce) path.lineTo(corner.x, corner.y);
+                    if (containsCornerBounce) path.lineTo(cornerX, cornerY);
                     path.lineTo(middle.x, middle.y);
-                    path.lineTo(endX, endY);
+//                    path.lineTo(endX, endY);
+                    path.lineTo(end.x, end.y);
                 }
 
                 if (TRIANGLES_ANIMATE_COLOR_ON_CREATION && animateColor) {
@@ -880,6 +939,24 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
         void drawTestGrays(Canvas canvas) {
+
+            Paint p = new Paint();
+            p.setStyle(Paint.Style.FILL);
+
+            p.setColor(Color.rgb(50, 50, 50));
+            canvas.drawRect(10, 10, 50, 100, p);
+
+            p.setColor(Color.rgb(100, 100, 100));
+            canvas.drawRect(50, 10, 100, 100, p);
+
+            p.setColor(Color.rgb(150, 150, 150));
+            canvas.drawRect(100, 10, 150, 100, p);
+
+            p.setColor(Color.rgb(200, 200, 200));
+            canvas.drawRect(150, 10, 200, 100, p);
+
+            p.setColor(Color.rgb(255, 255, 255));
+            canvas.drawRect(200, 10, 250, 100, p);
 
         }
 
