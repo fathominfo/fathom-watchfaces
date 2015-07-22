@@ -159,7 +159,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     .build());
 
             RALEWAY_REGULAR_TYPEFACE = Typeface.createFromAsset(getApplicationContext().getAssets(),
-                    "fonts/raleway-regular.ttf");
+                    "fonts/raleway-regular-enhanced.ttf");
 
             mTextPaintInteractive = new Paint();
             mTextPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);

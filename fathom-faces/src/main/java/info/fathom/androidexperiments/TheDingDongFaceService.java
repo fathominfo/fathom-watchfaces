@@ -51,7 +51,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final float TEXT_STEPS_HEIGHT = 0.10f;  // as a factor of screen height
     private static final float TEXT_STEPS_RIGHT_MARGIN = 0.10f;  // as a factor of screen width
 
-    private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular.ttf";
+    private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     //    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     //    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
@@ -358,7 +358,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
                 drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, time,
                         mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-                drawTextVerticallyCentered(canvas, mTextStepsPaintAmbient, mTestStepFormatter.format(mCurrentSteps),
+                drawTextVerticallyCentered(canvas, mTextStepsPaintAmbient, mTestStepFormatter.format(mCurrentSteps) + " #",
                         mWidth - mTextStepsRightMargin, mCenterY);
 
 
@@ -382,7 +382,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
                 drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, time,
                         mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-                drawTextVerticallyCentered(canvas, mTextStepsPaintInteractive, mTestStepFormatter.format(mCurrentSteps),
+                drawTextVerticallyCentered(canvas, mTextStepsPaintInteractive, mTestStepFormatter.format(mCurrentSteps) + " #",
                         mWidth - mTextStepsRightMargin, mCenterY);
 
 
@@ -811,7 +811,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private static final float FRICTION                 = 0.95f; // 0 - 1, 0 is total friction
             private static final float PLANE_ACCEL_FACTOR       = 0.25f; // when level, how much shake?
             private static final float GRAVITY_FACTOR           = 1.00f; //
-            private static final float ANCHOR_SPRING_FACTOR     = 0.02f; // how much spring from lock position
+            private static final float ANCHOR_SPRING_FACTOR     = 0.01f; // how much spring from lock position
 
             private static final float DEPTH_ACCEL_FACTOR       = 0.40f;
             private static final float DEPTH_SPRING_FACTOR      = 0.15f;

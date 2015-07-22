@@ -49,7 +49,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
     private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
 
-    private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular.ttf";
+    private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     //    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     //    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
