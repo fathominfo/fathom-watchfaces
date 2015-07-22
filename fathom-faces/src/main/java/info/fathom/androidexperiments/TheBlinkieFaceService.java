@@ -187,28 +187,54 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
             eyeMosaic = new EyeMosaic();
-            eyeMosaic.addEye(0, 0, 100);
 
-            eyeMosaic.addEye( 50, -40, 50);
-            eyeMosaic.addEye(-50, -40, 50);
-            eyeMosaic.addEye(-50,  40, 50);
-            eyeMosaic.addEye( 50,  40, 50);
+            eyeMosaic.addEye(39, 21, 49);
+            eyeMosaic.addEye(39, 73, 49);
+            eyeMosaic.addEye(82, 45, 49);
+            eyeMosaic.addEye(158, 45, 72);
+            eyeMosaic.addEye(106, 90, 72);
+            eyeMosaic.addEye(218, 21, 49);
+            eyeMosaic.addEye(267, 45, 49);
+            eyeMosaic.addEye(218, 73, 49);
+            eyeMosaic.addEye(54, 138, 97);
+            eyeMosaic.addEye(139, 151, 49);
+            eyeMosaic.addEye(106, 195, 72);
+            eyeMosaic.addEye(39, 212, 49);
+            eyeMosaic.addEye(82, 240, 49);
+            eyeMosaic.addEye(39, 265, 49);
+            eyeMosaic.addEye(106, 285, 72);
+            eyeMosaic.addEye(201, 195, 97);
+            eyeMosaic.addEye(282, 195, 49);
+            eyeMosaic.addEye(253, 253, 72);
+            eyeMosaic.addEye(185, 269, 49);
+            eyeMosaic.addEye(228, 298, 49);
 
-            eyeMosaic.addEye( 25, -60, 25);  // around topright eye
-            eyeMosaic.addEye( 75, -60, 25);
-            eyeMosaic.addEye( 75, -20, 25);
 
-            eyeMosaic.addEye( 25,  60, 25);  // around bottomright eye
-            eyeMosaic.addEye( 75,  60, 25);
-            eyeMosaic.addEye( 75,  20, 25);
 
-            eyeMosaic.addEye(-25,  60, 25);  // around bottomleft eye
-            eyeMosaic.addEye(-75,  60, 25);
-            eyeMosaic.addEye(-75,  20, 25);
 
-            eyeMosaic.addEye(-25, -60, 25);  // around topleft eye
-            eyeMosaic.addEye(-75, -60, 25);
-            eyeMosaic.addEye(-75, -20, 25);
+
+//            eyeMosaic.addEye(0, 0, 100);
+//
+//            eyeMosaic.addEye( 50, -40, 50);
+//            eyeMosaic.addEye(-50, -40, 50);
+//            eyeMosaic.addEye(-50,  40, 50);
+//            eyeMosaic.addEye( 50,  40, 50);
+//
+//            eyeMosaic.addEye( 25, -60, 25);  // around topright eye
+//            eyeMosaic.addEye( 75, -60, 25);
+//            eyeMosaic.addEye( 75, -20, 25);
+//
+//            eyeMosaic.addEye( 25,  60, 25);  // around bottomright eye
+//            eyeMosaic.addEye( 75,  60, 25);
+//            eyeMosaic.addEye( 75,  20, 25);
+//
+//            eyeMosaic.addEye(-25,  60, 25);  // around bottomleft eye
+//            eyeMosaic.addEye(-75,  60, 25);
+//            eyeMosaic.addEye(-75,  20, 25);
+//
+//            eyeMosaic.addEye(-25, -60, 25);  // around topleft eye
+//            eyeMosaic.addEye(-75, -60, 25);
+//            eyeMosaic.addEye(-75, -20, 25);
 
             mTime  = new Time();
         }
@@ -239,7 +265,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 unregisterTimeZoneReceiver();
                 unregisterAccelerometerSensor();
 
-                eyeMosaic.closeAll();
+//                eyeMosaic.closeAll();
 
             } else {
                 registerTimeZoneReceiver();
@@ -247,7 +273,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 glances++;
 //                eyeMosaic.addEye();
-                eyeMosaic.openAll();
+//                eyeMosaic.openAll();
                 eyeMosaic.setBlinkChance(glances);
             }
 
@@ -295,8 +321,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
                 canvas.save();
-                canvas.translate(mCenterX, mCenterY);
-                canvas.scale(1.5f, 1.5f);
+//                canvas.translate(mCenterX, mCenterY);
+//                canvas.scale(1.5f, 1.5f);
                 eyeMosaic.update();
                 eyeMosaic.render(canvas);
                 canvas.restore();
@@ -423,22 +449,15 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             void update() {
-
                 // trigger a random eye to blink
                 if (Math.random() < blinkChance) {
                     int id = (int) (eyeCount * Math.random());  //@TODO change to always hitting an eye to blink?
-//                    if (!eyes[id].blinking) {  // @TODO See if overriding blinking looks more hectic
-                        eyes[id].blink();
-//                    }
+                    eyes[id].blink();  // can affect an already blinking eye, but this is desired
                 }
 
-//                Log.v(TAG, "Updating eyes...");
                 for (Eye eye : updateList) {
-//                    Log.v(TAG, "UpdateList size: " + updateList.size());
-//                    Log.v(TAG, "Updating eye " + eye.id);
                     eye.update();
                 }
-//                Log.v(TAG, "Finished updating eyes...");
 
                 // Unregister them from update list externally, to avoid iterator problems
                 for (int i = updateList.size() - 1; i >= 0; i--) {
@@ -452,7 +471,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                     eyes[i].render(canvas);
                 }
             }
-
 
             void addEye(float x_, float y_, float width_) {
                 eyes[eyeCount++] = new Eye(this, eyeCount, x_, y_, width_);
@@ -469,14 +487,14 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             void openAll() {
-                Log.v(TAG, "Opening all");
+//                Log.v(TAG, "Opening all");
                 for (int i = 0; i < eyeCount; i++) {
                     eyes[i].open();
                 }
             }
 
             void closeAll() {
-                Log.v(TAG, "Closing all");
+//                Log.v(TAG, "Closing all");
                 for (int i = 0; i < eyeCount; i++) {
                     eyes[i].close();
                 }
@@ -546,40 +564,16 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 canvas.save();
                 canvas.translate(x, y);
                 canvas.rotate(screenRotation);
-                canvas.drawPath(eyelid, eyelidPaint);
+//                canvas.drawPath(eyelid, eyelidPaint);
+                canvas.clipPath(eyelid);
+                canvas.drawCircle(0, 0, 0.5f * width, eyelidPaint);
                 canvas.drawCircle(0, 0, pupilR, pupilPaint);
                 canvas.drawCircle(0, 0, irisR, irisPaint);
                 canvas.restore();
             }
 
-//            boolean update() {
-//                float diff = targetAperture - currentAperture;
-//                if (Math.abs(diff) < ANIM_END_THRESHOLD) {
-//                    switchBlink();
-//                    return blinking;
-//                }
-//                currentAperture += BLINK_SPEED * (diff);
-//                resetEyelid(currentAperture);
-//                return blinking;
-//            }
-//
-//            void switchBlink() {
-//                // if eye was closing
-//                if (targetAperture == 0) {
-//                    targetAperture = height;
-//
-//                } else {
-//                    resetEyelid(height);
-//                    blinking = false;
-//                }
-//            }
-
             boolean update() {
                 float diff = targetAperture - currentAperture;
-
-//                currentAperture = Math.abs(diff) < ANIM_END_THRESHOLD ?
-//                        targetAperture :
-//                        currentAperture + BLINK_SPEED * (diff);
 
                 if (Math.abs(diff) < ANIM_END_THRESHOLD) {
                     currentAperture = targetAperture;
@@ -639,7 +633,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             void unregisterUpdate() {
-//                parent.updateList.remove(this);  // this is done in parent, to avoid iterator exceptions
                 needsUpdate = false;
             }
         }
