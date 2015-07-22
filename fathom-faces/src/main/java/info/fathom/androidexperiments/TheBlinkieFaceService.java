@@ -20,7 +20,6 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
-import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.ArrayList;
@@ -52,6 +51,25 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular.ttf";
     //    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     //    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
+
+    private static final int[] EYE_COLORS = {
+            Color.rgb(255, 102, 51),
+            Color.rgb(0, 153, 255),
+            Color.rgb(125, 114, 163),
+            Color.rgb(215, 223, 35),
+            Color.rgb(238, 42, 123),
+            Color.rgb(0, 167, 157),
+            Color.rgb(117, 76, 41),
+            Color.rgb(141, 198, 63),
+            Color.rgb(196, 154, 108),
+            Color.rgb(128, 130, 133)
+    };
+    private static final int EYE_COLOR_COUNT = EYE_COLORS.length;
+
+
+
+
+
 
     private SensorManager mSensorManager;
     private Sensor mSensorAccelerometer;
@@ -168,28 +186,28 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
             eyeMosaic = new EyeMosaic();
-            eyeMosaic.addEye(0, 0, 100, 50, 1);
+            eyeMosaic.addEye(0, 0, 100);
 
-            eyeMosaic.addEye( 50, -40, 50, 25, 1);
-            eyeMosaic.addEye(-50, -40, 50, 25, 1);
-            eyeMosaic.addEye(-50,  40, 50, 25, 1);
-            eyeMosaic.addEye( 50,  40, 50, 25, 1);
+            eyeMosaic.addEye( 50, -40, 50);
+            eyeMosaic.addEye(-50, -40, 50);
+            eyeMosaic.addEye(-50,  40, 50);
+            eyeMosaic.addEye( 50,  40, 50);
 
-            eyeMosaic.addEye( 25, -60, 25, 13, 1);  // around topright eye
-            eyeMosaic.addEye( 75, -60, 25, 13, 1);
-            eyeMosaic.addEye( 75, -20, 25, 13, 1);
+            eyeMosaic.addEye( 25, -60, 25);  // around topright eye
+            eyeMosaic.addEye( 75, -60, 25);
+            eyeMosaic.addEye( 75, -20, 25);
 
-            eyeMosaic.addEye( 25,  60, 25, 13, 1);  // around bottomright eye
-            eyeMosaic.addEye( 75,  60, 25, 13, 1);
-            eyeMosaic.addEye( 75,  20, 25, 13, 1);
+            eyeMosaic.addEye( 25,  60, 25);  // around bottomright eye
+            eyeMosaic.addEye( 75,  60, 25);
+            eyeMosaic.addEye( 75,  20, 25);
 
-            eyeMosaic.addEye(-25,  60, 25, 13, 1);  // around bottomleft eye
-            eyeMosaic.addEye(-75,  60, 25, 13, 1);
-            eyeMosaic.addEye(-75,  20, 25, 13, 1);
+            eyeMosaic.addEye(-25,  60, 25);  // around bottomleft eye
+            eyeMosaic.addEye(-75,  60, 25);
+            eyeMosaic.addEye(-75,  20, 25);
 
-            eyeMosaic.addEye(-25, -60, 25, 13, 1);  // around topleft eye
-            eyeMosaic.addEye(-75, -60, 25, 13, 1);
-            eyeMosaic.addEye(-75, -20, 25, 13, 1);
+            eyeMosaic.addEye(-25, -60, 25);  // around topleft eye
+            eyeMosaic.addEye(-75, -60, 25);
+            eyeMosaic.addEye(-75, -20, 25);
 
             mTime  = new Time();
         }
@@ -406,7 +424,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             void update() {
 
                 // trigger a random eye to blink
-//                if (Math.random() < BLINK_PROBABILITY) {
                 if (Math.random() < blinkChance) {
                     int id = (int) (eyeCount * Math.random());  //@TODO change to always hitting an eye to blink?
                     if (!eyes[id].blinking) {
@@ -433,8 +450,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
 
-            void addEye(float x_, float y_, float width_, float height_, float scale_) {
-                eyes[eyeCount++] = new Eye(eyeCount, x_, y_, width_, height_, scale_);
+            void addEye(float x_, float y_, float width_) {
+                eyes[eyeCount++] = new Eye(eyeCount, x_, y_, width_);
 
                 // double the array size if necessary
                 if (eyeCount == eyes.length) {
@@ -442,23 +459,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
             }
 
-            void addEye() {
-                // add some algorithm to compute new eye position and sizes
-                float w = (float) (50 + 50 * Math.random());
-                eyes[eyeCount++] = new Eye(
-                        eyeCount,
-                        (float) (-110 + 220 * Math.random()),
-                        (float) (-110 + 220 * Math.random()),
-                        w,
-                        0.5f * w,
-                        1
-                );
-
-                // double the array size if necessary
-                if (eyeCount == eyes.length) {
-                    eyes = Arrays.copyOf(eyes, 2 * eyes.length);
-                }
-            }
 
             void setBlinkChance(float glances) {
                 blinkChance = glances / eyeCount;  //@TODO account for changes in blinkChance when an eye is added
@@ -468,38 +468,47 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
         class Eye {
-            static final int EYELID_COLOR = Color.GRAY;
+            // Constants
+            static final int   EYELID_COLOR = Color.WHITE;
+            static final int   IRIS_COLOR = Color.BLACK;
             static final float BLINK_SPEED = 0.25f;
-            static final int END_THRESHOLD = 2;
+            static final int   BLINK_END_THRESHOLD = 2;  // pixel distance to stop blink
+            static final float HEIGHT_RATIO = 0.68f;  // height/width ratio
+            static final float PUPIL_RATIO = 0.45f;  // pupilDiameter/width ratio
+            static final float IRIS_RATIO = 0.29f;  // irisDiam/width ratio
 
             int id;
             float x, y;
             float width, height;
-            float scale;
+            float pupilR, irisR;
+            int pupilColor;
+
             Path eyelid;
-            Paint eyelidPaint, corneaPaint, irisPaint;
+            Paint eyelidPaint, pupilPaint, irisPaint;
 
             boolean blinking;
             float currentAperture, targetAperture;
 
-            Eye(int id_, float x_, float y_, float width_, float height_, float scale_) {
+            Eye(int id_, float x_, float y_, float width_) {
                 id = id_;
                 x = x_;
                 y = y_;
                 width = width_;
-                height = height_;
-                scale = scale_;
+                height = HEIGHT_RATIO * width;
+                pupilR = 0.5f * PUPIL_RATIO * width;
+                irisR = 0.5f * IRIS_RATIO * width;
+                pupilColor = randomColor();
 
                 eyelidPaint = new Paint();
                 eyelidPaint.setColor(EYELID_COLOR);
                 eyelidPaint.setAntiAlias(true);
 
-                corneaPaint = new Paint();
-                corneaPaint.setColor(BACKGROUND_COLOR_INTERACTIVE);
-                corneaPaint.setAntiAlias(true);
+                pupilPaint = new Paint();
+                pupilPaint.setColor(pupilColor);
+                pupilPaint.setAntiAlias(true);
 
                 irisPaint = new Paint();
-                irisPaint.setColor(randomColor());
+                irisPaint.setColor(IRIS_COLOR);
                 irisPaint.setAntiAlias(true);
 
                 eyelid = new Path();
@@ -511,14 +520,14 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 canvas.translate(x, y);
                 canvas.rotate(screenRotation);
                 canvas.drawPath(eyelid, eyelidPaint);
-                canvas.drawCircle(0, 0, 0.375f * height, corneaPaint);
-                canvas.drawCircle(0, 0, 0.187f * height, irisPaint);
+                canvas.drawCircle(0, 0, pupilR, pupilPaint);
+                canvas.drawCircle(0, 0, irisR, irisPaint);
                 canvas.restore();
             }
 
             boolean update() {
                 float diff = targetAperture - currentAperture;
-                if (Math.abs(diff) < END_THRESHOLD) {
+                if (Math.abs(diff) < BLINK_END_THRESHOLD) {
                     switchBlink();
                     return blinking;
                 }
@@ -531,7 +540,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 // if eye was closing
                 if (targetAperture == 0) {
                     targetAperture = height;
-//                    blinking = true;
 
                 } else {
                     resetEyelid(height);
@@ -547,7 +555,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 eyelid.close();
             }
 
-
             void blink() {
                 currentAperture = height;
                 targetAperture = 0;
@@ -555,11 +562,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             int randomColor() {
-                return Color.rgb(
-                        (int) (255 * Math.random()),
-                        (int) (255 * Math.random()),
-                        (int) (255 * Math.random())
-                );
+                return EYE_COLORS[ (int) (EYE_COLOR_COUNT * Math.random()) ];
             }
         }
 
