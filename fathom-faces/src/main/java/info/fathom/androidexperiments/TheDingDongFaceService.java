@@ -44,7 +44,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.20f;  // as a factor of screen height
-    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.10f;  // as a factor of screen width
+    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.11f;  // as a factor of screen width
 
     private static final int   TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
@@ -358,7 +358,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
                 drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, time,
                         mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-                drawTextVerticallyCentered(canvas, mTextStepsPaintAmbient, mTestStepFormatter.format(mCurrentSteps) + " #",
+                drawTextVerticallyCentered(canvas, mTextStepsPaintAmbient, mTestStepFormatter.format(mCurrentSteps) + "#",
                         mWidth - mTextStepsRightMargin, mCenterY);
 
 
@@ -382,7 +382,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
                 drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, time,
                         mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-                drawTextVerticallyCentered(canvas, mTextStepsPaintInteractive, mTestStepFormatter.format(mCurrentSteps) + " #",
+                drawTextVerticallyCentered(canvas, mTextStepsPaintInteractive, mTestStepFormatter.format(mCurrentSteps) + "#",
                         mWidth - mTextStepsRightMargin, mCenterY);
 
 

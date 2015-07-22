@@ -36,7 +36,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final String TAG = "TheTwinkieFaceService";
     private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-    private static final long INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(5);
+    private static final long INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(50);
 
     /**
      * Update rate in milliseconds for interactive mode. We updateSize once a second to advance the
@@ -102,8 +102,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //        private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
         private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
         private final int[] backgroundColors = new int[24];
-        private final static int COLOR_TRIANGLE_ALPHA = 63;
-        private final static int CURSOR_TRIANGLE_ALPHA = 127;
+        private final int[] backgroundColorsAlpha = new int[24];
+        private final static int COLOR_TRIANGLE_ALPHA = 100;
+        private final static int CURSOR_TRIANGLE_ALPHA = 100;
 
         private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
         private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
@@ -210,6 +211,32 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             backgroundColors[21] = Color.rgb(0, 255, 234);
             backgroundColors[22] = Color.rgb(0, 212, 255);
             backgroundColors[23] = Color.rgb(0, 149, 255);
+
+            // Initialize hardcoded day colors
+            backgroundColorsAlpha[0] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 85, 255);
+            backgroundColorsAlpha[1] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 21, 255);
+            backgroundColorsAlpha[2] = Color.argb(CURSOR_TRIANGLE_ALPHA, 42, 0, 255);
+            backgroundColorsAlpha[3] = Color.argb(CURSOR_TRIANGLE_ALPHA, 106, 0, 255);
+            backgroundColorsAlpha[4] = Color.argb(CURSOR_TRIANGLE_ALPHA, 170, 0, 255);
+            backgroundColorsAlpha[5] = Color.argb(CURSOR_TRIANGLE_ALPHA, 234, 0, 255);
+            backgroundColorsAlpha[6] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 212);
+            backgroundColorsAlpha[7] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 149);
+            backgroundColorsAlpha[8] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 85);
+            backgroundColorsAlpha[9] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 21);
+            backgroundColorsAlpha[10] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 43, 0);
+            backgroundColorsAlpha[11] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 106, 0);
+            backgroundColorsAlpha[12] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 170, 0);
+            backgroundColorsAlpha[13] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 234, 0);
+            backgroundColorsAlpha[14] = Color.argb(CURSOR_TRIANGLE_ALPHA, 212, 255, 0);
+            backgroundColorsAlpha[15] = Color.argb(CURSOR_TRIANGLE_ALPHA, 149, 255, 0);
+            backgroundColorsAlpha[16] = Color.argb(CURSOR_TRIANGLE_ALPHA, 85, 255, 0);
+            backgroundColorsAlpha[17] = Color.argb(CURSOR_TRIANGLE_ALPHA, 21, 255, 0);
+            backgroundColorsAlpha[18] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 43);
+            backgroundColorsAlpha[19] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 106);
+            backgroundColorsAlpha[20] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 170);
+            backgroundColorsAlpha[21] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 234);
+            backgroundColorsAlpha[22] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 212, 255);
+            backgroundColorsAlpha[23] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 149, 255);
         }
 
         @Override
@@ -436,9 +463,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         class Ball {
 
             private static final int COLOR = Color.WHITE;
-            private static final float FRICTION = 0.97f;
-            private static final float ACCEL_FACTOR = 0.25f;
-            private static final float RADIUS_FACTOR = 0.03f;     // as a ratio to screen width
+            private static final float FRICTION = 0.999f;
+            private static final float ACCEL_FACTOR = 0.8f;
+            private static final float RADIUS_FACTOR = 0.03f;
+//            private static final float FRICTION = 0.97f;
+//            private static final float ACCEL_FACTOR = 0.25f;
+//            private static final float RADIUS_FACTOR = 0.03f;  // as a ratio to screen width
 
             Board parent;
             float x, y, r;
@@ -692,7 +722,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //                path.lineTo(middle.x, middle.y);
 //                path.lineTo(ball.x, ball.y);
 
-                trianglePaint.setColor(Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 255, 255));
+                mTime.setToNow();
+                int hour = mTime.hour;
+
+//                trianglePaint.setColor(Color.argb(CURSOR_TRIANGLE_ALPHA, backgroundColors[hour]) );
+                trianglePaint.setColor(backgroundColorsAlpha[hour]);
+//                trianglePaint.setColor(Color.HSVToColor(CURSOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } ));
+
                 canvas.drawPath(path, trianglePaint);
             }
 
@@ -862,7 +898,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 if (TRIANGLES_ANIMATE_COLOR_ON_CREATION) {
                     animateColor = true;
-                    currentColor = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 255, 255);
+
+                    mTime.setToNow();
+                    int hour = mTime.hour;
+                    currentColor = backgroundColorsAlpha[hour];
                 } else {
                     animateColor = false;
                     currentColor = baseColor;
@@ -964,6 +1003,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             int x, y;
             int side;  // 0 for top... 3 for left (clockwise)
             int color;
+            int colorHSV;
 
             Bounce(int x_, int y_) {
                 x = x_;
@@ -978,13 +1018,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             void newColor() {
-                
-                color = Color.argb(COLOR_TRIANGLE_ALPHA,
 
-                        (int) (255 * Math.random()),
-                        (int) (255 * Math.random()),
-                        (int) (255 * Math.random())
-                        );
+                color = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
+
+//                color = Color.argb(COLOR_TRIANGLE_ALPHA,
+//                        (int) (255 * Math.random()),
+//                        (int) (255 * Math.random()),
+//                        (int) (255 * Math.random())
+//                        );
             }
 
         }
