@@ -301,7 +301,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             super.onAmbientModeChanged(inAmbientMode);
 
             // choose random color for the background
-            randomColor = (int) (Math.random() * 7);
+            randomColor = (int) (Math.random() * BACKGROUND_COLORS_COUNT);
 
             if (inAmbientMode) {
                 if (timelyReset()) {

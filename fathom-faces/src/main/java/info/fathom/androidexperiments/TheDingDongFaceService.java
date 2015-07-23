@@ -50,7 +50,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final int   TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_STEPS_HEIGHT = 0.10f;  // as a factor of screen height
-    private static final float TEXT_STEPS_BASELINE_HEIGHT = 0.65f;  // as a factor of screen height
+    private static final float TEXT_STEPS_BASELINE_HEIGHT = TEXT_DIGITS_BASELINE_HEIGHT + 0.15f;  // as a factor of screen height
     private static final float TEXT_STEPS_RIGHT_MARGIN = 0.07f;  // as a factor of screen width
 
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
@@ -59,7 +59,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
     private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
 
-
+    // DEBUG
+    private static final boolean GENERATE_FAKE_STEPS = true;
+    private static final int RANDOM_FAKE_STEPS = 500;
+    private static final int MAX_STEP_THRESHOLD = 50000;
 
 
 
@@ -82,9 +85,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private boolean mStepSensorIsRegistered;
     private int mPrevSteps = 0;
     private int mCurrentSteps = 0;
-    private static final boolean GENERATE_FAKE_STEPS = false;
-    private static final int RANDOM_FAKE_STEPS = 500;
-    private static final int MAX_STEP_THRESHOLD = 50000;
+
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
