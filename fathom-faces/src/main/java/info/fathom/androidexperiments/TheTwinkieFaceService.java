@@ -52,8 +52,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
-    private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.40f;  // as a factor of screen height
-    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
+    private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;  // as a factor of screen height
+    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.08f;  // as a factor of screen width
 
     private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
     private static final long  INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);

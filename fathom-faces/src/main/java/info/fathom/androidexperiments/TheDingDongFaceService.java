@@ -44,14 +44,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.20f;  // as a factor of screen height
-    private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.40f;  // as a factor of screen height
-    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.11f;  // as a factor of screen width
+    private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;  // as a factor of screen height
+    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.08f;  // as a factor of screen width
 
     private static final int   TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_STEPS_HEIGHT = 0.10f;  // as a factor of screen height
-    private static final float TEXT_STEPS_BASELINE_HEIGHT = 0.52f;  // as a factor of screen height
-    private static final float TEXT_STEPS_RIGHT_MARGIN = 0.10f;  // as a factor of screen width
+    private static final float TEXT_STEPS_BASELINE_HEIGHT = 0.65f;  // as a factor of screen height
+    private static final float TEXT_STEPS_RIGHT_MARGIN = 0.07f;  // as a factor of screen width
 
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     //    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
