@@ -27,7 +27,6 @@ import android.view.SurfaceHolder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 
@@ -43,6 +42,32 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
      * second hand.
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
+
+
+    private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
+    private final int[] backgroundColors = new int[24];
+    private final int[] backgroundColorsAlpha = new int[24];
+    private final static int COLOR_TRIANGLE_ALPHA = 100;
+    private final static int CURSOR_TRIANGLE_ALPHA = 100;
+
+    private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
+    private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
+    private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
+    private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.40f;  // as a factor of screen height
+    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
+
+    private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
+
+    // DEBUG
+    private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
+    private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
+    private static final boolean DRAW_BALL = false;
+    private static final boolean USE_TRIANGLE_CURSOR = true;
+    private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
+    private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
+
+
+
 
     private SensorManager mSensorManager;
     private Sensor mSensorAccelerometer;
@@ -98,26 +123,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
         };
 
-//        private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
-//        private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
-        private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
-        private final int[] backgroundColors = new int[24];
-        private final int[] backgroundColorsAlpha = new int[24];
-        private final static int COLOR_TRIANGLE_ALPHA = 100;
-        private final static int CURSOR_TRIANGLE_ALPHA = 100;
-
-        private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
-        private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
-        private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
-        private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
-
-        // DEBUG
-        private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-        private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
-        private static final boolean DRAW_BALL = false;
-        private static final boolean USE_TRIANGLE_CURSOR = true;
-        private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
-        private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
 
 
 
@@ -128,11 +133,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private boolean mAmbient;
 
         private Time mTime;
+        private String mTimeStr;
+        private int mHourInt, mMinuteInt;
+        private int mLastAmbientHour;
         private Time mCurrentGlance, mPrevGlance;
 
-        private Paint mTextPaintInteractive, mTextPaintAmbient;
-        private float mTextHeight;
-        private float mTextRightMargin;
+        private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
+        private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
         private final Rect textBounds = new Rect();
         private Typeface RALEWAY_REGULAR_TYPEFACE;
 
@@ -162,17 +169,17 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             RALEWAY_REGULAR_TYPEFACE = Typeface.createFromAsset(getApplicationContext().getAssets(),
                     "fonts/raleway-regular-enhanced.ttf");
 
-            mTextPaintInteractive = new Paint();
-            mTextPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
-            mTextPaintInteractive.setTypeface(RALEWAY_REGULAR_TYPEFACE);
-            mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-            mTextPaintInteractive.setAntiAlias(true);
+            mTextDigitsPaintInteractive = new Paint();
+            mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
+            mTextDigitsPaintInteractive.setTypeface(RALEWAY_REGULAR_TYPEFACE);
+            mTextDigitsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+            mTextDigitsPaintInteractive.setAntiAlias(true);
 
-            mTextPaintAmbient = new Paint();
-            mTextPaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
-            mTextPaintAmbient.setTypeface(RALEWAY_REGULAR_TYPEFACE);
-            mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
-            mTextPaintAmbient.setAntiAlias(false);
+            mTextDigitsPaintAmbient = new Paint();
+            mTextDigitsPaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
+            mTextDigitsPaintAmbient.setTypeface(RALEWAY_REGULAR_TYPEFACE);
+            mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+            mTextDigitsPaintAmbient.setAntiAlias(false);
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -256,6 +263,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
 
+            if (inAmbientMode) {
+                if (timelyReset()) {
+                    Log.v(TAG, "Resetting watchface");
+                    board.reset();
+                }
+            }
+
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 invalidate();
@@ -270,8 +284,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 glances++;
 
-
-                if (shouldReset()) board.resetBoard();
+                if (shouldReset()) board.reset();
             }
 
             /*
@@ -289,7 +302,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             if (mCurrentGlance.toMillis(false) - mPrevGlance.toMillis(false) > INACTIVITY_RESET_TIME) return true;
 
-
             return false;
         }
 
@@ -304,50 +316,61 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             board.initialize(mWidth, mHeight);
 
-            mTextHeight = TEXT_DIGITS_HEIGHT * mHeight;
-            mTextRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
-            mTextPaintInteractive.setTextSize(mTextHeight);
-            mTextPaintAmbient.setTextSize(mTextHeight);
+            mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
+            mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
+            mTextDigitsRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
+            mTextDigitsPaintInteractive.setTextSize(mTextDigitsHeight);
+            mTextDigitsPaintAmbient.setTextSize(mTextDigitsHeight);
         }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
 
+//            mTime.setToNow();
+//
+//            int hour = mTime.hour;
+//            if (NEW_HOUR_PER_GLANCE) {
+//                hour = (hour + glances) % 24;
+//            }
+//
+////            String hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
+//            String hourStr = Integer.toString(hour % 12 == 0 ? 12 : hour % 12);
+//            String minuteStr = String.format("%02d", mTime.minute);
+
+
             mTime.setToNow();
-
-            int hour = mTime.hour;
+            mHourInt = mTime.hour;
             if (NEW_HOUR_PER_GLANCE) {
-                hour = (hour + glances) % 24;
+                mHourInt = (mHourInt + glances) % 24;
             }
-
-//            String hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
-            String hourStr = Integer.toString(hour % 12 == 0 ? 12 : hour % 12);
-            String minuteStr = String.format("%02d", mTime.minute);
+            mMinuteInt = mTime.minute;
+            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
 
             if (mAmbient) {
 
-                // if on debug, show real time on ambient
-                if (NEW_HOUR_PER_GLANCE) {
-                    hour = mTime.hour;
-                    hourStr = Integer.toString(hour % 12 == 0 ? 12 : hour % 12);
-                }
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
                 board.render(canvas, true);
 //                drawTestGrays(canvas);
 
-                drawTextVerticallyCentered(canvas, mTextPaintAmbient, hourStr + ":" + minuteStr,
-                        mWidth - mTextRightMargin, 0.33f * mHeight);
+                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                        mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
+
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, hourStr + ":" + minuteStr,
+//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
 
             } else {
 //                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
-                canvas.drawColor(backgroundColors[hour]);
+                canvas.drawColor(backgroundColors[mHourInt]);
 
                 board.update();
                 board.render(canvas, false);
 
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, hourStr + ":" + minuteStr,
-                        mWidth - mTextRightMargin, 0.33f * mHeight);
+                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                        mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
+
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, hourStr + ":" + minuteStr,
+//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
             }
         }
 
@@ -449,6 +472,16 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private void drawTextVerticallyCentered(Canvas canvas, Paint paint, String text, float cx, float cy) {
             paint.getTextBounds(text, 0, text.length(), textBounds);
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
+        }
+
+        // Checks if watchface should reset, like overnight
+        boolean timelyReset() {
+            boolean reset = false;
+            if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
+                reset = true;
+            }
+            mLastAmbientHour = mHourInt;
+            return reset;
         }
 
 
@@ -792,7 +825,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //                }
             }
 
-            void resetBoard() {
+            void reset() {
                 bounces = new Bounce[MAX_TRIANGLE_COUNT + 2];
                 bounceCount = 0;
                 bounceIterator = 0;
@@ -806,20 +839,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 triangleCount = 0;
                 triangleIterator = 0;
             }
-
-//            Bounce generateCornerBounce(Bounce startBounce) {
-//                switch (startBounce.side) {
-//                    case 0:
-//                        return new Bounce(mWidth, 0);
-//                    case 1:
-//                        return new Bounce(mWidth, mHeight);
-//                    case 2:
-//                        return new Bounce(0, mHeight);
-//                    case 3:
-//                    default:
-//                        return new Bounce(0, 0);
-//                }
-//            }
 
         }
 

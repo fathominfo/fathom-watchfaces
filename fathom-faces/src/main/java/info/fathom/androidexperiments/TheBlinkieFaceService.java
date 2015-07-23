@@ -20,6 +20,7 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 import java.util.ArrayList;
@@ -46,16 +47,16 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
+    private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.40f;  // as a factor of screen height
     private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
 
     private static final int   TEXT_GLANCES_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_GLANCES_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_GLANCES_HEIGHT = 0.10f;  // as a factor of screen height
+    private static final float TEXT_GLANCES_BASELINE_HEIGHT = 0.52f;  // as a factor of screen height
     private static final float TEXT_GLANCES_RIGHT_MARGIN = 0.10f;  // as a factor of screen width
 
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
-    //    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
-    //    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
     private static final int[] EYE_COLORS = {
             Color.rgb(255, 102, 51),
@@ -72,10 +73,12 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final int EYE_COLOR_COUNT = EYE_COLORS.length;
 
     private static final float BLINK_TO_GLANCE_CHANCE_RATIO = 0.10f;  // percent possibility of a blink event happening as compared to amount of glances
+    private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
     private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_EYES_PER_GLANCE = 5;
+    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
 
 
 
@@ -149,11 +152,14 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         private boolean mAmbient;
 
         private Time mTime;
+        private String mTimeStr;
+        private int mHourInt, mMinuteInt;
+        private int mLastAmbientHour;
 
-        private Paint mTextPaintInteractive, mTextPaintAmbient;
-        private float mTextHeight, mTextRightMargin;
+        private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
+        private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
         private Paint mTextGlancesPaintInteractive, mTextGlancesPaintAmbient;
-        private float mTextGlancesHeight, mTextGlancesRightMargin;
+        private float mTextGlancesHeight, mTextGlancesBaselineHeight, mTextGlancesRightMargin;
         private Typeface mTextTypeface;
         private final Rect textBounds = new Rect();
 
@@ -161,6 +167,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         private int mHeight;
         private float mCenterX;
         private float mCenterY;
+
 
 //        private Paint mLinePaint;
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
@@ -180,17 +187,17 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mTextTypeface = Typeface.createFromAsset(getApplicationContext().getAssets(),
                     RALEWAY_TYPEFACE_PATH);
 
-            mTextPaintInteractive = new Paint();
-            mTextPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
-            mTextPaintInteractive.setTypeface(mTextTypeface);
-            mTextPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-            mTextPaintInteractive.setAntiAlias(true);
+            mTextDigitsPaintInteractive = new Paint();
+            mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
+            mTextDigitsPaintInteractive.setTypeface(mTextTypeface);
+            mTextDigitsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+            mTextDigitsPaintInteractive.setAntiAlias(true);
 
-            mTextPaintAmbient = new Paint();
-            mTextPaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
-            mTextPaintAmbient.setTypeface(mTextTypeface);
-            mTextPaintAmbient.setTextAlign(Paint.Align.RIGHT);
-            mTextPaintAmbient.setAntiAlias(false);
+            mTextDigitsPaintAmbient = new Paint();
+            mTextDigitsPaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
+            mTextDigitsPaintAmbient.setTypeface(mTextTypeface);
+            mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+            mTextDigitsPaintAmbient.setAntiAlias(false);
 
             mTextGlancesPaintInteractive = new Paint();
             mTextGlancesPaintInteractive.setColor(TEXT_GLANCES_COLOR_INTERACTIVE);
@@ -252,6 +259,14 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
 
+            if (inAmbientMode) {
+                if (timelyReset()) {
+                    Log.v(TAG, "Resetting watchface");
+                    glances = 0;
+                    eyeMosaic.reset();
+                }
+            }
+
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 invalidate();
@@ -293,12 +308,14 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mCenterX = mWidth / 2f;
             mCenterY = mHeight / 2f;
 
-            mTextHeight = TEXT_DIGITS_HEIGHT * mHeight;
-            mTextRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
-            mTextPaintInteractive.setTextSize(mTextHeight);
-            mTextPaintAmbient.setTextSize(mTextHeight);
+            mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
+            mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
+            mTextDigitsRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
+            mTextDigitsPaintInteractive.setTextSize(mTextDigitsHeight);
+            mTextDigitsPaintAmbient.setTextSize(mTextDigitsHeight);
 
             mTextGlancesHeight = TEXT_GLANCES_HEIGHT * mHeight;
+            mTextGlancesBaselineHeight = TEXT_GLANCES_BASELINE_HEIGHT * mHeight;
             mTextGlancesRightMargin = TEXT_GLANCES_RIGHT_MARGIN * mWidth;
             mTextGlancesPaintInteractive.setTextSize(mTextGlancesHeight);
             mTextGlancesPaintAmbient.setTextSize(mTextGlancesHeight);
@@ -308,17 +325,22 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         public void onDraw(Canvas canvas, Rect bounds) {
 
             mTime.setToNow();
-
-            final String time = (mTime.hour % 12 == 0 ? 12 : mTime.hour % 12) + ":" + String.format("%02d", mTime.minute);
-
+            mHourInt = mTime.hour;
+            mMinuteInt = mTime.minute;
+            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
 
-                drawTextVerticallyCentered(canvas, mTextPaintAmbient, time,
-                        mWidth - mTextRightMargin, 0.33f * mHeight);
-                drawTextVerticallyCentered(canvas, mTextGlancesPaintAmbient, Integer.toString(glances),
-                        mWidth - mTextGlancesRightMargin, mCenterY);
+                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                        mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
+                if (DEBUG_SHOW_GLANCE_COUNTER) canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
+                        mTextGlancesBaselineHeight, mTextGlancesPaintAmbient);
+
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, time,
+//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
+//                drawTextVerticallyCentered(canvas, mTextGlancesPaintAmbient, Integer.toString(glances),
+//                        mWidth - mTextGlancesRightMargin, mCenterY);
 
             } else {
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
@@ -328,10 +350,15 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 eyeMosaic.render(canvas);
                 canvas.restore();
 
-                drawTextVerticallyCentered(canvas, mTextPaintInteractive, time,
-                        mWidth - mTextRightMargin, 0.33f * mHeight);
-                drawTextVerticallyCentered(canvas, mTextGlancesPaintInteractive, Integer.toString(glances),
-                        mWidth - mTextGlancesRightMargin, mCenterY);
+                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                        mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
+                if (DEBUG_SHOW_GLANCE_COUNTER) canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
+                        mTextGlancesBaselineHeight, mTextGlancesPaintInteractive);
+
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, time,
+//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
+//                drawTextVerticallyCentered(canvas, mTextGlancesPaintInteractive, Integer.toString(glances),
+//                        mWidth - mTextGlancesRightMargin, mCenterY);
             }
 
         }
@@ -434,6 +461,17 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
 
+        // Checks if watchface should reset, like overnight
+        boolean timelyReset() {
+            boolean reset = false;
+            if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
+                reset = true;
+            }
+            mLastAmbientHour = mHourInt;
+            return reset;
+        }
+
+
 
         class EyeMosaic {
 
@@ -518,6 +556,22 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
             }
 
+            void reset() {
+                for (Eye eye : activeEyes) {
+                    // @TODO improve this programmatically
+                    eye.isActive = false;
+                    eye.needsUpdate = false;
+                    eye.blinking = false;
+                    eye.currentAperture = 0;
+                    eye.targetAperture = 0;
+                    inactiveEyes.add(eye);
+                }
+                activeEyesCount = 0;
+                blinkChance = 0;
+                inactiveEyes.clear();
+                updateList.clear();
+            }
+
         }
 
 
@@ -563,7 +617,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 needsUpdate = false;
                 blinking = false;
                 currentAperture = 0;
-                targetAperture = height;
+                targetAperture = height;  // @TODO should this be 0?
 
                 eyelidPaint = new Paint();
                 eyelidPaint.setColor(EYELID_COLOR);
