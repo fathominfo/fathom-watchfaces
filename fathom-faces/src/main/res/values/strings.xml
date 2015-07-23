@@ -22,7 +22,7 @@
     <string name="bouncing_ball_name">Fathom Bouncing Ball</string>
     <string name="fit_data_name">Fathom Fit Data</string>
     <string name="all_sensors_name">Fathom All Sensors</string>
-    <string name="ding_dong_name">Fathom Ding Dong</string>
-    <string name="twinkie_name">Fathom Twinkie</string>
+    <string name="ding_dong_name">Fathom Rings</string>
+    <string name="twinkie_name">Fathom Triangles</string>
     <string name="blinkie_name">Fathom Blinkie</string>
 </resources>

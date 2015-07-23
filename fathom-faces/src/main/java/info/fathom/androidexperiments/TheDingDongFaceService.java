@@ -44,16 +44,20 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.20f;  // as a factor of screen height
+    private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.40f;  // as a factor of screen height
     private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.11f;  // as a factor of screen width
 
     private static final int   TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_STEPS_HEIGHT = 0.10f;  // as a factor of screen height
+    private static final float TEXT_STEPS_BASELINE_HEIGHT = 0.52f;  // as a factor of screen height
     private static final float TEXT_STEPS_RIGHT_MARGIN = 0.10f;  // as a factor of screen width
 
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     //    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     //    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
+
+    private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
 
 
 
@@ -178,11 +182,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private boolean mAmbient;
 
         private Time mTime;
+        private String mTimeStr;
+        private int mHourInt, mMinuteInt;
+        private int mLastAmbientHour;
 
         private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
-        private float mTextDigitsHeight, mTextDigitsRightMargin;
+        private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
         private Paint mTextStepsPaintInteractive, mTextStepsPaintAmbient;
-        private float mTextStepsHeight, mTextStepsRightMargin;
+        private float mTextStepsHeight, mTextStepsBaselineHeight, mTextStepsRightMargin;
         private Typeface mTextTypeface;
         private final Rect textBounds = new Rect();
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
@@ -264,11 +271,19 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
 
+            if (inAmbientMode) {
+                if (timelyReset()) {
+                    Log.v(TAG, "Resetting watchface");
+                    mPrevSteps = 0;
+                    mCurrentSteps = 0;
+                    bubbleManager.updateSteps(mCurrentSteps);
+                }
+            }
+
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 invalidate();
             }
-
 
             if (mAmbient) {
                 unregisterTimeReceiver();
@@ -330,11 +345,13 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             mCenterY = mHeight / 2f;
 
             mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
+            mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
             mTextDigitsRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
             mTextDigitsPaintInteractive.setTextSize(mTextDigitsHeight);
             mTextDigitsPaintAmbient.setTextSize(mTextDigitsHeight);
 
             mTextStepsHeight = TEXT_STEPS_HEIGHT * mHeight;
+            mTextStepsBaselineHeight = TEXT_STEPS_BASELINE_HEIGHT * mHeight;
             mTextStepsRightMargin = TEXT_STEPS_RIGHT_MARGIN * mWidth;
             mTextStepsPaintInteractive.setTextSize(mTextStepsHeight);
             mTextStepsPaintAmbient.setTextSize(mTextStepsHeight);
@@ -343,12 +360,18 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
 
+//            mTime.setToNow();
+//
+////            final String hours = Integer.toString(mTime.hour % 12 == 0 ? 12 : mTime.hour % 12);
+////            final String minutes = String.format("%02d", mTime.minute);
+//
+//            final String time = (mTime.hour % 12 == 0 ? 12 : mTime.hour % 12) + ":" + String.format("%02d", mTime.minute);
+
+
             mTime.setToNow();
-
-//            final String hours = Integer.toString(mTime.hour % 12 == 0 ? 12 : mTime.hour % 12);
-//            final String minutes = String.format("%02d", mTime.minute);
-
-            final String time = (mTime.hour % 12 == 0 ? 12 : mTime.hour % 12) + ":" + String.format("%02d", mTime.minute);
+            mHourInt = mTime.hour;
+            mMinuteInt = mTime.minute;
+            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
 
             // Start drawing watch elements
 //            canvas.save();
@@ -356,22 +379,16 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
-                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, time,
-                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-                drawTextVerticallyCentered(canvas, mTextStepsPaintAmbient, mTestStepFormatter.format(mCurrentSteps) + "#",
-                        mWidth - mTextStepsRightMargin, mCenterY);
+                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                        mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
+                canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
+                        mTextStepsBaselineHeight, mTextStepsPaintAmbient);
 
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, time,
+//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
+//                drawTextVerticallyCentered(canvas, mTextStepsPaintAmbient, mTestStepFormatter.format(mCurrentSteps) + "#",
+//                        mWidth - mTextStepsRightMargin, mCenterY);
 
-
-//                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, hours, 1.35f * mCenterX - 10, 0.35f * mCenterY);  // @TODO: be screen programmatic here
-//                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.LEFT);
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, minutes, 1.35f * mCenterX + 10, 0.35f * mCenterY);  // @TODO: be screen programmatic here
-//                mTextDigitsPaintAmbient.setTextAlign(Paint.Align.CENTER);
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, ":", 1.35f * mCenterX, 0.35f * mCenterY);
-
-////                canvas.drawText(mCurrentSteps + " steps", mCenterX, mCenterY, mTextStepsPaintAmbient);
-//                canvas.drawText("" + mCurrentSteps, 1.35f * mCenterX, 0.65f * mCenterY, mTextStepsPaintAmbient);
 
             } else {
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
@@ -380,22 +397,15 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubbleManager.update();
                 bubbleManager.render(canvas);
 
-                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, time,
-                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-                drawTextVerticallyCentered(canvas, mTextStepsPaintInteractive, mTestStepFormatter.format(mCurrentSteps) + "#",
-                        mWidth - mTextStepsRightMargin, mCenterY);
+                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                        mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
+                canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
+                        mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
-
-//
-//                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, hours, 1.35f * mCenterX - 10, 0.35f * mCenterY);  // @TODO: be screen programmatic here
-//                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.LEFT);
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, minutes, 1.35f * mCenterX + 10, 0.35f * mCenterY);  // @TODO: be screen programmatic here
-//                mTextDigitsPaintInteractive.setTextAlign(Paint.Align.CENTER);
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, ":", 1.35f * mCenterX, 0.35f * mCenterY);
-//
-////                canvas.drawText(mCurrentSteps + " steps", mCenterX, mCenterY, mTextStepsPaintInteractive);
-//                canvas.drawText("" + mCurrentSteps, 1.35f * mCenterX, 0.65f * mCenterY, mTextStepsPaintInteractive);
+//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, time,
+//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
+//                drawTextVerticallyCentered(canvas, mTextStepsPaintInteractive, mTestStepFormatter.format(mCurrentSteps) + "#",
+//                        mWidth - mTextStepsRightMargin, mCenterY);
 
             }
         }
@@ -524,19 +534,23 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             return isVisible() && !isInAmbientMode();
         }
 
-
-
-
-
-
-
-
-
         // http://stackoverflow.com/a/24969713/1934487
         private void drawTextVerticallyCentered(Canvas canvas, Paint paint, String text, float cx, float cy) {
             paint.getTextBounds(text, 0, text.length(), textBounds);
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
+
+        // Checks if watchface should reset, like overnight
+        boolean timelyReset() {
+            boolean reset = false;
+            if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
+                reset = true;
+            }
+            mLastAmbientHour = mHourInt;
+            return reset;
+        }
+
+
 
 
         private class BubbleManager {
