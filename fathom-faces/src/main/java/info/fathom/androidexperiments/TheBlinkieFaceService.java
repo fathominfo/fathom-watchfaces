@@ -42,7 +42,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
-    private static final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(50,50,50);
+    private static final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(0,0,0);
     private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
 
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;

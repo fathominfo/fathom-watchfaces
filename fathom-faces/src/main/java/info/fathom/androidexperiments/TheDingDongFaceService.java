@@ -50,7 +50,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final int   TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_STEPS_HEIGHT = 0.10f;  // as a factor of screen height
-    private static final float TEXT_STEPS_BASELINE_HEIGHT = 0.65f;  // as a factor of screen height
+    private static final float TEXT_STEPS_BASELINE_HEIGHT = TEXT_DIGITS_BASELINE_HEIGHT + 0.15f;  // as a factor of screen height
     private static final float TEXT_STEPS_RIGHT_MARGIN = 0.07f;  // as a factor of screen width
 
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
