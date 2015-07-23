@@ -35,28 +35,29 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final String TAG = "TheTwinkieFaceService";
     private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
     private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-    private static final long INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(50);
-
     /**
      * Update rate in milliseconds for interactive mode. We updateSize once a second to advance the
      * second hand.
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
-
     private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
+
+
     private final int[] backgroundColors = new int[24];
     private final int[] backgroundColorsAlpha = new int[24];
     private final static int COLOR_TRIANGLE_ALPHA = 100;
     private final static int CURSOR_TRIANGLE_ALPHA = 100;
-
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
+
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
     private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.40f;  // as a factor of screen height
     private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
 
     private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
+    private static final long  INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
+
 
     // DEBUG
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
@@ -136,7 +137,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private String mTimeStr;
         private int mHourInt, mMinuteInt;
         private int mLastAmbientHour;
-        private Time mCurrentGlance, mPrevGlance;
+        private Time mCurrentGlance;
+        private long mPrevGlance;
 
         private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
         private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
@@ -190,8 +192,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mTime  = new Time();
             mCurrentGlance = new Time();
             mCurrentGlance.setToNow();
-            mPrevGlance = new Time();
-            mPrevGlance.setToNow();
+            mPrevGlance = mCurrentGlance.toMillis(false);
 
             // Initialize hardcoded day colors
             backgroundColors[0] = Color.rgb(0, 85, 255);
@@ -297,10 +298,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private boolean shouldReset() {
             if (RESET_CRACK_THRESHOLD > 0 && glances % RESET_CRACK_THRESHOLD == 0) return true;
 
-            mPrevGlance = mCurrentGlance;
+            mPrevGlance = mCurrentGlance.toMillis(false);
             mCurrentGlance.setToNow();
 
-            if (mCurrentGlance.toMillis(false) - mPrevGlance.toMillis(false) > INACTIVITY_RESET_TIME) return true;
+            if (mCurrentGlance.toMillis(false) - mPrevGlance > INACTIVITY_RESET_TIME) return true;
 
             return false;
         }
