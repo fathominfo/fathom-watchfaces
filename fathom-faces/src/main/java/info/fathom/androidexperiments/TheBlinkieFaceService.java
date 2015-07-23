@@ -73,11 +73,11 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     };
     private static final int   EYE_COLOR_COUNT = EYE_COLORS.length;
 
-    private static final int   NEW_EYE_EVERY_N_GLANCES = 2;
+    private static final int   NEW_EYE_EVERY_N_GLANCES = 1;
     private static final float BLINK_TO_GLANCE_CHANCE_RATIO = 0.10f;  // percent possibility of a blink event happening as compared to amount of glances
     private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
-    private static final long  EYE_POPOUT_BASE_THRESHOLD = TimeUnit.MINUTES.toMillis(10);  // baseline threshold over which eyes will start popping out
-    private static final long  EYE_POPOUT_PERIOD = TimeUnit.MINUTES.toMillis(5);  // beyond baseline, an eye will pop out every N millis
+    private static final long  EYE_POPOUT_BASE_THRESHOLD = TimeUnit.SECONDS.toMillis(10);  // baseline threshold over which eyes will start popping out
+    private static final long  EYE_POPOUT_PERIOD = TimeUnit.SECONDS.toMillis(5);  // beyond baseline, an eye will pop out every N millis
 
     // DEBUG
     private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance

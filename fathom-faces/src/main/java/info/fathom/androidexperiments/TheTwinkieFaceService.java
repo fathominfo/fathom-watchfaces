@@ -7,9 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -41,11 +43,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
      */
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
-    private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
-    private final int[] backgroundColors = new int[7];
-//    private final int[] backgroundColorsAlpha = new int[24];
-    private final static int COLOR_TRIANGLE_ALPHA = 100;
-    private final static int CURSOR_TRIANGLE_ALPHA = 100;
+    private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
+    private final static int   BACKGROUND_COLORS_COUNT = 7;
+    private final int[] backgroundColors = new int[BACKGROUND_COLORS_COUNT];
+    //    private final int[] backgroundColorsAlpha = new int[24];
+    private final static int   COLOR_TRIANGLE_ALPHA = 100;
+    private final static int   CURSOR_TRIANGLE_ALPHA = 100;
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
@@ -178,7 +181,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int randomColor;
-        private int triangleColorNew = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );;
+        private int triangleColorNew = randomHSVColor();
 
 
 
@@ -298,7 +301,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             super.onAmbientModeChanged(inAmbientMode);
 
             // choose random color for the background
-            randomColor = (int) (Math.random() * 6);
+            randomColor = (int) (Math.random() * 7);
 
             if (inAmbientMode) {
                 if (timelyReset()) {
@@ -536,7 +539,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             private static final int COLOR = Color.WHITE;
             private static final float FRICTION = 0.999f;
-            private static final float ACCEL_FACTOR = 0.8f;
+            private static final float ACCEL_FACTOR = 0.5f;
             private static final float RADIUS_FACTOR = 0.03f;
 //            private static final float FRICTION = 0.97f;
 //            private static final float ACCEL_FACTOR = 0.25f;
@@ -607,7 +610,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 if (bounce) {
                     parent.addBounce(bounceX, bounceY);
 
-                    triangleColorNew = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
+                    triangleColorNew = randomHSVColor();
                 }
 
 
@@ -754,59 +757,21 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 path.lineTo(ball.x, ball.y);
 
 
-                // CURSOR TRIANGLE FOLLOWS NEW TRIANGULATION ALGORITHM
-//                Bounce a, b;
-//                Bounce start, corner, middle;
-//                boolean threeV = false;
-//                if (bounceCount < 2) {
-//                    start = new Bounce((int) mCenterX, 0);
-//                    middle = new Bounce((int) mCenterX, mHeight);
-//                    corner = middle;  // fake initialization for compile
-//                } else {
-//                    int posA = (bounceIterator - 2) % bounceCount;
-//                    if (posA < 0) posA += bounceCount;
-//                    int posB = (bounceIterator - 1) % bounceCount;
-//                    if (posB < 0) posB += bounceCount;
-//                                        a = bounces[posA];
-//                    b = bounces[posB];
-//
-//                    if (a.side < b.side) {
-//                        start = a;
-//                        middle = b;
-//                    } else if (a.side == 3 && b.side == 0) {
-//                        start = a;
-//                        middle = b;
-//                    } else {
-//                        start = b;
-//                        middle = a;
-//                    }
-//                    if (middle.side - start.side != 2) {
-//                        corner = generateCornerBounce(start);
-//                        threeV = true;
-//                    } else {
-//                        corner = middle;  // fake initialization for compile
-//                    }
-//                }
-//
-//                Path path = new Path();
-//                path.moveTo(start.x, start.y);
-//                if (threeV) {
-//                    path.lineTo(corner.x, corner.y);
-//                }
-//                path.lineTo(middle.x, middle.y);
-//                path.lineTo(ball.x, ball.y);
-
-                mTime.setToNow();
-                int hour = mTime.hour;
-
-
-
 //                trianglePaint.setColor(Color.argb(CURSOR_TRIANGLE_ALPHA, 255,255,255) );
-                trianglePaint.setColor(triangleColorNew);
 //                trianglePaint.setColor(backgroundColorsAlpha[hour]);
 //                trianglePaint.setColor(Color.HSVToColor(CURSOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } ));
 
+
+//                float midX = Math.min(a.x, b.x) + 0.5f * Math.abs(a.x - b.x);
+//                float midY = Math.min(a.y, b.y) + 0.5f * Math.abs(a.y - b.y);
+//                trianglePaint.setShader(new LinearGradient(ball.x, ball.y, midX, midY,
+//                        Color.argb(255, 255, 255, 255), Color.argb(0, 255, 255, 255), Shader.TileMode.MIRROR));
+//                canvas.drawPath(path, trianglePaint);
+//                trianglePaint.setShader(null);  // revert back  @TODO: improve this with a dedicated cursor paint
+
+                trianglePaint.setColor(triangleColorNew);
                 canvas.drawPath(path, trianglePaint);
+
             }
 
             void addBounce(int xpos, int ypos) {
@@ -1095,30 +1060,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         }
 
+    }
 
-
-//        void drawTestGrays(Canvas canvas) {
-//
-//            Paint p = new Paint();
-//            p.setStyle(Paint.Style.FILL);
-//
-//            p.setColor(Color.rgb(50, 50, 50));
-//            canvas.drawRect(10, 10, 50, 100, p);
-//
-//            p.setColor(Color.rgb(100, 100, 100));
-//            canvas.drawRect(50, 10, 100, 100, p);
-//
-//            p.setColor(Color.rgb(150, 150, 150));
-//            canvas.drawRect(100, 10, 150, 100, p);
-//
-//            p.setColor(Color.rgb(200, 200, 200));
-//            canvas.drawRect(150, 10, 200, 100, p);
-//
-//            p.setColor(Color.rgb(255, 255, 255));
-//            canvas.drawRect(200, 10, 250, 100, p);
-//
-//        }
-
+    int randomHSVColor() {
+        return Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
     }
 
 }
