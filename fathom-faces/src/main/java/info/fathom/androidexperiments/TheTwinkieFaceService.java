@@ -101,8 +101,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //        private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
 //        private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
         private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
-        private final int[] backgroundColors = new int[24];
-        private final int[] backgroundColorsAlpha = new int[24];
+        private final int[] backgroundColors = new int[7];
+//        private final int[] backgroundColorsAlpha = new int[24];
         private final static int COLOR_TRIANGLE_ALPHA = 100;
         private final static int CURSOR_TRIANGLE_ALPHA = 100;
 
@@ -144,7 +144,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private Board board;
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
-
+        private int randomColor;
+        private int triangleColorNew = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );;
 
 
 
@@ -187,56 +188,64 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mPrevGlance.setToNow();
 
             // Initialize hardcoded day colors
-            backgroundColors[0] = Color.rgb(0, 85, 255);
-            backgroundColors[1] = Color.rgb(0, 21, 255);
-            backgroundColors[2] = Color.rgb(42, 0, 255);
-            backgroundColors[3] = Color.rgb(106, 0, 255);
-            backgroundColors[4] = Color.rgb(170, 0, 255);
-            backgroundColors[5] = Color.rgb(234, 0, 255);
-            backgroundColors[6] = Color.rgb(255, 0, 212);
-            backgroundColors[7] = Color.rgb(255, 0, 149);
-            backgroundColors[8] = Color.rgb(255, 0, 85);
-            backgroundColors[9] = Color.rgb(255, 0, 21);
-            backgroundColors[10] = Color.rgb(255, 43, 0);
-            backgroundColors[11] = Color.rgb(255, 106, 0);
-            backgroundColors[12] = Color.rgb(255, 170, 0);
-            backgroundColors[13] = Color.rgb(255, 234, 0);
-            backgroundColors[14] = Color.rgb(212, 255, 0);
-            backgroundColors[15] = Color.rgb(149, 255, 0);
-            backgroundColors[16] = Color.rgb(85, 255, 0);
-            backgroundColors[17] = Color.rgb(21, 255, 0);
-            backgroundColors[18] = Color.rgb(0, 255, 43);
-            backgroundColors[19] = Color.rgb(0, 255, 106);
-            backgroundColors[20] = Color.rgb(0, 255, 170);
-            backgroundColors[21] = Color.rgb(0, 255, 234);
-            backgroundColors[22] = Color.rgb(0, 212, 255);
-            backgroundColors[23] = Color.rgb(0, 149, 255);
+//            backgroundColors[0] = Color.rgb(0, 85, 255);
+//            backgroundColors[1] = Color.rgb(0, 21, 255);
+//            backgroundColors[2] = Color.rgb(42, 0, 255);
+//            backgroundColors[3] = Color.rgb(106, 0, 255);
+//            backgroundColors[4] = Color.rgb(170, 0, 255);
+//            backgroundColors[5] = Color.rgb(234, 0, 255);
+//            backgroundColors[6] = Color.rgb(255, 0, 212);
+//            backgroundColors[7] = Color.rgb(255, 0, 149);
+//            backgroundColors[8] = Color.rgb(255, 0, 85);
+//            backgroundColors[9] = Color.rgb(255, 0, 21);
+//            backgroundColors[10] = Color.rgb(255, 43, 0);
+//            backgroundColors[11] = Color.rgb(255, 106, 0);
+//            backgroundColors[12] = Color.rgb(255, 170, 0);
+//            backgroundColors[13] = Color.rgb(255, 234, 0);
+//            backgroundColors[14] = Color.rgb(212, 255, 0);
+//            backgroundColors[15] = Color.rgb(149, 255, 0);
+//            backgroundColors[16] = Color.rgb(85, 255, 0);
+//            backgroundColors[17] = Color.rgb(21, 255, 0);
+//            backgroundColors[18] = Color.rgb(0, 255, 43);
+//            backgroundColors[19] = Color.rgb(0, 255, 106);
+//            backgroundColors[20] = Color.rgb(0, 255, 170);
+//            backgroundColors[21] = Color.rgb(0, 255, 234);
+//            backgroundColors[22] = Color.rgb(0, 212, 255);
+//            backgroundColors[23] = Color.rgb(0, 149, 255);
+
+            backgroundColors[0] = Color.rgb(255, 102, 51);
+            backgroundColors[1] = Color.rgb(0, 153, 255);
+            backgroundColors[2] = Color.rgb(125, 114, 163);
+            backgroundColors[3] = Color.rgb(215, 223, 35);
+            backgroundColors[4] = Color.rgb(238, 42, 123);
+            backgroundColors[5] = Color.rgb(0, 167, 157);
+            backgroundColors[6] = Color.rgb(141, 198, 63);
 
             // Initialize hardcoded day colors
-            backgroundColorsAlpha[0] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 85, 255);
-            backgroundColorsAlpha[1] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 21, 255);
-            backgroundColorsAlpha[2] = Color.argb(CURSOR_TRIANGLE_ALPHA, 42, 0, 255);
-            backgroundColorsAlpha[3] = Color.argb(CURSOR_TRIANGLE_ALPHA, 106, 0, 255);
-            backgroundColorsAlpha[4] = Color.argb(CURSOR_TRIANGLE_ALPHA, 170, 0, 255);
-            backgroundColorsAlpha[5] = Color.argb(CURSOR_TRIANGLE_ALPHA, 234, 0, 255);
-            backgroundColorsAlpha[6] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 212);
-            backgroundColorsAlpha[7] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 149);
-            backgroundColorsAlpha[8] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 85);
-            backgroundColorsAlpha[9] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 21);
-            backgroundColorsAlpha[10] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 43, 0);
-            backgroundColorsAlpha[11] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 106, 0);
-            backgroundColorsAlpha[12] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 170, 0);
-            backgroundColorsAlpha[13] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 234, 0);
-            backgroundColorsAlpha[14] = Color.argb(CURSOR_TRIANGLE_ALPHA, 212, 255, 0);
-            backgroundColorsAlpha[15] = Color.argb(CURSOR_TRIANGLE_ALPHA, 149, 255, 0);
-            backgroundColorsAlpha[16] = Color.argb(CURSOR_TRIANGLE_ALPHA, 85, 255, 0);
-            backgroundColorsAlpha[17] = Color.argb(CURSOR_TRIANGLE_ALPHA, 21, 255, 0);
-            backgroundColorsAlpha[18] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 43);
-            backgroundColorsAlpha[19] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 106);
-            backgroundColorsAlpha[20] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 170);
-            backgroundColorsAlpha[21] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 234);
-            backgroundColorsAlpha[22] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 212, 255);
-            backgroundColorsAlpha[23] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 149, 255);
+//            backgroundColorsAlpha[0] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 85, 255);
+//            backgroundColorsAlpha[1] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 21, 255);
+//            backgroundColorsAlpha[2] = Color.argb(CURSOR_TRIANGLE_ALPHA, 42, 0, 255);
+//            backgroundColorsAlpha[3] = Color.argb(CURSOR_TRIANGLE_ALPHA, 106, 0, 255);
+//            backgroundColorsAlpha[4] = Color.argb(CURSOR_TRIANGLE_ALPHA, 170, 0, 255);
+//            backgroundColorsAlpha[5] = Color.argb(CURSOR_TRIANGLE_ALPHA, 234, 0, 255);
+//            backgroundColorsAlpha[6] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 212);
+//            backgroundColorsAlpha[7] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 149);
+//            backgroundColorsAlpha[8] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 85);
+//            backgroundColorsAlpha[9] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 21);
+//            backgroundColorsAlpha[10] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 43, 0);
+//            backgroundColorsAlpha[11] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 106, 0);
+//            backgroundColorsAlpha[12] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 170, 0);
+//            backgroundColorsAlpha[13] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 234, 0);
+//            backgroundColorsAlpha[14] = Color.argb(CURSOR_TRIANGLE_ALPHA, 212, 255, 0);
+//            backgroundColorsAlpha[15] = Color.argb(CURSOR_TRIANGLE_ALPHA, 149, 255, 0);
+//            backgroundColorsAlpha[16] = Color.argb(CURSOR_TRIANGLE_ALPHA, 85, 255, 0);
+//            backgroundColorsAlpha[17] = Color.argb(CURSOR_TRIANGLE_ALPHA, 21, 255, 0);
+//            backgroundColorsAlpha[18] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 43);
+//            backgroundColorsAlpha[19] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 106);
+//            backgroundColorsAlpha[20] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 170);
+//            backgroundColorsAlpha[21] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 234);
+//            backgroundColorsAlpha[22] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 212, 255);
+//            backgroundColorsAlpha[23] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 149, 255);
         }
 
         @Override
@@ -255,6 +264,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         @Override
         public void onAmbientModeChanged(boolean inAmbientMode) {
             super.onAmbientModeChanged(inAmbientMode);
+
+            // choose random color for the background
+            randomColor = (int) (Math.random() * 6);
 
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
@@ -340,8 +352,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                         mWidth - mTextRightMargin, 0.33f * mHeight);
 
             } else {
-//                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
-                canvas.drawColor(backgroundColors[hour]);
+
+                canvas.drawColor(backgroundColors[randomColor]);
 
                 board.update();
                 board.render(canvas, false);
@@ -534,6 +546,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 if (bounce) {
                     parent.addBounce(bounceX, bounceY);
+
+                    triangleColorNew = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
                 }
 
 
@@ -550,7 +564,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         class Board {
 
             static final boolean AVOID_DUPLICATE_SIDES = true;
-            static final int     MAX_TRIANGLE_COUNT = 15;
+            static final int     MAX_TRIANGLE_COUNT = 20;
 
             int width, height;
             Ball ball;
@@ -725,8 +739,11 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 mTime.setToNow();
                 int hour = mTime.hour;
 
-//                trianglePaint.setColor(Color.argb(CURSOR_TRIANGLE_ALPHA, backgroundColors[hour]) );
-                trianglePaint.setColor(backgroundColorsAlpha[hour]);
+
+
+//                trianglePaint.setColor(Color.argb(CURSOR_TRIANGLE_ALPHA, 255,255,255) );
+                trianglePaint.setColor(triangleColorNew);
+//                trianglePaint.setColor(backgroundColorsAlpha[hour]);
 //                trianglePaint.setColor(Color.HSVToColor(CURSOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } ));
 
                 canvas.drawPath(path, trianglePaint);
@@ -901,7 +918,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                     mTime.setToNow();
                     int hour = mTime.hour;
-                    currentColor = backgroundColorsAlpha[hour];
+
+//                    currentColor = Color.argb(COLOR_TRIANGLE_ALPHA, 255,255,255);
+                    currentColor = triangleColorNew;
                 } else {
                     animateColor = false;
                     currentColor = baseColor;
@@ -1019,8 +1038,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             void newColor() {
 
-                color = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
-
+//                color = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
+                color = triangleColorNew;
 //                color = Color.argb(COLOR_TRIANGLE_ALPHA,
 //                        (int) (255 * Math.random()),
 //                        (int) (255 * Math.random()),
