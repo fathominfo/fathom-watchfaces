@@ -287,6 +287,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         public void onDestroy() {
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             mSensorManager.unregisterListener(TheTwinkieFaceService.this);
+            unregisterTimeZoneReceiver();
+            unregisterAccelerometerSensor();
             super.onDestroy();
         }
 

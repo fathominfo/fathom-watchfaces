@@ -8,6 +8,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
@@ -17,11 +18,15 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
 import android.util.Log;
+import android.view.Display;
 import android.view.SurfaceHolder;
+import android.view.WindowInsets;
+import android.view.WindowManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +87,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     // DEBUG
     private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_EYES_PER_GLANCE = 5;
-    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
+    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = true;
 
 
 
@@ -114,7 +119,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             }
         }
     }
-
 
 
 
@@ -173,6 +177,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         private int mHeight;
         private float mCenterX;
         private float mCenterY;
+        private boolean mIsRound, mIsMoto360;
 
 
 //        private Paint mLinePaint;
@@ -180,8 +185,13 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         private EyeMosaic eyeMosaic;
 
+        private AmbientManager ambientManager;
+
+
+
         @Override
         public void onCreate(SurfaceHolder holder) {
+            Log.v(TAG, "onCreate");
             super.onCreate(holder);
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(TheBlinkieFaceService.this)
@@ -247,12 +257,18 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mCurrentGlance = new Time();
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
+
+            registerScreenReceiver();
+            ambientManager = new AmbientManager();
         }
 
         @Override
         public void onDestroy() {
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             mSensorManager.unregisterListener(TheBlinkieFaceService.this);
+            unregisterTimeZoneReceiver();
+            unregisterAccelerometerSensor();
+            unregisterScreenReceiver();
             super.onDestroy();
         }
 
@@ -264,7 +280,10 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         @Override
         public void onAmbientModeChanged(boolean inAmbientMode) {
+            Log.v(TAG, "onAmbientModeChanged: " + inAmbientMode);
             super.onAmbientModeChanged(inAmbientMode);
+
+            ambientManager.ambientTick(inAmbientMode);
 
             if (inAmbientMode) {
                 if (timelyReset()) {
@@ -282,6 +301,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             if (mAmbient) {
                 unregisterTimeZoneReceiver();
                 unregisterAccelerometerSensor();
+
 
                 mCurrentGlance.setToNow();
                 mPrevGlance = mCurrentGlance.toMillis(false);
@@ -338,12 +358,13 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            Log.v(TAG, "onSurfaceChanged: " + format + " " + width + " " + height);
             super.onSurfaceChanged(holder, format, width, height);
 
             mWidth = width;
             mHeight = height;
-            mCenterX = mWidth / 2f;
-            mCenterY = mHeight / 2f;
+            mCenterX = 0.50f * mWidth;
+            mCenterY = 0.50f * mHeight;
 
             mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
@@ -359,7 +380,20 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         }
 
         @Override
+        public void onApplyWindowInsets(WindowInsets insets) {
+            Log.d(TAG, "onApplyWindowInsets");
+            super.onApplyWindowInsets(insets);
+
+            mIsRound = insets.isRound();
+            mIsMoto360 = isMoto360();
+            Log.v(TAG, "mIsRound? " + mIsRound);
+            Log.v(TAG, "Is this a Moto360? " + mIsMoto360);
+        }
+
+        @Override
         public void onDraw(Canvas canvas, Rect bounds) {
+
+            Log.v(TAG, getDisplayState());
 
             mTime.setToNow();
             mHourInt = mTime.hour;
@@ -374,11 +408,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 if (DEBUG_SHOW_GLANCE_COUNTER) canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
                         mTextGlancesBaselineHeight, mTextGlancesPaintAmbient);
 
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, time,
-//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-//                drawTextVerticallyCentered(canvas, mTextGlancesPaintAmbient, Integer.toString(glances),
-//                        mWidth - mTextGlancesRightMargin, mCenterY);
-
             } else {
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
@@ -392,16 +421,16 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 if (DEBUG_SHOW_GLANCE_COUNTER) canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
                         mTextGlancesBaselineHeight, mTextGlancesPaintInteractive);
 
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, time,
-//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-//                drawTextVerticallyCentered(canvas, mTextGlancesPaintInteractive, Integer.toString(glances),
-//                        mWidth - mTextGlancesRightMargin, mCenterY);
             }
+
+
 
         }
 
         @Override
         public void onVisibilityChanged(boolean visible) {
+            Log.v(TAG, "onVisibilityChanged: " + visible);
+
             super.onVisibilityChanged(visible);
 
             if (visible) {
@@ -423,6 +452,32 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             * so we may need to start or stop the timer.
             */
             updateTimer();
+        }
+
+        private final BroadcastReceiver mScreenReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.v(TAG, "Received intent");
+                if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                    Log.v(TAG, "Screen ON");
+//                    onAmbientModeChanged(false);
+                    ambientManager.screenTick(true);
+                } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                    Log.v(TAG, "Screen OFF");
+//                    onAmbientModeChanged(true);
+                    ambientManager.screenTick(false);
+                }
+            }
+        };
+
+        private void registerScreenReceiver() {
+            Log.v(TAG, "ScreenReceiver registered");
+            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_ON));
+            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
+        }
+
+        private void unregisterScreenReceiver() {
+            TheBlinkieFaceService.this.unregisterReceiver(mScreenReceiver);
         }
 
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -498,8 +553,9 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
 
+
         // Checks if watchface should reset, like overnight
-        boolean timelyReset() {
+        private boolean timelyReset() {
             boolean reset = false;
             if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
                 reset = true;
@@ -507,6 +563,35 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mLastAmbientHour = mHourInt;
             return reset;
         }
+
+
+        private boolean isMoto360() {
+            // Cannot rely on the width/height params passed to onSurfaceChanged,
+            // because those are faking a virtual 320x320 screen...
+
+            WindowManager wm = (WindowManager) TheBlinkieFaceService.this.getSystemService(Context.WINDOW_SERVICE);
+            Display display = wm.getDefaultDisplay();
+            Point size = new Point();
+            display.getSize(size);
+
+            Log.v(TAG, "isMoto360: " + mIsRound + " " + size.x + " " + size.y);
+            return (mIsRound && size.x == 320 && size.y == 290);
+        }
+
+        private String getDisplayState() {
+            int state = ((WindowManager) TheBlinkieFaceService.this.getSystemService(Context.WINDOW_SERVICE))
+                    .getDefaultDisplay().getState();
+            switch (state) {
+                case Display.STATE_ON: return "STATE_ON";
+                case Display.STATE_OFF: return "STATE_OFF";
+                case Display.STATE_DOZE: return "STATE_DOZE";
+                case Display.STATE_DOZE_SUSPEND: return "STATE_DOZE_SUSPEND";
+                case Display.STATE_UNKNOWN: return "STATE_UNKNOWN";
+                default: return "ELSE";
+            }
+        }
+
+
 
 
 
@@ -786,6 +871,37 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 needsUpdate = false;
             }
         }
+
+
+        private class AmbientManager {
+
+            private Time time;
+            private long lastAmbientTick, lastScreenTick;
+
+            public boolean isAmbientScreenModeOn;
+
+            AmbientManager() {
+                time = new Time();
+                time.setToNow();
+                lastAmbientTick = time.toMillis(false);
+                lastScreenTick = time.toMillis(false);
+            }
+
+            void ambientTick(boolean turnedAmbient) {
+                Log.v(TAG, "ambientTick: " + turnedAmbient);
+
+            }
+
+            void screenTick(boolean turnedOn) {
+                Log.v(TAG, "screenTick: " + turnedOn);
+
+            }
+
+
+
+
+        }
+
 
     }
 
