@@ -67,7 +67,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
     private static final boolean DISPLAY_BOUNCES = false;
     private static final boolean GRADIENT_CURSOR = true;
-    private static final boolean WHITE_CURSOR = true;
+    private static final boolean WHITE_GRADIENT_CURSOR = false;
 
 
 
@@ -130,6 +130,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int randomColor;
+        private int currentR, currentG, currentB;
         private int triangleColorNew = generateTriangleColor();
 
 
@@ -390,7 +391,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             return false;
         }
 
-        // Checks if watchface should reset, like overnight
+        // Checks if watch face should reset, like overnight
         boolean timelyReset() {
             boolean reset = false;
             if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
@@ -412,10 +413,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         class Ball {
 
             private static final int COLOR = Color.WHITE;
-//            private static final float FRICTION = 0.999f;
-//            private static final float ACCEL_FACTOR = 0.5f;
-            private static final float FRICTION = 0.97f;
-            private static final float ACCEL_FACTOR = 0.25f;
+            private static final float FRICTION = 0.999f;
+            private static final float ACCEL_FACTOR = 0.5f;
+//            private static final float FRICTION = 0.97f;
+//            private static final float ACCEL_FACTOR = 0.25f;
             private static final float RADIUS_FACTOR = 0.03f;  // as a ratio to screen width
 
             Board parent;
@@ -666,7 +667,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     a = bounces[posA];
                     b = bounces[posB];
                 }
-                
+
                 cursorPath.rewind();
                 cursorPath.moveTo(a.x, a.y);
                 cursorPath.lineTo(ball.x, ball.y);
@@ -682,8 +683,17 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     double pl = (dx * dpx + dy * dpy) / xylen;
                     float px = (float) (a.x + pl * dx / xylen);
                     float py = (float) (a.y + pl * dy / xylen);
-                    cursorPaint.setShader(new LinearGradient(ball.x, ball.y, px, py,
-                            Color.argb(255, 255, 255, 255), Color.argb(127, 255, 255, 255), Shader.TileMode.MIRROR));
+
+                    if (WHITE_GRADIENT_CURSOR) {
+                        cursorPaint.setShader(new LinearGradient(ball.x, ball.y, px, py,
+                                Color.argb(255, 255, 255, 255), Color.argb(COLOR_TRIANGLE_ALPHA, 255, 255, 255), Shader.TileMode.MIRROR));
+                    } else {
+                        cursorPaint.setShader(new LinearGradient(ball.x, ball.y, px, py,
+                                Color.argb(255, currentR, currentG, currentB),
+                                Color.argb(COLOR_TRIANGLE_ALPHA, currentR, currentG, currentB),
+                                Shader.TileMode.MIRROR));
+                    }
+
                     canvas.drawPath(cursorPath, cursorPaint);
                     cursorPaint.setShader(null);
 
@@ -1020,6 +1030,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             int currentTriangleColor = Color.HSVToColor(COLOR_TRIANGLE_ALPHA, new float[]{ (float) randomHue, 1.0f, 1.0f } );
+            currentR = Color.red(currentTriangleColor);
+            currentG = Color.green(currentTriangleColor);
+            currentB = Color.blue(currentTriangleColor);
 
             return currentTriangleColor;
         }
