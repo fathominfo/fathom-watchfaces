@@ -7,11 +7,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
-import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -25,6 +23,7 @@ import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.view.WindowInsets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,21 +34,19 @@ import java.util.concurrent.TimeUnit;
 public class TheTwinkieFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
     private static final String TAG = "TheTwinkieFaceService";
-    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
-    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-    /**
-     * Update rate in milliseconds for interactive mode. We updateSize once a second to advance the
-     * second hand.
-     */
+
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
     private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
-//    private final static int   BACKGROUND_COLORS_COUNT = 24;
+
+//    private final static int   BACKGROUND_COLORS_COUNT = 7;
 //    private final int[] backgroundColors = new int[BACKGROUND_COLORS_COUNT];
     //    private final int[] backgroundColorsAlpha = new int[24];
     private final static int   COLOR_TRIANGLE_ALPHA = 100;
 //    private final static int   CURSOR_TRIANGLE_ALPHA = 100;
     private final static int   RANGE_HUE = 150;
+
+    private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
@@ -66,66 +63,11 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final boolean USE_TRIANGLE_CURSOR = true;
     private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
     private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
+    private static final boolean DISPLAY_BOUNCES = false;
 
 
 
 
-
-//
-//    <<<<<<< HEAD
-//    //        private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
-////        private final int BACKGROUND_COLOR_INTERACTIVE = Color.rgb(240, 78, 35);  // orange
-//    private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
-//    private final int[] backgroundColors = new int[7];
-//    //        private final int[] backgroundColorsAlpha = new int[24];
-//    private final static int COLOR_TRIANGLE_ALPHA = 100;
-//    private final static int CURSOR_TRIANGLE_ALPHA = 100;
-//
-//    private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
-//    private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
-//    private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
-//    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.1f;  // as a factor of screen width
-//
-//    // DEBUG
-//    private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-//    private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
-//    private static final boolean DRAW_BALL = false;
-//    private static final boolean USE_TRIANGLE_CURSOR = true;
-//    private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
-//    private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
-//    =======
-//            >>>>>>> master
-
-
-
-
-
-
-
-    private SensorManager mSensorManager;
-    private Sensor mSensorAccelerometer;
-    private boolean mSensorAccelerometerIsRegistered;
-    private float[] gravity = new float[3];
-
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            // In this example, alpha is calculated as t / (t + dT),
-            // where t is the low-pass filter's time-constant and
-            // dT is the event delivery rate.
-            final float alpha = 0.8f;
-
-            // Isolate the force of gravity with the low-pass filter.
-            gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-            gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-            // gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-
-        }
-    }
 
 
 
@@ -156,12 +98,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
         };
 
-
-
         private boolean mRegisteredTimeZoneReceiver = false;
+        private boolean mAmbient;
 //        private boolean mLowBitAmbient;
 //        private boolean mBurnInProtection;
-        private boolean mAmbient;
 
         private Time mTime;
         private String mTimeStr;
@@ -179,6 +119,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private int mHeight;
         private float mCenterX;
         private float mCenterY;
+        private boolean mIsRound;
+        private float mRadius;
 
         private Board board;
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
@@ -200,7 +142,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     .build());
 
             RALEWAY_REGULAR_TYPEFACE = Typeface.createFromAsset(getApplicationContext().getAssets(),
-                    "fonts/raleway-regular-enhanced.ttf");
+                    RALEWAY_TYPEFACE_PATH);
 
             mTextDigitsPaintInteractive = new Paint();
             mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
@@ -215,8 +157,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mTextDigitsPaintAmbient.setAntiAlias(false);
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            mSensorManager.registerListener(TheTwinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
+                    TheTwinkieFaceService.this, mSensorManager);
+            mSensorAccelerometer.register();
 
             board = new Board();
 
@@ -225,31 +168,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
 
-//             Initialize hardcoded day colors
-//            backgroundColors[0] = Color.rgb(0, 85, 255);
-//            backgroundColors[1] = Color.rgb(0, 21, 255);
-//            backgroundColors[2] = Color.rgb(42, 0, 255);
-//            backgroundColors[3] = Color.rgb(106, 0, 255);
-//            backgroundColors[4] = Color.rgb(170, 0, 255);
-//            backgroundColors[5] = Color.rgb(234, 0, 255);
-//            backgroundColors[6] = Color.rgb(255, 0, 212);
-//            backgroundColors[7] = Color.rgb(255, 0, 149);
-//            backgroundColors[8] = Color.rgb(255, 0, 85);
-//            backgroundColors[9] = Color.rgb(255, 0, 21);
-//            backgroundColors[10] = Color.rgb(255, 43, 0);
-//            backgroundColors[11] = Color.rgb(255, 106, 0);
-//            backgroundColors[12] = Color.rgb(255, 170, 0);
-//            backgroundColors[13] = Color.rgb(255, 234, 0);
-//            backgroundColors[14] = Color.rgb(212, 255, 0);
-//            backgroundColors[15] = Color.rgb(149, 255, 0);
-//            backgroundColors[16] = Color.rgb(85, 255, 0);
-//            backgroundColors[17] = Color.rgb(21, 255, 0);
-//            backgroundColors[18] = Color.rgb(0, 255, 43);
-//            backgroundColors[19] = Color.rgb(0, 255, 106);
-//            backgroundColors[20] = Color.rgb(0, 255, 170);
-//            backgroundColors[21] = Color.rgb(0, 255, 234);
-//            backgroundColors[22] = Color.rgb(0, 212, 255);
-//            backgroundColors[23] = Color.rgb(0, 149, 255);
 
 //            backgroundColors[0] = Color.rgb(255, 102, 51);
 //            backgroundColors[1] = Color.rgb(0, 153, 255);
@@ -259,37 +177,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //            backgroundColors[5] = Color.rgb(0, 167, 157);
 //            backgroundColors[6] = Color.rgb(141, 198, 63);
 
-            // Initialize hardcoded day colors
-//            backgroundColorsAlpha[0] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 85, 255);
-//            backgroundColorsAlpha[1] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 21, 255);
-//            backgroundColorsAlpha[2] = Color.argb(CURSOR_TRIANGLE_ALPHA, 42, 0, 255);
-//            backgroundColorsAlpha[3] = Color.argb(CURSOR_TRIANGLE_ALPHA, 106, 0, 255);
-//            backgroundColorsAlpha[4] = Color.argb(CURSOR_TRIANGLE_ALPHA, 170, 0, 255);
-//            backgroundColorsAlpha[5] = Color.argb(CURSOR_TRIANGLE_ALPHA, 234, 0, 255);
-//            backgroundColorsAlpha[6] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 212);
-//            backgroundColorsAlpha[7] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 149);
-//            backgroundColorsAlpha[8] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 85);
-//            backgroundColorsAlpha[9] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 0, 21);
-//            backgroundColorsAlpha[10] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 43, 0);
-//            backgroundColorsAlpha[11] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 106, 0);
-//            backgroundColorsAlpha[12] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 170, 0);
-//            backgroundColorsAlpha[13] = Color.argb(CURSOR_TRIANGLE_ALPHA, 255, 234, 0);
-//            backgroundColorsAlpha[14] = Color.argb(CURSOR_TRIANGLE_ALPHA, 212, 255, 0);
-//            backgroundColorsAlpha[15] = Color.argb(CURSOR_TRIANGLE_ALPHA, 149, 255, 0);
-//            backgroundColorsAlpha[16] = Color.argb(CURSOR_TRIANGLE_ALPHA, 85, 255, 0);
-//            backgroundColorsAlpha[17] = Color.argb(CURSOR_TRIANGLE_ALPHA, 21, 255, 0);
-//            backgroundColorsAlpha[18] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 43);
-//            backgroundColorsAlpha[19] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 106);
-//            backgroundColorsAlpha[20] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 170);
-//            backgroundColorsAlpha[21] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 255, 234);
-//            backgroundColorsAlpha[22] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 212, 255);
-//            backgroundColorsAlpha[23] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 149, 255);
         }
 
         @Override
         public void onDestroy() {
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             mSensorManager.unregisterListener(TheTwinkieFaceService.this);
+            unregisterTimeZoneReceiver();
+            mSensorAccelerometer.unregister();
             super.onDestroy();
         }
 
@@ -320,10 +215,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             if (mAmbient) {
                 unregisterTimeZoneReceiver();
-                unregisterAccelerometerSensor();
+                mSensorAccelerometer.unregister();
             } else {
                 registerTimeZoneReceiver();
-                registerAccelerometerSensor();
+                mSensorAccelerometer.register();
 
                 glances++;
 
@@ -337,25 +232,16 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             updateTimer();
         }
 
-        private boolean shouldReset() {
-            if (RESET_CRACK_THRESHOLD > 0 && glances % RESET_CRACK_THRESHOLD == 0) return true;
-
-            mPrevGlance = mCurrentGlance.toMillis(false);
-            mCurrentGlance.setToNow();
-
-            if (mCurrentGlance.toMillis(false) - mPrevGlance > INACTIVITY_RESET_TIME) return true;
-
-            return false;
-        }
 
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             super.onSurfaceChanged(holder, format, width, height);
 
-            mWidth = width;
-            mHeight = height;
-            mCenterX = mWidth / 2f;
-            mCenterY = mHeight / 2f;
+            mWidth   = width;
+            mHeight  = height;
+            mCenterX = 0.50f * mWidth;
+            mCenterY = 0.50f * mHeight;
+            mRadius  = 0.50f * mWidth;
 
             board.initialize(mWidth, mHeight);
 
@@ -367,19 +253,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         }
 
         @Override
+        public void onApplyWindowInsets(WindowInsets insets) {
+            super.onApplyWindowInsets(insets);
+            mIsRound = insets.isRound();
+        }
+
+        @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-
-//            mTime.setToNow();
-//
-//            int hour = mTime.hour;
-//            if (NEW_HOUR_PER_GLANCE) {
-//                hour = (hour + glances) % 24;
-//            }
-//
-////            String hourStr = String.format("%02d", hour % 12 == 0 ? 12 : hour % 12);
-//            String hourStr = Integer.toString(hour % 12 == 0 ? 12 : hour % 12);
-//            String minuteStr = String.format("%02d", mTime.minute);
-
 
             mTime.setToNow();
             mHourInt = mTime.hour;
@@ -390,36 +270,24 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
 
             if (mAmbient) {
-
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
-
                 board.render(canvas, true);
-//                drawTestGrays(canvas);
-
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
 
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, hourStr + ":" + minuteStr,
-//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-
             } else {
+//                canvas.drawColor(backgroundColors[randomColor]);
                 int tempBackHue = (mHourInt * 15) + 200;
                 if (tempBackHue > 360) {
                     tempBackHue -= 360;
                 }
                 int tempBackColor = Color.HSVToColor(new float[]{ (float) tempBackHue, 1.0f, 1.0f });
                 canvas.drawColor(tempBackColor);
-//                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
-//                canvas.drawColor(backgroundColors[mHourInt]);
 
-                board.update();
+//                board.update();  // moved to class
                 board.render(canvas, false);
-
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
-
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, hourStr + ":" + minuteStr,
-//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
             }
         }
 
@@ -429,14 +297,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             if (visible) {
                 registerTimeZoneReceiver();
-                registerAccelerometerSensor();
+                mSensorAccelerometer.register();
 
                 // Update time zone in case it changed while we weren't visible.
                 mTime.clear(TimeZone.getDefault().getID());
                 mTime.setToNow();
             } else {
                 unregisterTimeZoneReceiver();
-                unregisterAccelerometerSensor();
+                mSensorAccelerometer.unregister();
             }
 
             /*
@@ -446,6 +314,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             */
             updateTimer();
         }
+
+
+
 
 
 
@@ -475,19 +346,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             TheTwinkieFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
-        private boolean registerAccelerometerSensor() {
-            if (mSensorAccelerometerIsRegistered) return true;
-            mSensorAccelerometerIsRegistered = mSensorManager.registerListener(
-                    TheTwinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-            return mSensorAccelerometerIsRegistered;
-        }
-
-        private boolean unregisterAccelerometerSensor() {
-            if (!mSensorAccelerometerIsRegistered) return false;
-            mSensorManager.unregisterListener(TheTwinkieFaceService.this, mSensorAccelerometer);
-            mSensorAccelerometerIsRegistered = false;
-            return false;
-        }
 
         private void updateTimer() {
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
@@ -517,10 +375,15 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
         }
 
-        // http://stackoverflow.com/a/24969713/1934487
-        private void drawTextVerticallyCentered(Canvas canvas, Paint paint, String text, float cx, float cy) {
-            paint.getTextBounds(text, 0, text.length(), textBounds);
-            canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
+        private boolean shouldReset() {
+            if (RESET_CRACK_THRESHOLD > 0 && glances % RESET_CRACK_THRESHOLD == 0) return true;
+
+            mPrevGlance = mCurrentGlance.toMillis(false);
+            mCurrentGlance.setToNow();
+
+            if (mCurrentGlance.toMillis(false) - mPrevGlance > INACTIVITY_RESET_TIME) return true;
+
+            return false;
         }
 
         // Checks if watchface should reset, like overnight
@@ -547,10 +410,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             private static final int COLOR = Color.WHITE;
             private static final float FRICTION = 0.999f;
             private static final float ACCEL_FACTOR = 0.5f;
-            private static final float RADIUS_FACTOR = 0.03f;
 //            private static final float FRICTION = 0.97f;
 //            private static final float ACCEL_FACTOR = 0.25f;
-//            private static final float RADIUS_FACTOR = 0.03f;  // as a ratio to screen width
+            private static final float RADIUS_FACTOR = 0.03f;  // as a ratio to screen width
 
             Board parent;
             float x, y, r;
@@ -584,43 +446,96 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 // @TODO in general, make this check more programmatic
                 boolean bounce = false;
                 int bounceX = 0, bounceY = 0;
-                if (x > parent.width) {
-                    bounce = true;
-                    bounceX = parent.width;
-                    bounceY = Math.round( y - velY + velY * x / parent.width );  // proportional height at bounce
-                    x = parent.width - (x - parent.width);
-                    velX = -velX;
 
-                } else if (x < 0) {
-                    bounce = true;
-                    bounceX = 0;
-                    bounceY = Math.round( y - velY + velY * x / parent.width );  // proportional height at bounce
-                    x = -x;
-                    velX = -velX;
-                }
+                if (mIsRound) {
+                    double drx = x - mCenterX;
+                    double dry = y - mCenterY;
+                    double r = Math.sqrt(drx * drx + dry * dry);
 
-                if (y > mHeight) {
-                    bounce = true;
-                    bounceX = Math.round( x - velX + velX * y / parent.height );  // proportional height at bounce
-                    bounceY = parent.height;
-                    y = mHeight - (y - mHeight);
-                    velY = -velY;
+                    if (r > mRadius) {
+//                        Log.v(TAG, "Checking circ-int for [" + x + ", " + y + "]");
 
-                } else if (y < 0) {
-                    bounce = true;
-                    bounceX = Math.round( x - velX + velX * y / parent.height );  // proportional height at bounce
-                    bounceY = 0;
-                    y = -y;
-                    velY = -velY;
+                        double dcx = drx - velX;
+                        double dcy = dry - velY;
+                        double a = velX * velX + velY * velY;
+                        double b = 2 * (velX * dcx + velY * dcy);
+                        double c = (dcx * dcx + dcy * dcy) - mRadius * mRadius;
+                        double disc = b * b - 4 * a * c;
+
+                        if (disc < 0) {
+                            Log.v(TAG, "No intersection, disc: " + disc);
+                        } else {
+                            double sq = Math.sqrt(disc);
+//                            double t0 = (-b - sq) / (2 * a);
+                            double t1 = (-b + sq) / (2 * a);
+
+                            //double xt0 = x - velX + t0 * velX;
+                           // double yt0 = y - velY + t0 * velY;
+                            double xt1 = x - velX + t1 * velX;
+                            double yt1 = y - velY + t1 * velY;
+
+                            //Log.v(TAG, "Bounce 0: [" + xt0 + ", " + yt0 + "]");
+//                            Log.v(TAG, "Bounce 1: [" + xt1 + ", " + yt1 + "]");
+
+                            bounce = true;
+                            bounceX = Math.round((float) xt1);
+                            bounceY = Math.round((float) yt1);
+
+                            // http://www.3dkingdoms.com/weekly/weekly.php?a=2
+                            double tangentAngle = Math.atan2(yt1 - mCenterY, xt1 - mCenterX) + 0.50f * Math.PI;
+                            double tx = Math.cos(tangentAngle);
+                            double ty = Math.sin(tangentAngle);
+                            double dVelX = x - xt1;
+                            double dVelY = y - yt1;
+                            double dVelDotT = dVelX * tx + dVelY * ty;
+                            double refDVelX = 2 * dVelDotT * tx - dVelX;
+                            double refDVelY = 2 * dVelDotT * ty - dVelY;
+
+                            x = (float) (xt1 + refDVelX);
+                            y = (float) (yt1 + refDVelY);
+
+                            double velDotT = velX * tx + velY * ty;
+                            velX = (float) (2 * velDotT * tx - velX);
+                            velY = (float) (2 * velDotT * ty - velY);
+                        }
+                    }
+
+                } else {
+                    if (x > parent.width) {
+                        bounce = true;
+                        bounceX = parent.width;
+                        bounceY = Math.round(y - velY + velY * x / parent.width);  // proportional height at bounce
+                        x = parent.width - (x - parent.width);
+                        velX = -velX;
+
+                    } else if (x < 0) {
+                        bounce = true;
+                        bounceX = 0;
+                        bounceY = Math.round(y - velY + velY * x / parent.width);  // proportional height at bounce
+                        x = -x;
+                        velX = -velX;
+                    }
+
+                    if (y > mHeight) {
+                        bounce = true;
+                        bounceX = Math.round(x - velX + velX * y / parent.height);  // proportional height at bounce
+                        bounceY = parent.height;
+                        y = mHeight - (y - mHeight);
+                        velY = -velY;
+
+                    } else if (y < 0) {
+                        bounce = true;
+                        bounceX = Math.round(x - velX + velX * y / parent.height);  // proportional height at bounce
+                        bounceY = 0;
+                        y = -y;
+                        velY = -velY;
+                    }
                 }
 
                 if (bounce) {
                     parent.addBounce(bounceX, bounceY);
-
-                    triangleColorNew = generateTriangleColor();
+//                    triangleColorNew = generateTriangleColor();  // moved to successful bounce
                 }
-
-
 
             }
 
@@ -700,45 +615,25 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 // @TODO background is drawn before this call, change this at some point
 
                 if (ambientMode) {
-//                    for (int i = 0; i < bounceCount - 1; i++) {
-//                        canvas.drawLine(bounces[i].x, bounces[i].y,
-//                                bounces[i + 1].x, bounces[i + 1].y, linePaint);
-////                        Log.v(TAG, "bounceCount: " + bounceCount + " bounceIterator: "
-////                                + bounceIterator + " i: " + i);
-//                    }
-//
-//                    // Close the polyline
-//                    if (bounceCount > 2) {
-//                        canvas.drawLine(bounces[bounceCount - 1].x, bounces[bounceCount - 1].y,
-//                                bounces[0].x, bounces[0].y, linePaint);
-//                    }
-
-//                    Log.v(TAG, "Paint: " + linePaint.toString());
-//                    Log.v(TAG, "Canvas: " + canvas.toString());
-
-//                    for (Triangle t : triangles) {
-//                        Log.v(TAG, "Triangle: " + t.toString());
-//                        t.renderOutline(canvas, linePaint);
-//                    }
-
                     for (int i = 0; i < triangleCount; i++) {
-//                        Log.v(TAG, "Triangle: " + triangles[i].toString());
                         triangles[i].renderOutline(canvas, linePaint);
                     }
 
                 } else {
-//                    for (int i = 0; i < triangleCount; i++) {
-//                        triangles[i].render(canvas, trianglePaint);
-//                    }
+                    update();
 
                     for (int i = 0; i < triangleCount; i++) {
                         int pos = (triangleIterator + i) % triangleCount;
-//                        Log.v(TAG, "triangleCount: " + triangleCount + " triangleIterator: "
-//                                + triangleIterator + " i: " + i + " pos: " + pos);
                         triangles[pos].render(canvas, trianglePaint);
                     }
+
                     if (DRAW_BALL) ball.render(canvas);
                     if (USE_TRIANGLE_CURSOR) renderTriangleCursor(canvas);
+                    if (DISPLAY_BOUNCES) {
+                        for (int i = bounceCount - 1; i >= 0; i--) {
+                            bounces[i].render(canvas);
+                        }
+                    }
                 }
             }
 
@@ -794,7 +689,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 // Otherwise, add it to the array
                 bounces[bounceIterator++] = bounce;
-
                 if (bounceIterator >= MAX_TRIANGLE_COUNT + 2) {
                     bounceIterator = 0;
                 }
@@ -802,7 +696,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     bounceCount++;
                 }
 
-
+                // New current color
+                triangleColorNew = generateTriangleColor();
 
                 if (bounceCount > 2) {
                     int posA = (bounceIterator - 3) % bounceCount;
@@ -1037,21 +932,37 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
         class Bounce {
+
+            final static double TAU_MINUS_3_8 = -0.75 * Math.PI;
+            final static double TAU_MINUS_1_8 = -0.25 * Math.PI;
+            final static double TAU_PLUS_1_8 = 0.25 * Math.PI;
+            final static double TAU_PLUS_3_8 = 0.75 * Math.PI;
+
             int x, y;
             int side;  // 0 for top... 3 for left (clockwise)
             int color;
-            int colorHSV;
+//            int colorHSV;
 
             Bounce(int x_, int y_) {
                 x = x_;
                 y = y_;
 
-                if (x == 0)            side = 3;
-                else if (x == mWidth)  side = 1;
-                else if (y == 0)       side = 0;
-                else if (y == mHeight) side = 2;
+                if (mIsRound) {
+                    double angle = Math.atan2(y - mCenterY, x - mCenterX);
+                    if (angle > TAU_MINUS_3_8 && angle <= TAU_MINUS_1_8) side = 0;
+                    else if (angle > TAU_MINUS_1_8 && angle <= TAU_PLUS_1_8) side = 1;
+                    else if (angle > TAU_PLUS_1_8 && angle <= TAU_PLUS_3_8) side = 2;
+                    else side = 3;
 
-                newColor();
+                } else {
+                    if (x == 0)            side = 3;
+                    else if (x == mWidth)  side = 1;
+                    else if (y == 0)       side = 0;
+                    else if (y == mHeight) side = 2;
+                }
+
+//                newColor();
+                color = triangleColorNew;
             }
 
             void newColor() {
@@ -1065,6 +976,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //                        );
             }
 
+            void render(Canvas canvas) {
+                canvas.drawCircle(x, y, 5, mTextDigitsPaintInteractive);
+            }
+
         }
 
         int generateTriangleColor() {
@@ -1076,7 +991,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             // find random number between the range
             int randomHue = randomRange(startHue, endHue);
 
-            // ajust the random number
+            // adjust the random number
             if (randomHue < 0) {
                 randomHue += totalHue;
             } else if (randomHue > totalHue) {
@@ -1099,5 +1014,107 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         return Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
     }
 
+
+
+    // Sensors
+    private SensorManager mSensorManager;
+    private SensorWrapper mSensorAccelerometer;
+    private float[] gravity = new float[3];
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                mSensorAccelerometer.update(event);
+                updateGravity(event);
+                break;
+        }
+    }
+
+    void updateGravity(SensorEvent event) {
+        // In this example, alpha is calculated as t / (t + dT),
+        // where t is the low-pass filter's time-constant and
+        // dT is the event delivery rate.
+        final float alpha = 0.8f;
+
+        // Isolate the force of gravity with the low-pass filter.
+        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+        // gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+    }
+
+
+
+    private class SensorWrapper {
+
+        SensorEventListener listener;
+        SensorManager manager;
+        String name;
+        int type;
+        Sensor sensor;
+        boolean isActive, isRegistered;
+        int valueCount;
+        float[] values;
+        final static boolean DEBUG_TO_CONSOLE = false;
+
+        SensorWrapper(String name_, int sensorType_, int valueCount_, SensorEventListener listener_, SensorManager manager_) {
+            listener = listener_;
+            manager = manager_;
+            name = name_;
+            type = sensorType_;
+            valueCount = valueCount_;
+            values = new float[valueCount];
+
+            // Initialize the sensor
+            sensor = manager.getDefaultSensor(type);
+
+            // http://developer.android.com/guide/topics/sensors/sensors_overview.html#sensors-identify
+            if (sensor == null) {
+                Log.v(TAG, "Sensor " + name + " not available in this device");
+                isActive = false;
+                isRegistered = false;
+            } else {
+                isActive = true;
+                isRegistered = true;
+            }
+        }
+
+        boolean register() {
+            if (!isActive) return false;
+            if (isRegistered) return true;
+            isRegistered = manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+            if (DEBUG_TO_CONSOLE) Log.i(TAG, "Registered " + name + ": " + isRegistered);
+            return isRegistered;
+        }
+
+        boolean unregister() {
+            if (!isActive) return false;
+            if (!isRegistered) return false;
+            manager.unregisterListener(listener);
+            isRegistered = false;
+            if (DEBUG_TO_CONSOLE) Log.i(TAG, "Unregistered " + name);
+            return false;
+        }
+
+        String stringify() {
+            if (!isActive) return name + " sensor not available in this device";
+            String vals = name + ": [";
+            for (int i = 0; i < valueCount; i++) {
+                vals += String.format("%.2f", values[i]);
+                if (i + 1 < valueCount) vals += ", ";
+            }
+            vals += "]";
+            return vals;
+        }
+
+        void update(SensorEvent event) {
+            for (int i = 0; i < valueCount; i++) {
+                values[i] = event.values[i];
+            }
+        }
+    }
 
 }
