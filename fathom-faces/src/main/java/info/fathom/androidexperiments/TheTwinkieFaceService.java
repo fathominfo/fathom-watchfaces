@@ -44,11 +44,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
     private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
-    private final static int   BACKGROUND_COLORS_COUNT = 7;
-    private final int[] backgroundColors = new int[BACKGROUND_COLORS_COUNT];
+//    private final static int   BACKGROUND_COLORS_COUNT = 24;
+//    private final int[] backgroundColors = new int[BACKGROUND_COLORS_COUNT];
     //    private final int[] backgroundColorsAlpha = new int[24];
     private final static int   COLOR_TRIANGLE_ALPHA = 100;
-    private final static int   CURSOR_TRIANGLE_ALPHA = 100;
+//    private final static int   CURSOR_TRIANGLE_ALPHA = 100;
+    private final static int   RANGE_HUE = 150;
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
@@ -65,6 +66,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final boolean USE_TRIANGLE_CURSOR = true;
     private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
     private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
+
+
 
 
 
@@ -181,7 +184,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int randomColor;
-        private int triangleColorNew = randomHSVColor();
+        private int triangleColorNew = generateTriangleColor();
 
 
 
@@ -222,7 +225,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
 
-            // Initialize hardcoded day colors
+//             Initialize hardcoded day colors
 //            backgroundColors[0] = Color.rgb(0, 85, 255);
 //            backgroundColors[1] = Color.rgb(0, 21, 255);
 //            backgroundColors[2] = Color.rgb(42, 0, 255);
@@ -248,13 +251,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //            backgroundColors[22] = Color.rgb(0, 212, 255);
 //            backgroundColors[23] = Color.rgb(0, 149, 255);
 
-            backgroundColors[0] = Color.rgb(255, 102, 51);
-            backgroundColors[1] = Color.rgb(0, 153, 255);
-            backgroundColors[2] = Color.rgb(125, 114, 163);
-            backgroundColors[3] = Color.rgb(215, 223, 35);
-            backgroundColors[4] = Color.rgb(238, 42, 123);
-            backgroundColors[5] = Color.rgb(0, 167, 157);
-            backgroundColors[6] = Color.rgb(141, 198, 63);
+//            backgroundColors[0] = Color.rgb(255, 102, 51);
+//            backgroundColors[1] = Color.rgb(0, 153, 255);
+//            backgroundColors[2] = Color.rgb(125, 114, 163);
+//            backgroundColors[3] = Color.rgb(215, 223, 35);
+//            backgroundColors[4] = Color.rgb(238, 42, 123);
+//            backgroundColors[5] = Color.rgb(0, 167, 157);
+//            backgroundColors[6] = Color.rgb(141, 198, 63);
 
             // Initialize hardcoded day colors
 //            backgroundColorsAlpha[0] = Color.argb(CURSOR_TRIANGLE_ALPHA, 0, 85, 255);
@@ -400,8 +403,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
 
             } else {
-
-                canvas.drawColor(backgroundColors[randomColor]);
+                int tempBackHue = (mHourInt * 15) + 200;
+                if (tempBackHue > 360) {
+                    tempBackHue -= 360;
+                }
+                int tempBackColor = Color.HSVToColor(new float[]{ (float) tempBackHue, 1.0f, 1.0f });
+                canvas.drawColor(tempBackColor);
 //                canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 //                canvas.drawColor(backgroundColors[mHourInt]);
 
@@ -610,7 +617,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 if (bounce) {
                     parent.addBounce(bounceX, bounceY);
 
-                    triangleColorNew = randomHSVColor();
+                    triangleColorNew = generateTriangleColor();
                 }
 
 
@@ -1048,7 +1055,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             void newColor() {
-
+//                  color = generateTriangleColor();
 //                color = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
                 color = triangleColorNew;
 //                color = Color.argb(COLOR_TRIANGLE_ALPHA,
@@ -1060,10 +1067,37 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         }
 
+        int generateTriangleColor() {
+            int totalHue = 360;
+            // start range at the minute of the hour mapped to the total hue, minus half the range
+            int startHue = (mMinuteInt * 6) - (RANGE_HUE/2);
+            int endHue   = startHue + RANGE_HUE;
+
+            // find random number between the range
+            int randomHue = randomRange(startHue, endHue);
+
+            // ajust the random number
+            if (randomHue < 0) {
+                randomHue += totalHue;
+            } else if (randomHue > totalHue) {
+                randomHue -= totalHue;
+            }
+
+            int currentTriangleColor = Color.HSVToColor(COLOR_TRIANGLE_ALPHA, new float[]{ (float) randomHue, 1.0f, 1.0f } );
+
+            return currentTriangleColor;
+        }
+
+        int randomRange(int min, int max) {
+            int range = (max - min) + 1;
+            return (int)(Math.random() * range) + min;
+        }
+
     }
 
     int randomHSVColor() {
         return Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
     }
+
 
 }
