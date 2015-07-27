@@ -66,6 +66,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
     private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
     private static final boolean DISPLAY_BOUNCES = false;
+    private static final boolean GRADIENT_CURSOR = true;
+    private static final boolean WHITE_CURSOR = true;
 
 
 
@@ -565,7 +567,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             Paint linePaint;
             Paint trianglePaint;
-            Path triangleCursorPath;
+
+            Path cursorPath;
+            Paint cursorPaint;
 
             Board() {}
 
@@ -595,7 +599,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 trianglePaint.setStyle(Paint.Style.FILL);
                 trianglePaint.setAntiAlias(true);
 
-                triangleCursorPath = new Path();
+                cursorPath = new Path();
+
+                cursorPaint = new Paint();
+                cursorPaint.setColor(Color.WHITE);
+                cursorPaint.setStyle(Paint.Style.FILL);
+                cursorPaint.setAntiAlias(true);
 
                 // Initialize two bounces for an initial triangle cursor
                 addBounce(1, 0);
@@ -657,37 +666,34 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     a = bounces[posA];
                     b = bounces[posB];
                 }
+                
+                cursorPath.rewind();
+                cursorPath.moveTo(a.x, a.y);
+                cursorPath.lineTo(ball.x, ball.y);
+                cursorPath.lineTo(b.x, b.y);
 
-//                Path path = new Path();
-                triangleCursorPath.rewind();
-                triangleCursorPath.moveTo(a.x, a.y);
-                triangleCursorPath.lineTo(ball.x, ball.y);
-                triangleCursorPath.lineTo(b.x, b.y);
+                // gradient fill on projection
+                if (GRADIENT_CURSOR) {
+                    double dx = b.x - a.x;
+                    double dy = b.y - a.y;
+                    double dpx = ball.x - a.x;
+                    double dpy = ball.y - a.y;
+                    double xylen = Math.sqrt(dx * dx + dy * dy);
+                    double pl = (dx * dpx + dy * dpy) / xylen;
+                    float px = (float) (a.x + pl * dx / xylen);
+                    float py = (float) (a.y + pl * dy / xylen);
+                    cursorPaint.setShader(new LinearGradient(ball.x, ball.y, px, py,
+                            Color.argb(255, 255, 255, 255), Color.argb(127, 255, 255, 255), Shader.TileMode.MIRROR));
+                    canvas.drawPath(cursorPath, cursorPaint);
+                    cursorPaint.setShader(null);
 
-                // gradient fill
-//                float midX = Math.min(a.x, b.x) + 0.5f * Math.abs(a.x - b.x);
-//                float midY = Math.min(a.y, b.y) + 0.5f * Math.abs(a.y - b.y);
-//                trianglePaint.setShader(new LinearGradient(ball.x, ball.y, midX, midY,
-//                        Color.argb(255, 255, 255, 255), Color.argb(63, 255, 255, 255), Shader.TileMode.MIRROR));
-//                canvas.drawPath(triangleCursorPath, trianglePaint);
-//                trianglePaint.setShader(null);  // revert back  @TODO: improve this with a dedicated cursor paint
+                } else {
+                    trianglePaint.setColor(triangleColorNew);
+                    canvas.drawPath(cursorPath, trianglePaint);
+                }
 
-//                // gradient fiill on projection
-//                double dx = b.x - a.x;
-//                double dy = b.y - a.y;
-//                double dpx = ball.x - a.x;
-//                double dpy = ball.y - a.y;
-//                double xylen = Math.sqrt(dx * dx + dy * dy);
-//                double pl = (dx * dpx + dy * dpy) / xylen;
-//                float px = (float) (a.x + pl * dx / xylen);
-//                float py = (float) (a.y + pl * dy / xylen);
-//                trianglePaint.setShader(new LinearGradient(ball.x, ball.y, px, py,
-//                        Color.argb(255, 255, 255, 255), Color.argb(127, 255, 255, 255), Shader.TileMode.MIRROR));
-//                canvas.drawPath(triangleCursorPath, trianglePaint);
-//                trianglePaint.setShader(null);  // revert back  @TODO: improve this with a dedicated cursor paint
 
-                trianglePaint.setColor(triangleColorNew);
-                canvas.drawPath(triangleCursorPath, trianglePaint);
+
 
             }
 
