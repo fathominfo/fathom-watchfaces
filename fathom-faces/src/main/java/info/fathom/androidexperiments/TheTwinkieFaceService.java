@@ -38,10 +38,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
     private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
-    private final static int   BACKGROUND_COLORS_COUNT = 7;
-    private final int[]        backgroundColors = new int[BACKGROUND_COLORS_COUNT];
+
+//    private final static int   BACKGROUND_COLORS_COUNT = 7;
+//    private final int[] backgroundColors = new int[BACKGROUND_COLORS_COUNT];
+    //    private final int[] backgroundColorsAlpha = new int[24];
     private final static int   COLOR_TRIANGLE_ALPHA = 100;
-    private final static int   CURSOR_TRIANGLE_ALPHA = 100;
+//    private final static int   CURSOR_TRIANGLE_ALPHA = 100;
+    private final static int   RANGE_HUE = 150;
 
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
@@ -61,12 +64,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
     private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
     private static final boolean DISPLAY_BOUNCES = false;
-
-
-
-
-
-
 
 
 
@@ -129,7 +126,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int randomColor;
-        private int triangleColorNew = randomHSVColor();
+        private int triangleColorNew = generateTriangleColor();
 
 
 
@@ -171,14 +168,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
 
-            // Initialize hardcoded day colors
-            backgroundColors[0] = Color.rgb(255, 102, 51);
-            backgroundColors[1] = Color.rgb(0, 153, 255);
-            backgroundColors[2] = Color.rgb(125, 114, 163);
-            backgroundColors[3] = Color.rgb(215, 223, 35);
-            backgroundColors[4] = Color.rgb(238, 42, 123);
-            backgroundColors[5] = Color.rgb(0, 167, 157);
-            backgroundColors[6] = Color.rgb(141, 198, 63);
+
+//            backgroundColors[0] = Color.rgb(255, 102, 51);
+//            backgroundColors[1] = Color.rgb(0, 153, 255);
+//            backgroundColors[2] = Color.rgb(125, 114, 163);
+//            backgroundColors[3] = Color.rgb(215, 223, 35);
+//            backgroundColors[4] = Color.rgb(238, 42, 123);
+//            backgroundColors[5] = Color.rgb(0, 167, 157);
+//            backgroundColors[6] = Color.rgb(141, 198, 63);
 
         }
 
@@ -279,7 +276,14 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
 
             } else {
-                canvas.drawColor(backgroundColors[randomColor]);
+//                canvas.drawColor(backgroundColors[randomColor]);
+                int tempBackHue = (mHourInt * 15) + 200;
+                if (tempBackHue > 360) {
+                    tempBackHue -= 360;
+                }
+                int tempBackColor = Color.HSVToColor(new float[]{ (float) tempBackHue, 1.0f, 1.0f });
+                canvas.drawColor(tempBackColor);
+
 //                board.update();  // moved to class
                 board.render(canvas, false);
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
@@ -500,38 +504,37 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     if (x > parent.width) {
                         bounce = true;
                         bounceX = parent.width;
-                        bounceY = Math.round( y - velY + velY * x / parent.width );  // proportional height at bounce
+                        bounceY = Math.round(y - velY + velY * x / parent.width);  // proportional height at bounce
                         x = parent.width - (x - parent.width);
                         velX = -velX;
 
                     } else if (x < 0) {
                         bounce = true;
                         bounceX = 0;
-                        bounceY = Math.round( y - velY + velY * x / parent.width );  // proportional height at bounce
+                        bounceY = Math.round(y - velY + velY * x / parent.width);  // proportional height at bounce
                         x = -x;
                         velX = -velX;
                     }
 
                     if (y > mHeight) {
                         bounce = true;
-                        bounceX = Math.round( x - velX + velX * y / parent.height );  // proportional height at bounce
+                        bounceX = Math.round(x - velX + velX * y / parent.height);  // proportional height at bounce
                         bounceY = parent.height;
                         y = mHeight - (y - mHeight);
                         velY = -velY;
 
                     } else if (y < 0) {
                         bounce = true;
-                        bounceX = Math.round( x - velX + velX * y / parent.height );  // proportional height at bounce
+                        bounceX = Math.round(x - velX + velX * y / parent.height);  // proportional height at bounce
                         bounceY = 0;
                         y = -y;
                         velY = -velY;
                     }
                 }
 
-
                 if (bounce) {
                     parent.addBounce(bounceX, bounceY);
-//                    triangleColorNew = randomHSVColor();  // moved to successful bounce
+//                    triangleColorNew = generateTriangleColor();  // moved to successful bounce
                 }
 
             }
@@ -694,7 +697,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
 
                 // New current color
-                triangleColorNew = randomHSVColor();
+                triangleColorNew = generateTriangleColor();
 
                 if (bounceCount > 2) {
                     int posA = (bounceIterator - 3) % bounceCount;
@@ -963,7 +966,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             void newColor() {
-
+//                  color = generateTriangleColor();
 //                color = Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
                 color = triangleColorNew;
 //                color = Color.argb(COLOR_TRIANGLE_ALPHA,
@@ -979,15 +982,37 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         }
 
+        int generateTriangleColor() {
+            int totalHue = 360;
+            // start range at the minute of the hour mapped to the total hue, minus half the range
+            int startHue = (mMinuteInt * 6) - (RANGE_HUE/2);
+            int endHue   = startHue + RANGE_HUE;
+
+            // find random number between the range
+            int randomHue = randomRange(startHue, endHue);
+
+            // adjust the random number
+            if (randomHue < 0) {
+                randomHue += totalHue;
+            } else if (randomHue > totalHue) {
+                randomHue -= totalHue;
+            }
+
+            int currentTriangleColor = Color.HSVToColor(COLOR_TRIANGLE_ALPHA, new float[]{ (float) randomHue, 1.0f, 1.0f } );
+
+            return currentTriangleColor;
+        }
+
+        int randomRange(int min, int max) {
+            int range = (max - min) + 1;
+            return (int)(Math.random() * range) + min;
+        }
+
     }
 
     int randomHSVColor() {
         return Color.HSVToColor( COLOR_TRIANGLE_ALPHA, new float[]{ (float) (360 * Math.random()), 1.0f, 1.0f } );
     }
-
-
-
-
 
 
 
