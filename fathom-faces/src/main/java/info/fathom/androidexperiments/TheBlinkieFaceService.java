@@ -524,9 +524,11 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
             void update() {
                 // trigger a random eye to blink
-                if (Math.random() < blinkChance / (eyeCount * BLINK_CHANCE_FACTOR)) {
-                    int id = (int) (activeEyesCount * Math.random());
-                    activeEyes.get(id).blink();  // can affect an already blinking eye, but this is desired
+                if (activeEyesCount > 0) {
+                    if (Math.random() < blinkChance / (eyeCount * BLINK_CHANCE_FACTOR)) {
+                        int id = (int) (activeEyesCount * Math.random());
+                        activeEyes.get(id).blink();  // can affect an already blinking eye, but this is desired
+                    }
                 }
 
                 for (Eye eye : updateList) {
