@@ -66,6 +66,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
     private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
     private static final boolean DISPLAY_BOUNCES = false;
+    private static final boolean GRADIENT_CURSOR = true;
+    private static final boolean WHITE_GRADIENT_CURSOR = false;
 
 
 
@@ -128,6 +130,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int randomColor;
+        private int currentR, currentG, currentB;
         private int triangleColorNew = generateTriangleColor();
 
 
@@ -388,7 +391,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             return false;
         }
 
-        // Checks if watchface should reset, like overnight
+        // Checks if watch face should reset, like overnight
         boolean timelyReset() {
             boolean reset = false;
             if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
@@ -565,7 +568,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             Paint linePaint;
             Paint trianglePaint;
-            Path triangleCursorPath;
+
+            Path cursorPath;
+            Paint cursorPaint;
 
             Board() {}
 
@@ -595,7 +600,12 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 trianglePaint.setStyle(Paint.Style.FILL);
                 trianglePaint.setAntiAlias(true);
 
-                triangleCursorPath = new Path();
+                cursorPath = new Path();
+
+                cursorPaint = new Paint();
+                cursorPaint.setColor(Color.WHITE);
+                cursorPaint.setStyle(Paint.Style.FILL);
+                cursorPaint.setAntiAlias(true);
 
                 // Initialize two bounces for an initial triangle cursor
                 addBounce(1, 0);
@@ -658,36 +668,42 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     b = bounces[posB];
                 }
 
-//                Path path = new Path();
-                triangleCursorPath.rewind();
-                triangleCursorPath.moveTo(a.x, a.y);
-                triangleCursorPath.lineTo(ball.x, ball.y);
-                triangleCursorPath.lineTo(b.x, b.y);
+                cursorPath.rewind();
+                cursorPath.moveTo(a.x, a.y);
+                cursorPath.lineTo(ball.x, ball.y);
+                cursorPath.lineTo(b.x, b.y);
 
-                // gradient fill
-//                float midX = Math.min(a.x, b.x) + 0.5f * Math.abs(a.x - b.x);
-//                float midY = Math.min(a.y, b.y) + 0.5f * Math.abs(a.y - b.y);
-//                trianglePaint.setShader(new LinearGradient(ball.x, ball.y, midX, midY,
-//                        Color.argb(255, 255, 255, 255), Color.argb(63, 255, 255, 255), Shader.TileMode.MIRROR));
-//                canvas.drawPath(triangleCursorPath, trianglePaint);
-//                trianglePaint.setShader(null);  // revert back  @TODO: improve this with a dedicated cursor paint
+                // gradient fill on projection
+                if (GRADIENT_CURSOR) {
+                    double dx = b.x - a.x;
+                    double dy = b.y - a.y;
+                    double dpx = ball.x - a.x;
+                    double dpy = ball.y - a.y;
+                    double xylen = Math.sqrt(dx * dx + dy * dy);
+                    double pl = (dx * dpx + dy * dpy) / xylen;
+                    float px = (float) (a.x + pl * dx / xylen);
+                    float py = (float) (a.y + pl * dy / xylen);
 
-//                // gradient fiill on projection
-//                double dx = b.x - a.x;
-//                double dy = b.y - a.y;
-//                double dpx = ball.x - a.x;
-//                double dpy = ball.y - a.y;
-//                double xylen = Math.sqrt(dx * dx + dy * dy);
-//                double pl = (dx * dpx + dy * dpy) / xylen;
-//                float px = (float) (a.x + pl * dx / xylen);
-//                float py = (float) (a.y + pl * dy / xylen);
-//                trianglePaint.setShader(new LinearGradient(ball.x, ball.y, px, py,
-//                        Color.argb(255, 255, 255, 255), Color.argb(127, 255, 255, 255), Shader.TileMode.MIRROR));
-//                canvas.drawPath(triangleCursorPath, trianglePaint);
-//                trianglePaint.setShader(null);  // revert back  @TODO: improve this with a dedicated cursor paint
+                    if (WHITE_GRADIENT_CURSOR) {
+                        cursorPaint.setShader(new LinearGradient(ball.x, ball.y, px, py,
+                                Color.argb(255, 255, 255, 255), Color.argb(COLOR_TRIANGLE_ALPHA, 255, 255, 255), Shader.TileMode.MIRROR));
+                    } else {
+                        cursorPaint.setShader(new LinearGradient(ball.x, ball.y, px, py,
+                                Color.argb(255, currentR, currentG, currentB),
+                                Color.argb(COLOR_TRIANGLE_ALPHA, currentR, currentG, currentB),
+                                Shader.TileMode.MIRROR));
+                    }
 
-                trianglePaint.setColor(triangleColorNew);
-                canvas.drawPath(triangleCursorPath, trianglePaint);
+                    canvas.drawPath(cursorPath, cursorPaint);
+                    cursorPaint.setShader(null);
+
+                } else {
+                    trianglePaint.setColor(triangleColorNew);
+                    canvas.drawPath(cursorPath, trianglePaint);
+                }
+
+
+
 
             }
 
@@ -1014,6 +1030,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             int currentTriangleColor = Color.HSVToColor(COLOR_TRIANGLE_ALPHA, new float[]{ (float) randomHue, 1.0f, 1.0f } );
+            currentR = Color.red(currentTriangleColor);
+            currentG = Color.green(currentTriangleColor);
+            currentB = Color.blue(currentTriangleColor);
 
             return currentTriangleColor;
         }
