@@ -585,7 +585,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private final static float WEIGHT_SMALL     = 3;
 
             private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);  // pink
-            private final int COLOR_BIG     = Color.argb(204, 146, 39, 143);  // red
+            private final int COLOR_BIG     = Color.argb(204, 255, 167, 39);  // red
             private final int COLOR_MEDIUM  = Color.argb(204, 39, 170, 225);  // blue
             private final int COLOR_SMALL   = Color.argb(204, 141, 198, 63);  // yellow
 

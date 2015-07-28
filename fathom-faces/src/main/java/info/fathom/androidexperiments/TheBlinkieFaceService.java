@@ -47,7 +47,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
     private static final long  INTERACTIVE_UPDATE_RATE_MS = 33;
 
-    private static final int   BACKGROUND_COLOR_INTERACTIVE = Color.rgb(0,0,0);
+    private static final int   BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
     private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
 
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
@@ -59,8 +59,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final int   TEXT_GLANCES_COLOR_INTERACTIVE = Color.WHITE;
     private static final int   TEXT_GLANCES_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_GLANCES_HEIGHT = 0.10f;  // as a factor of screen height
-    private static final float TEXT_GLANCES_BASELINE_HEIGHT = 0.52f;  // as a factor of screen height
-    private static final float TEXT_GLANCES_RIGHT_MARGIN = 0.10f;  // as a factor of screen width
+    private static final float TEXT_GLANCES_BASELINE_HEIGHT = TEXT_DIGITS_BASELINE_HEIGHT + 0.15f;  // as a factor of screen height
+    private static final float TEXT_GLANCES_RIGHT_MARGIN = 0.08f;  // as a factor of screen width
 
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
 
@@ -716,9 +716,9 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         class Eye {
             // Constants
-            static final int   EYELID_COLOR = Color.WHITE;
+            final int   EYELID_COLOR = Color.rgb(235, 220, 220);
             static final int   PUPIL_COLOR = Color.BLACK;
-            static final float BLINK_SPEED = 0.25f;
+            static final float BLINK_SPEED = 0.40f;
             static final int   ANIM_END_THRESHOLD = 1;  // pixel distance to stop animation
             static final float HEIGHT_RATIO = 0.68f;  // height/width ratio
             static final float IRIS_RATIO = 0.45f;  // irisDiameter/width ratio

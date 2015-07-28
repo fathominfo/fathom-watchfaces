@@ -46,7 +46,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     //    private final int[] backgroundColorsAlpha = new int[24];
     private final static int   COLOR_TRIANGLE_ALPHA = 100;
 //    private final static int   CURSOR_TRIANGLE_ALPHA = 100;
-    private final static int   RANGE_HUE = 150;
+    private final static int   RANGE_HUE = 165;
 
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
@@ -412,8 +412,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             private static final int COLOR = Color.WHITE;
 //            private static final float FRICTION = 0.999f;
 //            private static final float ACCEL_FACTOR = 0.5f;
-            private static final float FRICTION = 0.97f;
-            private static final float ACCEL_FACTOR = 0.25f;
+            private static final float FRICTION = 0.999f;
+            private static final float ACCEL_FACTOR = 0.40f;
             private static final float RADIUS_FACTOR = 0.03f;  // as a ratio to screen width
 
             Board parent;
@@ -1000,7 +1000,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         int generateTriangleColor() {
             int totalHue = 360;
             // start range at the minute of the hour mapped to the total hue, minus half the range
-            int startHue = (mMinuteInt * 6) - (RANGE_HUE/2);
+            int startHue = (mMinuteInt * 6) - (RANGE_HUE/2) + 115;
             int endHue   = startHue + RANGE_HUE;
 
             // find random number between the range
