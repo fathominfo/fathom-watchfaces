@@ -23,6 +23,7 @@ import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
+import android.view.WindowInsets;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -64,84 +65,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
 
 
-    private SensorManager mSensorManager;
-
-    // ACCELEROMETER SENSING
-    private Sensor mAccelSensor;
-    private boolean mAccelSensorIsRegistered;
-    // Compute gravisty and lin acc manually, since these sensors may not be available on the device
-    private float[] gravity = new float[3];
-    private float[] linear_acceleration = new float[3];
-    private float[] rotation = new float[3];
-
-    private Sensor mGyroscopeSensor;
-    private boolean mGyroscopeSensorIsRegistered;
-
-    // STEP SENSING
-    private Sensor mStepSensor;
-    private boolean mStepSensorIsRegistered;
-    private int mPrevSteps = 0;
-    private int mCurrentSteps = 0;
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-//        Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        switch (event.sensor.getType()) {
-            case Sensor.TYPE_STEP_COUNTER:
-                if (!GENERATE_FAKE_STEPS) {
-                    if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
-                    mCurrentSteps = Math.round(event.values[0]);
-                }
-                break;
-            case Sensor.TYPE_ACCELEROMETER:
-                processAcceleration(event.values);
-//                Log.v(TAG, "Accel: [" + String.format("%.2f", linear_acceleration[0]) + ", "
-//                        + String.format("%.2f", linear_acceleration[1]) + ", "
-//                        + String.format("%.2f", linear_acceleration[2]) + "]");
-                break;
-            case Sensor.TYPE_GYROSCOPE:
-                rotation = event.values;
-//                Log.v(TAG, "Gyros: [" + String.format("%.2f", event.values[0]) + ", "
-//                        + String.format("%.2f", event.values[1]) + ", "
-//                        + String.format("%.2f", event.values[2]) + "]");
-                break;
-        }
-
-//        Log.v(TAG, "Accel: [" + String.format("%.2f", linear_acceleration[0]) + ", "
-//                + String.format("%.2f", linear_acceleration[1]) + ", "
-//                + String.format("%.2f", linear_acceleration[2]) + "]; "
-//                + "Gyros: [" + String.format("%.2f", rotation[0]) + ", "
-//                + String.format("%.2f", rotation[1]) + ", "
-//                + String.format("%.2f", rotation[2]) + "]");
-    }
-
-
-    public void processAcceleration(float[] values) {
-        // In this example, alpha is calculated as t / (t + dT),
-        // where t is the low-pass filter's time-constant and
-        // dT is the event delivery rate.
-        final float alpha = 0.8f;
-
-        // Isolate the force of gravity with the low-pass filter.
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * values[2];
-
-        // Remove the gravity contribution with the high-pass filter.
-        linear_acceleration[0] = values[0] - gravity[0];
-        linear_acceleration[1] = values[1] - gravity[1];
-        linear_acceleration[2] = values[2] - gravity[2];
-    }
-
-
-
-
-
-
 
 
     @Override
@@ -173,10 +96,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         };
 
 
-        private boolean mRegisteredTimeZoneReceiver = false;
         //        private boolean mLowBitAmbient;
         //        private boolean mBurnInProtection;
-        private boolean mAmbient;
+        private boolean mAmbient, mScreenOn;
 
         private Time mTime;
         private String mTimeStr;
@@ -193,8 +115,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         private int mWidth;
         private int mHeight;
-        private float mCenterX;
-        private float mCenterY;
+        private float mCenterX, mCenterY;
+        private boolean mIsRound;
+        private float mRadius;
 
         private BubbleManager bubbleManager;
 
@@ -213,13 +136,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                     RALEWAY_TYPEFACE_PATH);
 
 
-            /**
-             * STEP SENSING
-             */
-            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-            mAccelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            mGyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
             mTextDigitsPaintInteractive = new Paint();
             mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
@@ -249,16 +165,36 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             mTime  = new Time();
 
+            /**
+             * STEP SENSING
+             */
+//            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+//            mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+//            mAccelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//            mGyroscopeSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
+                    TheDingDongFaceService.this, mSensorManager);
+            mSensorAccelerometer.register();
+            mSensorStep = new SensorWrapper("Steps", Sensor.TYPE_STEP_COUNTER, 1,
+                    TheDingDongFaceService.this, mSensorManager);
+            mSensorStep.register();
+
+//            registerScreenReceiver();
 
         }
 
         @Override
         public void onDestroy() {
+            if (DEBUG_LOGS) Log.v(TAG, "onDestroy()");
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
-            unregisterTimeReceiver();
-            unregisterStepSensor();
-            unregisterAccelSensor();
-            unregisterGyroscopeSensor();
+            unregisterTimeZoneReceiver();
+//            unregisterStepSensor();
+//            unregisterAccelSensor();
+//            unregisterGyroscopeSensor();
+            mSensorStep.unregister();
+            mSensorAccelerometer.unregister();
             super.onDestroy();
         }
 
@@ -270,6 +206,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         @Override
         public void onAmbientModeChanged(boolean inAmbientMode) {
+            if (DEBUG_LOGS) Log.v(TAG, "onAmbientModeChanged: " + inAmbientMode);
             super.onAmbientModeChanged(inAmbientMode);
 
             if (inAmbientMode) {
@@ -287,17 +224,21 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             if (mAmbient) {
-                unregisterTimeReceiver();
-                unregisterStepSensor();
-                unregisterAccelSensor();
-                unregisterGyroscopeSensor();
+                unregisterTimeZoneReceiver();
+//                unregisterStepSensor();
+//                unregisterAccelSensor();
+//                unregisterGyroscopeSensor();
+                mSensorStep.unregister();
+                mSensorAccelerometer.unregister();
 
                 bubbleManager.resetMotion();
             } else {
-                registerTimeReceiver();
-                registerStepSensor();
-                registerAccelSensor();
-                registerGyroscopeSensor();
+                registerTimeZoneReceiver();
+//                registerStepSensor();
+//                registerAccelSensor();
+//                registerGyroscopeSensor();
+                mSensorStep.register();
+                mSensorAccelerometer.register();
 
                 updateStepCounts();
             }
@@ -309,41 +250,96 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             updateTimer();
         }
 
-        private void updateStepCounts() {
-            if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
-            if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+        @Override
+        public void onVisibilityChanged(boolean visible) {
+            Log.v(TAG, "onVisibilityChanged: " + visible);
+            super.onVisibilityChanged(visible);
 
-            if (GENERATE_FAKE_STEPS) {
-                int fakeSteps = (int) (RANDOM_FAKE_STEPS * Math.random());
-                if (DEBUG_LOGS) Log.v(TAG, "Generating fake steps: " + fakeSteps);
-                mCurrentSteps += fakeSteps;
+            if (visible) {
+                registerTimeZoneReceiver();
+//                registerStepSensor();
+//                registerAccelSensor();
+//                registerGyroscopeSensor();
+                mSensorStep.register();
+                mSensorAccelerometer.register();
+
+                // Update time zone in case it changed while we weren't visible.
+                mTime.clear(TimeZone.getDefault().getID());
+                mTime.setToNow();
+            } else {
+                unregisterTimeZoneReceiver();
+//                unregisterStepSensor();
+//                unregisterAccelSensor();
+//                unregisterGyroscopeSensor();
+                mSensorStep.unregister();
+                mSensorAccelerometer.unregister();
             }
 
-            int stepInc = mCurrentSteps - mPrevSteps;
-            mPrevSteps = mCurrentSteps;
+            /*
+            * Whether the timer should be running depends on whether we're visible
+            * (as well as whether we're in ambient mode),
+            * so we may need to start or stop the timer.
+            */
+            updateTimer();
+        }
 
-            if (DEBUG_LOGS) Log.v(TAG, stepInc + " new steps!");
 
-            if (mCurrentSteps > MAX_STEP_THRESHOLD) {
-                if (DEBUG_LOGS) Log.v(TAG, "Resetting step counts");
-                mPrevSteps = 0;
-                mCurrentSteps = 0;
-                if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
-                if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+        private final BroadcastReceiver mScreenReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (DEBUG_LOGS) Log.v(TAG, "Received intent: " + action);
+                if (action.equals(Intent.ACTION_SCREEN_ON)) {
+                    if (DEBUG_LOGS) Log.v(TAG, "Screen ON");
+                    mScreenOn = true;
+                    onScreenChange(true);
+                } else if (action.equals(Intent.ACTION_SCREEN_OFF)) {
+                    if (DEBUG_LOGS) Log.v(TAG, "Screen OFF");
+                    mScreenOn = false;
+                    onScreenChange(false);
+                }
             }
+        };
 
-            bubbleManager.updateSteps(mCurrentSteps);
+        private void registerScreenReceiver() {
+            if (DEBUG_LOGS) Log.v(TAG, "ScreenReceiver registered");
+            TheDingDongFaceService.this.registerReceiver(mScreenReceiver,
+                    new IntentFilter(Intent.ACTION_SCREEN_ON));
+            TheDingDongFaceService.this.registerReceiver(mScreenReceiver,
+                    new IntentFilter(Intent.ACTION_SCREEN_OFF));
+        }
 
+        private void unregisterScreenReceiver() {
+            TheDingDongFaceService.this.unregisterReceiver(mScreenReceiver);
+        }
+
+        /**
+         * This is a dedicated method to account for screen changes, which will happen when
+         * the watch goes to ambient mode (if active), or if visibility changes (if ambient
+         * mode is off).
+         * This method should be called from a Broadcast receiver targeting Intent.ACTION_SCREEN_ON/OFF
+         * @param turnedOn
+         */
+        public void onScreenChange(boolean turnedOn) {
+            if (DEBUG_LOGS) Log.v(TAG, "onScreenChange: " + turnedOn);
+
+            if (turnedOn) {
+
+            } else {
+
+            }
         }
 
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            if (DEBUG_LOGS) Log.v(TAG, "onSurfaceChanged: " + format + " " + width + " " + height);
             super.onSurfaceChanged(holder, format, width, height);
 
             mWidth = width;
             mHeight = height;
-            mCenterX = mWidth / 2f;
-            mCenterY = mHeight / 2f;
+            mCenterX = 0.50f * mWidth;
+            mCenterY = 0.50f * mHeight;
+            mRadius = 0.50f * mWidth;
 
             mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
@@ -359,7 +355,17 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         }
 
         @Override
+        public void onApplyWindowInsets(WindowInsets insets) {
+            if (DEBUG_LOGS) Log.d(TAG, "onApplyWindowInsets");
+            super.onApplyWindowInsets(insets);
+
+            mIsRound = insets.isRound();
+            if (DEBUG_LOGS) Log.v(TAG, "mIsRound? " + mIsRound);
+        }
+
+        @Override
         public void onDraw(Canvas canvas, Rect bounds) {
+//            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
             mTime.setToNow();
             mHourInt = mTime.hour;
@@ -390,47 +396,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
         }
 
-        @Override
-        public void onVisibilityChanged(boolean visible) {
-            super.onVisibilityChanged(visible);
-
-            if (visible) {
-                registerTimeReceiver();
-                registerStepSensor();
-                registerAccelSensor();
-                registerGyroscopeSensor();
-
-                // Update time zone in case it changed while we weren't visible.
-                mTime.clear(TimeZone.getDefault().getID());
-                mTime.setToNow();
-            } else {
-                unregisterTimeReceiver();
-                unregisterStepSensor();
-                unregisterAccelSensor();
-                unregisterGyroscopeSensor();
-            }
-
-            /*
-            * Whether the timer should be running depends on whether we're visible
-            * (as well as whether we're in ambient mode),
-            * so we may need to start or stop the timer.
-            */
-            updateTimer();
-        }
-
-        @Override
-        public void onPeekCardPositionUpdate(Rect rect) {
-            super.onPeekCardPositionUpdate(rect);
-//            mCardBounds.set(rect);
-        }
-
-        @Override
-        public void onPropertiesChanged(Bundle properties) {
-            super.onPropertiesChanged(properties);
-//            mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
-//            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
-        }
-
+        private boolean mRegisteredTimeZoneReceiver = false;
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -439,7 +405,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
         };
 
-        private void registerTimeReceiver() {
+        private void registerTimeZoneReceiver() {
             if (mRegisteredTimeZoneReceiver) {
                 return;
             }
@@ -448,7 +414,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             TheDingDongFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
-        private void unregisterTimeReceiver() {
+        private void unregisterTimeZoneReceiver() {
             if (!mRegisteredTimeZoneReceiver) {
                 return;
             }
@@ -456,45 +422,46 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             TheDingDongFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
-        private void registerStepSensor() {
-            if (mStepSensorIsRegistered) {
-                return;
-            }
-            mStepSensorIsRegistered = true;
-            mSensorManager.registerListener(TheDingDongFaceService.this, mStepSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        }
 
-        private void unregisterStepSensor() {
-            if (!mStepSensorIsRegistered) {
-                return;
-            }
-            mStepSensorIsRegistered = false;
-            mSensorManager.unregisterListener(TheDingDongFaceService.this, mStepSensor);
-        }
-
-        private void registerAccelSensor() {
-            if (mAccelSensorIsRegistered) return;
-            mAccelSensorIsRegistered = true;
-            mSensorManager.registerListener(TheDingDongFaceService.this, mAccelSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
-        private void unregisterAccelSensor() {
-            if (!mAccelSensorIsRegistered) return;
-            mAccelSensorIsRegistered = false;
-            mSensorManager.unregisterListener(TheDingDongFaceService.this, mAccelSensor);
-        }
-
-        private void registerGyroscopeSensor() {
-            if (mGyroscopeSensorIsRegistered) return;
-            mGyroscopeSensorIsRegistered = true;
-            mSensorManager.registerListener(TheDingDongFaceService.this, mGyroscopeSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
-        private void unregisterGyroscopeSensor() {
-            if (!mGyroscopeSensorIsRegistered) return;
-            mGyroscopeSensorIsRegistered = false;
-            mSensorManager.unregisterListener(TheDingDongFaceService.this, mGyroscopeSensor);
-        }
+//        private void registerStepSensor() {
+//            if (mStepSensorIsRegistered) {
+//                return;
+//            }
+//            mStepSensorIsRegistered = true;
+//            mSensorManager.registerListener(TheDingDongFaceService.this, mStepSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//        }
+//
+//        private void unregisterStepSensor() {
+//            if (!mStepSensorIsRegistered) {
+//                return;
+//            }
+//            mStepSensorIsRegistered = false;
+//            mSensorManager.unregisterListener(TheDingDongFaceService.this, mStepSensor);
+//        }
+//
+//        private void registerAccelSensor() {
+//            if (mAccelSensorIsRegistered) return;
+//            mAccelSensorIsRegistered = true;
+//            mSensorManager.registerListener(TheDingDongFaceService.this, mAccelSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//        }
+//
+//        private void unregisterAccelSensor() {
+//            if (!mAccelSensorIsRegistered) return;
+//            mAccelSensorIsRegistered = false;
+//            mSensorManager.unregisterListener(TheDingDongFaceService.this, mAccelSensor);
+//        }
+//
+//        private void registerGyroscopeSensor() {
+//            if (mGyroscopeSensorIsRegistered) return;
+//            mGyroscopeSensorIsRegistered = true;
+//            mSensorManager.registerListener(TheDingDongFaceService.this, mGyroscopeSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//        }
+//
+//        private void unregisterGyroscopeSensor() {
+//            if (!mGyroscopeSensorIsRegistered) return;
+//            mGyroscopeSensorIsRegistered = false;
+//            mSensorManager.unregisterListener(TheDingDongFaceService.this, mGyroscopeSensor);
+//        }
 
 
 
@@ -514,14 +481,54 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             return isVisible() && !isInAmbientMode();
         }
 
+        @Override
+        public void onPeekCardPositionUpdate(Rect rect) {
+            super.onPeekCardPositionUpdate(rect);
+//            mCardBounds.set(rect);
+        }
+
+        @Override
+        public void onPropertiesChanged(Bundle properties) {
+            super.onPropertiesChanged(properties);
+//            mLowBitAmbient = properties.getBoolean(PROPERTY_LOW_BIT_AMBIENT, false);
+//            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
+        }
+
         // Checks if watchface should reset, like overnight
-        boolean timelyReset() {
+        private boolean timelyReset() {
             boolean reset = false;
             if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
                 reset = true;
             }
             mLastAmbientHour = mHourInt;
             return reset;
+        }
+
+        private void updateStepCounts() {
+            if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
+            if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+
+            if (GENERATE_FAKE_STEPS) {
+                int fakeSteps = (int) (RANDOM_FAKE_STEPS * Math.random());
+                if (DEBUG_LOGS) Log.v(TAG, "Generating fake steps: " + fakeSteps);
+                mCurrentSteps += fakeSteps;
+            }
+
+            int stepInc = mCurrentSteps - mPrevSteps;
+            mPrevSteps = mCurrentSteps;
+
+            if (DEBUG_LOGS) Log.v(TAG, stepInc + " new steps!");
+
+            if (mCurrentSteps > MAX_STEP_THRESHOLD) {
+                if (DEBUG_LOGS) Log.v(TAG, "Resetting step counts");
+                mPrevSteps = 0;
+                mCurrentSteps = 0;
+                if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
+                if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+            }
+
+            bubbleManager.updateSteps(mCurrentSteps);
+
         }
 
 
@@ -612,39 +619,29 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void render(Canvas canvas) {
-                bubblesXBig.render(canvas);
-                bubblesBig.render(canvas);
-                bubblesMedium.render(canvas);
-                bubblesSmall.render(canvas);
                 bubblesXSmall.render(canvas);
+                bubblesSmall.render(canvas);
+                bubblesMedium.render(canvas);
+                bubblesBig.render(canvas);
+                bubblesXBig.render(canvas);
             }
 
             public void update() {
 
                 switch (updateStep) {
+                    // XSMALL BALLS STILL NOT WORKING PROPERLY, THE NUMBER IS WEIRD...
                     case 1:
+                        bubblesXSmall.add( (currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size() );
                         int stepInc = currentSteps - prevSteps;
-                        currentSteps -= stepInc % STEP_RATIO_XSMALL;  // account for the remainder of the division
-                        bubblesXSmall.add(stepInc / STEP_RATIO_XSMALL);
+                        currentSteps -= stepInc % STEP_RATIO_SMALL;  // account for the remainder of the division
+                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL);
                         updateStep++;
                         break;
                     case 2:
-                        boolean continueUpdating0 = bubblesXSmall.update();
-                        if (!continueUpdating0) updateStep++;
-                        break;
-                    case 3:
-                        int scaleRatioSXS = STEP_RATIO_SMALL / STEP_RATIO_XSMALL;
-                        int xSmallBubbleCount = bubblesXSmall.bubbles.size();
-                        int newSmallBubbleCount = xSmallBubbleCount / scaleRatioSXS;
-                        bubblesXSmall.remove(newSmallBubbleCount * scaleRatioSXS);
-                        bubblesSmall.add(newSmallBubbleCount);
-                        updateStep++;
-                        break;
-                    case 4:
-                        boolean continueUpdating1 = bubblesSmall.update();
+                        boolean continueUpdating1 = bubblesXSmall.update() && bubblesSmall.update();
                         if (!continueUpdating1) updateStep++;
                         break;
-                    case 5:
+                    case 3:
                         int scaleRatioMS = STEP_RATIO_MEDIUM / STEP_RATIO_SMALL;
                         int smallBubbleCount = bubblesSmall.bubbles.size();
                         int newMediumBubbleCount = smallBubbleCount / scaleRatioMS;
@@ -652,14 +649,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         bubblesMedium.add(newMediumBubbleCount);
                         updateStep++;
                         break;
-                    case 6:
+                    case 4:
                         bubblesSmall.update();
                         bubblesMedium.update();
                         boolean continueUpdating3 =
                                 bubblesSmall.needsUpdate || bubblesMedium.needsUpdate;
                         if (!continueUpdating3) updateStep++;
                         break;
-                    case 7:
+                    case 5:
                         int scaleRatioBM = STEP_RATIO_BIG / STEP_RATIO_MEDIUM;
                         int mediumBubbleCount = bubblesMedium.bubbles.size();
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
@@ -667,14 +664,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         bubblesBig.add(newBigBubbleCount);
                         updateStep++;
                         break;
-                    case 8:
+                    case 6:
                         bubblesMedium.update();
                         bubblesBig.update();
                         boolean continueUpdating5 =
                                 bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
                         if (!continueUpdating5) updateStep++;
                         break;
-                    case 9:
+                    case 7:
                         int scaleRatioBXB = STEP_RATIO_XBIG / STEP_RATIO_BIG;
                         int bigBubbleCount = bubblesBig.bubbles.size();
                         int newXBigBubbleCount = bigBubbleCount / scaleRatioBXB;
@@ -682,14 +679,13 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         bubblesXBig.add(newXBigBubbleCount);
                         updateStep++;
                         break;
-                    case 10:
+                    case 8:
                         bubblesBig.update();
                         bubblesXBig.update();
                         boolean continueUpdating6 =
                                 bubblesBig.needsUpdate || bubblesXBig.needsUpdate;
                         if (!continueUpdating6) updateStep = 0;  // stop animation transition
                         break;
-
 
                     // WHAT WAS THIS FOR..?
                     case 11:
@@ -710,7 +706,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                                 bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
                         if (!continueUpdating12) updateStep = 0;  // stop animation transition
                         break;
-
 
                     default:
                         break;
@@ -791,6 +786,11 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             private void add(int count_) {
+                if (count_ < 0) {
+                    remove(-count_);
+                    return;
+                }
+
                 for (int i = 0; i < count_; i++) {
                     Bubble b = new Bubble(this, radius, weight, gapAngle, paint);
                     b.grow();
@@ -977,5 +977,181 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         }
 
     }
+
+
+
+
+
+
+
+
+
+    private SensorManager mSensorManager;
+
+    private SensorWrapper mSensorAccelerometer;
+    private float[] gravity = new float[3];
+    private float[] linear_acceleration = new float[3];
+
+    private SensorWrapper mSensorStep;
+    private int mPrevSteps = 0;
+    private int mCurrentSteps = 0;
+
+
+    // ACCELEROMETER SENSING
+//    private Sensor mAccelSensor;
+//    private boolean mAccelSensorIsRegistered;
+    // Compute gravisty and lin acc manually, since these sensors may not be available on the device
+//    private float[] gravity = new float[3];
+//    private float[] linear_acceleration = new float[3];
+//    private float[] rotation = new float[3];
+
+//    private Sensor mGyroscopeSensor;
+//    private boolean mGyroscopeSensorIsRegistered;
+
+//    // STEP SENSING
+//    private Sensor mStepSensor;
+//    private boolean mStepSensorIsRegistered;
+//    private int mPrevSteps = 0;
+//    private int mCurrentSteps = 0;
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                mSensorAccelerometer.update(event);
+                updateGravity(event);
+                break;
+            case Sensor.TYPE_STEP_COUNTER:
+                mSensorStep.update(event);
+                if (!GENERATE_FAKE_STEPS) {
+                    if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
+                    mCurrentSteps = Math.round(event.values[0]);
+                }
+                break;
+        }
+    }
+
+//    @Override
+//    public void onSensorChanged(SensorEvent event) {
+//        switch (event.sensor.getType()) {
+//            case Sensor.TYPE_STEP_COUNTER:
+//                if (!GENERATE_FAKE_STEPS) {
+//                    if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
+//                    mCurrentSteps = Math.round(event.values[0]);
+//                }
+//                break;
+//            case Sensor.TYPE_ACCELEROMETER:
+//                processAcceleration(event.values);
+////                Log.v(TAG, "Accel: [" + String.format("%.2f", linear_acceleration[0]) + ", "
+////                        + String.format("%.2f", linear_acceleration[1]) + ", "
+////                        + String.format("%.2f", linear_acceleration[2]) + "]");
+//                break;
+//            case Sensor.TYPE_GYROSCOPE:
+//                rotation = event.values;
+////                Log.v(TAG, "Gyros: [" + String.format("%.2f", event.values[0]) + ", "
+////                        + String.format("%.2f", event.values[1]) + ", "
+////                        + String.format("%.2f", event.values[2]) + "]");
+//                break;
+//        }
+//
+////        Log.v(TAG, "Accel: [" + String.format("%.2f", linear_acceleration[0]) + ", "
+////                + String.format("%.2f", linear_acceleration[1]) + ", "
+////                + String.format("%.2f", linear_acceleration[2]) + "]; "
+////                + "Gyros: [" + String.format("%.2f", rotation[0]) + ", "
+////                + String.format("%.2f", rotation[1]) + ", "
+////                + String.format("%.2f", rotation[2]) + "]");
+//    }
+
+
+    public void updateGravity(SensorEvent event) {
+        // In this example, alpha is calculated as t / (t + dT),
+        // where t is the low-pass filter's time-constant and
+        // dT is the event delivery rate.
+        final float alpha = 0.8f;
+
+        // Isolate the force of gravity with the low-pass filter.
+        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+
+        // Remove the gravity contribution with the high-pass filter.
+        linear_acceleration[0] = event.values[0] - gravity[0];
+        linear_acceleration[1] = event.values[1] - gravity[1];
+        linear_acceleration[2] = event.values[2] - gravity[2];
+    }
+
+
+
+    private class SensorWrapper {
+
+        SensorEventListener listener;
+        SensorManager manager;
+        String name;
+        int type;
+        Sensor sensor;
+        boolean isActive, isRegistered;
+        int valueCount;
+        float[] values;
+
+        SensorWrapper(String name_, int sensorType_, int valueCount_, SensorEventListener listener_, SensorManager manager_) {
+            listener = listener_;
+            manager = manager_;
+            name = name_;
+            type = sensorType_;
+            valueCount = valueCount_;
+            values = new float[valueCount];
+
+            // Initialize the sensor
+            sensor = manager.getDefaultSensor(type);
+
+            // http://developer.android.com/guide/topics/sensors/sensors_overview.html#sensors-identify
+            if (sensor == null) {
+                if (DEBUG_LOGS) Log.v(TAG, "Sensor " + name + " not available in this device");
+                isActive = false;
+                isRegistered = false;
+            } else {
+                isActive = true;
+                isRegistered = true;
+            }
+        }
+
+        boolean register() {
+            if (!isActive) return false;
+            if (isRegistered) return true;
+            isRegistered = manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+            if (DEBUG_LOGS) Log.i(TAG, "Registered " + name + ": " + isRegistered);
+            return isRegistered;
+        }
+
+        boolean unregister() {
+            if (!isActive) return false;
+            if (!isRegistered) return false;
+            manager.unregisterListener(listener);
+            isRegistered = false;
+            if (DEBUG_LOGS) Log.i(TAG, "Unregistered " + name);
+            return false;
+        }
+
+        String stringify() {
+            if (!isActive) return name + " sensor not available in this device";
+            String vals = name + ": [";
+            for (int i = 0; i < valueCount; i++) {
+                vals += String.format("%.2f", values[i]);
+                if (i + 1 < valueCount) vals += ", ";
+            }
+            vals += "]";
+            return vals;
+        }
+
+        void update(SensorEvent event) {
+            for (int i = 0; i < valueCount; i++) {
+                values[i] = event.values[i];
+            }
+        }
+    }
+
 
 }

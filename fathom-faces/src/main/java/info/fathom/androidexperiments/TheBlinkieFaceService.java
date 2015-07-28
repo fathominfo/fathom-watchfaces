@@ -121,8 +121,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
 
-
-        private boolean mRegisteredTimeZoneReceiver = false;
         //        private boolean mLowBitAmbient;
         //        private boolean mBurnInProtection;
         private boolean mAmbient, mScreenOn;
@@ -228,6 +226,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         @Override
         public void onDestroy() {
+            if (DEBUG_LOGS) Log.v(TAG, "onDestroy()");
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             unregisterTimeZoneReceiver();
             unregisterScreenReceiver();
@@ -264,10 +263,12 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
-            if (visible)
+            if (visible) {
                 mSensorAccelerometer.register();
-            else
+
+            } else {
                 mSensorAccelerometer.unregister();
+            }
 
             /*
             * Whether the timer should be running depends on whether we're visible
@@ -436,6 +437,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         }
 
+        private boolean mRegisteredTimeZoneReceiver = false;
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -518,7 +520,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             List<Eye> updateList = new ArrayList<>();
 
             EyeMosaic() {
-                eyes = new Eye[8];  // @TODO be programmatic here
+                eyes = new Eye[8];
                 eyeCount = 0;
                 activeEyesCount = 0;
                 blinkChance = 0;
@@ -796,7 +798,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private float screenRotation = 0;
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -808,7 +810,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         }
     }
 
-    void updateGravity(SensorEvent event) {
+    private void updateGravity(SensorEvent event) {
         final float alpha = 0.90f;
 
         // Isolate the force of gravity with the low-pass filter.
