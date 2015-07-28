@@ -401,7 +401,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
+//            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
             mTime.setToNow();
             mHourInt = mTime.hour;
