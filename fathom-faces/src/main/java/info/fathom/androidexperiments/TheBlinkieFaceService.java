@@ -18,7 +18,6 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
@@ -40,28 +39,25 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final String TAG = "TheBlinkieFaceService";
 
     private static final float TAU = (float) (2 * Math.PI);
-
     private static final float QUARTER_TAU = TAU / 4;
     private static final float TO_DEGS = 360.0f / TAU;
-    private static final float GRAVITY_THRESHOLD = 1.0f;
-
     private static final long  INTERACTIVE_UPDATE_RATE_MS = 33;
 
     private static final int   BACKGROUND_COLOR_INTERACTIVE = Color.rgb(0,0,0);
-    private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
 
+    private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
     private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
+
     private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
     private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;  // as a factor of screen height
     private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.08f;  // as a factor of screen width
-
     private static final int   TEXT_GLANCES_COLOR_INTERACTIVE = Color.WHITE;
+
     private static final int   TEXT_GLANCES_COLOR_AMBIENT = Color.WHITE;
     private static final float TEXT_GLANCES_HEIGHT = 0.10f;  // as a factor of screen height
     private static final float TEXT_GLANCES_BASELINE_HEIGHT = 0.52f;  // as a factor of screen height
     private static final float TEXT_GLANCES_RIGHT_MARGIN = 0.10f;  // as a factor of screen width
-
     private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
 
     private static final int[] EYE_COLORS = {
@@ -76,6 +72,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             Color.rgb(196, 154, 108),
             Color.rgb(128, 130, 133)
     };
+
     private static final int   EYE_COLOR_COUNT = EYE_COLORS.length;
 
     private static final int   NEW_EYE_EVERY_N_GLANCES = 1;
@@ -83,8 +80,10 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
     private static final long  EYE_POPOUT_BASE_THRESHOLD = TimeUnit.SECONDS.toMillis(10);  // baseline threshold over which eyes will start popping out
     private static final long  EYE_POPOUT_PERIOD = TimeUnit.SECONDS.toMillis(5);  // beyond baseline, an eye will pop out every N millis
+    private static final float GRAVITY_THRESHOLD = 0.1f;
 
     // DEBUG
+    private static final boolean DEBUG_DUMPS = true;
     private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_EYES_PER_GLANCE = 5;
     private static final boolean DEBUG_SHOW_GLANCE_COUNTER = true;
@@ -94,31 +93,31 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
 
 
-    private SensorManager mSensorManager;
-    private Sensor mSensorAccelerometer;
-    private boolean mSensorAccelerometerIsRegistered;
-    private float[] gravity = new float[2];
-    private float screenRotation = 0;
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
-            final float alpha = 0.8f;
-
-            // Isolate the force of gravity with the low-pass filter.
-            gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-            gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-
-            if (Math.abs(gravity[0]) > GRAVITY_THRESHOLD && Math.abs(gravity[1]) > GRAVITY_THRESHOLD) {
-                screenRotation = alpha * screenRotation + (1 - alpha) * (float) (-(Math.atan2(gravity[1], gravity[0]) - QUARTER_TAU) * TO_DEGS);
-//                Log.v("FOO", "Rotation: " + screenRotation);
-            }
-        }
-    }
+//    private SensorManager mSensorManager;
+//    private Sensor mSensorAccelerometer;
+//    private boolean mSensorAccelerometerIsRegistered;
+//    private float[] gravity = new float[2];
+//    private float screenRotation = 0;
+//
+//    @Override
+//    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+//
+//    @Override
+//    public void onSensorChanged(SensorEvent event) {
+//        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+//
+//            final float alpha = 0.8f;
+//
+//            // Isolate the force of gravity with the low-pass filter.
+//            gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+//            gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+//
+//            if (Math.abs(gravity[0]) > GRAVITY_THRESHOLD && Math.abs(gravity[1]) > GRAVITY_THRESHOLD) {
+//                screenRotation = alpha * screenRotation + (1 - alpha) * (float) (-(Math.atan2(gravity[1], gravity[0]) - QUARTER_TAU) * TO_DEGS);
+////                Log.v("FOO", "Rotation: " + screenRotation);
+//            }
+//        }
+//    }
 
 
 
@@ -177,7 +176,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         private int mHeight;
         private float mCenterX;
         private float mCenterY;
-        private boolean mIsRound, mIsMoto360;
+        private boolean mIsRound;  //, mIsMoto360;
 
 
 //        private Paint mLinePaint;
@@ -185,7 +184,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         private EyeMosaic eyeMosaic;
 
-        private AmbientManager ambientManager;
+//        private AmbientManager ambientManager;
 
 
 
@@ -227,9 +226,14 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mTextGlancesPaintAmbient.setAntiAlias(false);
             mTextGlancesPaintAmbient.setTextAlign(Paint.Align.RIGHT);
 
+//            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+//            mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//            mSensorManager.registerListener(TheBlinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            mSensorAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            mSensorManager.registerListener(TheBlinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
+                    TheBlinkieFaceService.this, mSensorManager);
+            mSensorAccelerometer.register();
 
             eyeMosaic = new EyeMosaic();
             eyeMosaic.addEye(39, 21, 49);
@@ -259,7 +263,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mPrevGlance = mCurrentGlance.toMillis(false);
 
             registerScreenReceiver();
-            ambientManager = new AmbientManager();
+//            ambientManager = new AmbientManager();
         }
 
         @Override
@@ -267,7 +271,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             mSensorManager.unregisterListener(TheBlinkieFaceService.this);
             unregisterTimeZoneReceiver();
-            unregisterAccelerometerSensor();
+//            unregisterAccelerometerSensor();
+            mSensorAccelerometer.unregister();
             unregisterScreenReceiver();
             super.onDestroy();
         }
@@ -283,69 +288,195 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             Log.v(TAG, "onAmbientModeChanged: " + inAmbientMode);
             super.onAmbientModeChanged(inAmbientMode);
 
-            ambientManager.ambientTick(inAmbientMode);
+//            ambientManager.ambientTick(inAmbientMode);
 
-            if (inAmbientMode) {
-                if (timelyReset()) {
-                    Log.v(TAG, "Resetting watchface");
-                    glances = 0;
-                    eyeMosaic.reset();
-                }
-            }
+//            if (inAmbientMode) {
+//                if (timelyReset()) {
+//                    Log.v(TAG, "Resetting watchface");
+//                    glances = 0;
+//                    eyeMosaic.reset();
+//                }
+//            }
 
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 invalidate();
             }
 
-            if (mAmbient) {
-                unregisterTimeZoneReceiver();
-                unregisterAccelerometerSensor();
+//            if (mAmbient) {
+//                unregisterTimeZoneReceiver();
+//                unregisterAccelerometerSensor();
+//
+//
+//                mCurrentGlance.setToNow();
+//                mPrevGlance = mCurrentGlance.toMillis(false);
+//
+//            } else {
+//                registerTimeZoneReceiver();
+//                registerAccelerometerSensor();
+//
+//                glances++;
+//
+//                mCurrentGlance.setToNow();
+//                long glanceDiff = mCurrentGlance.toMillis(false) - mPrevGlance;
+//
+////                Log.v(TAG, "Diff: " + glanceDiff);
+////                Log.v(TAG, "Thresh: " + EYE_POPOUT_BASE_THRESHOLD);
+//
+//                // Must eyes start popping out?
+//                if (glanceDiff > EYE_POPOUT_BASE_THRESHOLD) {
+//                    int popoutCount = (int) ((glanceDiff - EYE_POPOUT_BASE_THRESHOLD) / EYE_POPOUT_PERIOD);
+////                    Log.v(TAG, "Out: " + popoutCount);
+//
+//                    if (DEBUG_ACCELERATE_INTERACTION) {
+//                        eyeMosaic.deactivateRandomEye(popoutCount * DEBUG_EYES_PER_GLANCE);
+////                        eyeMosaic.setBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glances * DEBUG_EYES_PER_GLANCE / NEW_EYE_EVERY_N_GLANCES);
+//                        eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * DEBUG_EYES_PER_GLANCE / NEW_EYE_EVERY_N_GLANCES);
+//                    } else {
+//                        eyeMosaic.deactivateRandomEye(popoutCount);
+////                        eyeMosaic.setBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glances / NEW_EYE_EVERY_N_GLANCES);
+//                        eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO / NEW_EYE_EVERY_N_GLANCES);
+//                    }
+//
+//
+//                // Or should they be added
+//                } else if (glances % NEW_EYE_EVERY_N_GLANCES == 0) {
+//                    if (DEBUG_ACCELERATE_INTERACTION) {
+//                        eyeMosaic.activateRandomEye(DEBUG_EYES_PER_GLANCE);
+////                        eyeMosaic.setBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glances * DEBUG_EYES_PER_GLANCE / NEW_EYE_EVERY_N_GLANCES);
+//                        eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * DEBUG_EYES_PER_GLANCE / NEW_EYE_EVERY_N_GLANCES);
+//                    } else {
+//                        eyeMosaic.activateRandomEye(1);
+////                        eyeMosaic.setBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glances / NEW_EYE_EVERY_N_GLANCES);
+//                        eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO / NEW_EYE_EVERY_N_GLANCES);
+//                    }
+//                }
+//
+//            }
+//
+//            /*
+//             * Whether the timer should be running depends on whether we're visible (as well as
+//             * whether we're in ambient mode), so we may need to start or stop the timer.
+//             */
+//            updateTimer();
+        }
 
+        @Override
+        public void onVisibilityChanged(boolean visible) {
+            Log.v(TAG, "onVisibilityChanged: " + visible);
 
-                mCurrentGlance.setToNow();
-                mPrevGlance = mCurrentGlance.toMillis(false);
+            super.onVisibilityChanged(visible);
+
+            if (visible) {
+//                registerTimeZoneReceiver();
+//                registerAccelerometerSensor();
+                mSensorAccelerometer.register();
+//
+//                // Update time zone in case it changed while we weren't visible.
+//                mTime.clear(TimeZone.getDefault().getID());
+//                mTime.setToNow();
 
             } else {
+//                unregisterTimeZoneReceiver();
+//                unregisterAccelerometerSensor();
+                mSensorAccelerometer.unregister();
+            }
+
+            /*
+            * Whether the timer should be running depends on whether we're visible
+            * (as well as whether we're in ambient mode),
+            * so we may need to start or stop the timer.
+            */
+            updateTimer();
+        }
+
+
+        private final BroadcastReceiver mScreenReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                Log.v(TAG, "Received intent: " + action);
+                if (action.equals(Intent.ACTION_SCREEN_ON)) {
+                    Log.v(TAG, "Screen ON");
+//                    onAmbientModeChanged(false);
+//                    ambientManager.screenTick(true);
+                    onScreenChange(true);
+                } else if (action.equals(Intent.ACTION_SCREEN_OFF)) {
+                    Log.v(TAG, "Screen OFF");
+//                    onAmbientModeChanged(true);
+//                    ambientManager.screenTick(false);
+                    onScreenChange(false);
+                }
+            }
+        };
+
+        private void registerScreenReceiver() {
+            Log.v(TAG, "ScreenReceiver registered");
+            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_ON));
+            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
+        }
+
+        private void unregisterScreenReceiver() {
+            TheBlinkieFaceService.this.unregisterReceiver(mScreenReceiver);
+        }
+
+        /**
+         * This is a dedicated method to account for screen changes, which will happen when
+         * the watch goes to ambient mode (if active), or if visibility changes (if ambient
+         * mode is off).
+         * This method should be called from a Broadcast receiver targeting Intent.ACTION_SCREEN_ON/OFF
+         * @param turnedOn
+         */
+        public void onScreenChange(boolean turnedOn) {
+
+            if (turnedOn) {
                 registerTimeZoneReceiver();
-                registerAccelerometerSensor();
+//                registerAccelerometerSensor();
+                mSensorAccelerometer.register();
 
                 glances++;
 
                 mCurrentGlance.setToNow();
                 long glanceDiff = mCurrentGlance.toMillis(false) - mPrevGlance;
 
-//                Log.v(TAG, "Diff: " + glanceDiff);
-//                Log.v(TAG, "Thresh: " + EYE_POPOUT_BASE_THRESHOLD);
-
                 // Must eyes start popping out?
                 if (glanceDiff > EYE_POPOUT_BASE_THRESHOLD) {
                     int popoutCount = (int) ((glanceDiff - EYE_POPOUT_BASE_THRESHOLD) / EYE_POPOUT_PERIOD);
-//                    Log.v(TAG, "Out: " + popoutCount);
 
                     if (DEBUG_ACCELERATE_INTERACTION) {
                         eyeMosaic.deactivateRandomEye(popoutCount * DEBUG_EYES_PER_GLANCE);
-//                        eyeMosaic.setBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glances * DEBUG_EYES_PER_GLANCE / NEW_EYE_EVERY_N_GLANCES);
                         eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * DEBUG_EYES_PER_GLANCE / NEW_EYE_EVERY_N_GLANCES);
                     } else {
                         eyeMosaic.deactivateRandomEye(popoutCount);
-//                        eyeMosaic.setBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glances / NEW_EYE_EVERY_N_GLANCES);
                         eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO / NEW_EYE_EVERY_N_GLANCES);
                     }
 
 
-                // Or should they be added
+                    // Or should they be added
                 } else if (glances % NEW_EYE_EVERY_N_GLANCES == 0) {
                     if (DEBUG_ACCELERATE_INTERACTION) {
                         eyeMosaic.activateRandomEye(DEBUG_EYES_PER_GLANCE);
-//                        eyeMosaic.setBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glances * DEBUG_EYES_PER_GLANCE / NEW_EYE_EVERY_N_GLANCES);
                         eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * DEBUG_EYES_PER_GLANCE / NEW_EYE_EVERY_N_GLANCES);
                     } else {
                         eyeMosaic.activateRandomEye(1);
-//                        eyeMosaic.setBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glances / NEW_EYE_EVERY_N_GLANCES);
                         eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO / NEW_EYE_EVERY_N_GLANCES);
                     }
                 }
+
+            } else {
+                if (timelyReset()) {
+                    Log.v(TAG, "Resetting watchface");
+                    glances = 0;
+                    eyeMosaic.reset();
+                }
+
+                unregisterTimeZoneReceiver();
+//                unregisterAccelerometerSensor();
+                mSensorAccelerometer.unregister();
+
+
+                mCurrentGlance.setToNow();
+                mPrevGlance = mCurrentGlance.toMillis(false);
 
             }
 
@@ -385,15 +516,14 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             super.onApplyWindowInsets(insets);
 
             mIsRound = insets.isRound();
-            mIsMoto360 = isMoto360();
+//            mIsMoto360 = isMoto360();
             Log.v(TAG, "mIsRound? " + mIsRound);
-            Log.v(TAG, "Is this a Moto360? " + mIsMoto360);
+//            Log.v(TAG, "Is this a Moto360? " + mIsMoto360);
         }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-
-            Log.v(TAG, getDisplayState());
+//            Log.v(TAG, getDisplayState());
 
             mTime.setToNow();
             mHourInt = mTime.hour;
@@ -427,58 +557,32 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         }
 
-        @Override
-        public void onVisibilityChanged(boolean visible) {
-            Log.v(TAG, "onVisibilityChanged: " + visible);
 
-            super.onVisibilityChanged(visible);
-
-            if (visible) {
-                registerTimeZoneReceiver();
-                registerAccelerometerSensor();
-
-                // Update time zone in case it changed while we weren't visible.
-                mTime.clear(TimeZone.getDefault().getID());
-                mTime.setToNow();
-
-            } else {
-                unregisterTimeZoneReceiver();
-                unregisterAccelerometerSensor();
-            }
-
-            /*
-            * Whether the timer should be running depends on whether we're visible
-            * (as well as whether we're in ambient mode),
-            * so we may need to start or stop the timer.
-            */
-            updateTimer();
-        }
-
-        private final BroadcastReceiver mScreenReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.v(TAG, "Received intent");
-                if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-                    Log.v(TAG, "Screen ON");
-//                    onAmbientModeChanged(false);
-                    ambientManager.screenTick(true);
-                } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-                    Log.v(TAG, "Screen OFF");
-//                    onAmbientModeChanged(true);
-                    ambientManager.screenTick(false);
-                }
-            }
-        };
-
-        private void registerScreenReceiver() {
-            Log.v(TAG, "ScreenReceiver registered");
-            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_ON));
-            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
-        }
-
-        private void unregisterScreenReceiver() {
-            TheBlinkieFaceService.this.unregisterReceiver(mScreenReceiver);
-        }
+//        private final BroadcastReceiver mScreenReceiver = new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                Log.v(TAG, "Received intent");
+//                if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+//                    Log.v(TAG, "Screen ON");
+////                    onAmbientModeChanged(false);
+//                    ambientManager.screenTick(true);
+//                } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+//                    Log.v(TAG, "Screen OFF");
+////                    onAmbientModeChanged(true);
+//                    ambientManager.screenTick(false);
+//                }
+//            }
+//        };
+//
+//        private void registerScreenReceiver() {
+//            Log.v(TAG, "ScreenReceiver registered");
+//            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_ON));
+//            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver, new IntentFilter(Intent.ACTION_SCREEN_OFF));
+//        }
+//
+//        private void unregisterScreenReceiver() {
+//            TheBlinkieFaceService.this.unregisterReceiver(mScreenReceiver);
+//        }
 
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
@@ -505,19 +609,19 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             TheBlinkieFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
-        private boolean registerAccelerometerSensor() {
-            if (mSensorAccelerometerIsRegistered) return true;
-            mSensorAccelerometerIsRegistered = mSensorManager.registerListener(
-                    TheBlinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-            return mSensorAccelerometerIsRegistered;
-        }
-
-        private boolean unregisterAccelerometerSensor() {
-            if (!mSensorAccelerometerIsRegistered) return false;
-            mSensorManager.unregisterListener(TheBlinkieFaceService.this, mSensorAccelerometer);
-            mSensorAccelerometerIsRegistered = false;
-            return false;
-        }
+//        private boolean registerAccelerometerSensor() {
+//            if (mSensorAccelerometerIsRegistered) return true;
+//            mSensorAccelerometerIsRegistered = mSensorManager.registerListener(
+//                    TheBlinkieFaceService.this, mSensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+//            return mSensorAccelerometerIsRegistered;
+//        }
+//
+//        private boolean unregisterAccelerometerSensor() {
+//            if (!mSensorAccelerometerIsRegistered) return false;
+//            mSensorManager.unregisterListener(TheBlinkieFaceService.this, mSensorAccelerometer);
+//            mSensorAccelerometerIsRegistered = false;
+//            return false;
+//        }
 
         private void updateTimer() {
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
@@ -565,31 +669,31 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         }
 
 
-        private boolean isMoto360() {
-            // Cannot rely on the width/height params passed to onSurfaceChanged,
-            // because those are faking a virtual 320x320 screen...
-
-            WindowManager wm = (WindowManager) TheBlinkieFaceService.this.getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
-            Point size = new Point();
-            display.getSize(size);
-
-            Log.v(TAG, "isMoto360: " + mIsRound + " " + size.x + " " + size.y);
-            return (mIsRound && size.x == 320 && size.y == 290);
-        }
-
-        private String getDisplayState() {
-            int state = ((WindowManager) TheBlinkieFaceService.this.getSystemService(Context.WINDOW_SERVICE))
-                    .getDefaultDisplay().getState();
-            switch (state) {
-                case Display.STATE_ON: return "STATE_ON";
-                case Display.STATE_OFF: return "STATE_OFF";
-                case Display.STATE_DOZE: return "STATE_DOZE";
-                case Display.STATE_DOZE_SUSPEND: return "STATE_DOZE_SUSPEND";
-                case Display.STATE_UNKNOWN: return "STATE_UNKNOWN";
-                default: return "ELSE";
-            }
-        }
+//        private boolean isMoto360() {
+//            // Cannot rely on the width/height params passed to onSurfaceChanged,
+//            // because those are faking a virtual 320x320 screen...
+//
+//            WindowManager wm = (WindowManager) TheBlinkieFaceService.this.getSystemService(Context.WINDOW_SERVICE);
+//            Display display = wm.getDefaultDisplay();
+//            Point size = new Point();
+//            display.getSize(size);
+//
+//            Log.v(TAG, "isMoto360: " + mIsRound + " " + size.x + " " + size.y);
+//            return (mIsRound && size.x == 320 && size.y == 290);
+//        }
+//
+//        private String getDisplayState() {
+//            int state = ((WindowManager) TheBlinkieFaceService.this.getSystemService(Context.WINDOW_SERVICE))
+//                    .getDefaultDisplay().getState();
+//            switch (state) {
+//                case Display.STATE_ON: return "STATE_ON";
+//                case Display.STATE_OFF: return "STATE_OFF";
+//                case Display.STATE_DOZE: return "STATE_DOZE";
+//                case Display.STATE_DOZE_SUSPEND: return "STATE_DOZE_SUSPEND";
+//                case Display.STATE_UNKNOWN: return "STATE_UNKNOWN";
+//                default: return "ELSE";
+//            }
+//        }
 
 
 
@@ -873,36 +977,145 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         }
 
 
-        private class AmbientManager {
+//        private class AmbientManager {
+//
+//            private Time time;
+//            private long lastAmbientTick, lastScreenTick;
+//
+//            public boolean isAmbientScreenModeOn;
+//
+//            AmbientManager() {
+//                time = new Time();
+//                time.setToNow();
+//                lastAmbientTick = time.toMillis(false);
+//                lastScreenTick = time.toMillis(false);
+//            }
+//
+//            void ambientTick(boolean turnedAmbient) {
+//                Log.v(TAG, "ambientTick: " + turnedAmbient);
+//
+//            }
+//
+//            void screenTick(boolean turnedOn) {
+//                Log.v(TAG, "screenTick: " + turnedOn);
+//
+//            }
+//
+//
+//
+//
+//        }
 
-            private Time time;
-            private long lastAmbientTick, lastScreenTick;
 
-            public boolean isAmbientScreenModeOn;
+    }
 
-            AmbientManager() {
-                time = new Time();
-                time.setToNow();
-                lastAmbientTick = time.toMillis(false);
-                lastScreenTick = time.toMillis(false);
+
+
+
+
+
+
+    // Sensors
+    private SensorManager mSensorManager;
+    private SensorWrapper mSensorAccelerometer;
+    private float[] gravity = new float[3];
+    private float screenRotation = 0;
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                mSensorAccelerometer.update(event);
+                updateGravity(event);
+                break;
+        }
+    }
+
+    void updateGravity(SensorEvent event) {
+        final float alpha = 0.90f;
+
+        // Isolate the force of gravity with the low-pass filter.
+        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+
+        if (Math.abs(gravity[0]) > GRAVITY_THRESHOLD && Math.abs(gravity[1]) > GRAVITY_THRESHOLD) {
+            screenRotation = alpha * screenRotation + (1 - alpha) * (float) (-(Math.atan2(gravity[1], gravity[0]) - QUARTER_TAU) * TO_DEGS);
+        }
+    }
+
+
+
+    private class SensorWrapper {
+
+        SensorEventListener listener;
+        SensorManager manager;
+        String name;
+        int type;
+        Sensor sensor;
+        boolean isActive, isRegistered;
+        int valueCount;
+        float[] values;
+        final static boolean DEBUG_TO_CONSOLE = true;
+
+        SensorWrapper(String name_, int sensorType_, int valueCount_, SensorEventListener listener_, SensorManager manager_) {
+            listener = listener_;
+            manager = manager_;
+            name = name_;
+            type = sensorType_;
+            valueCount = valueCount_;
+            values = new float[valueCount];
+
+            // Initialize the sensor
+            sensor = manager.getDefaultSensor(type);
+
+            // http://developer.android.com/guide/topics/sensors/sensors_overview.html#sensors-identify
+            if (sensor == null) {
+                Log.v(TAG, "Sensor " + name + " not available in this device");
+                isActive = false;
+                isRegistered = false;
+            } else {
+                isActive = true;
+                isRegistered = true;
             }
-
-            void ambientTick(boolean turnedAmbient) {
-                Log.v(TAG, "ambientTick: " + turnedAmbient);
-
-            }
-
-            void screenTick(boolean turnedOn) {
-                Log.v(TAG, "screenTick: " + turnedOn);
-
-            }
-
-
-
-
         }
 
+        boolean register() {
+            if (!isActive) return false;
+            if (isRegistered) return true;
+            isRegistered = manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+            if (DEBUG_TO_CONSOLE) Log.i(TAG, "Registered " + name + ": " + isRegistered);
+            return isRegistered;
+        }
 
+        boolean unregister() {
+            if (!isActive) return false;
+            if (!isRegistered) return false;
+            manager.unregisterListener(listener);
+            isRegistered = false;
+            if (DEBUG_TO_CONSOLE) Log.i(TAG, "Unregistered " + name);
+            return false;
+        }
+
+        String stringify() {
+            if (!isActive) return name + " sensor not available in this device";
+            String vals = name + ": [";
+            for (int i = 0; i < valueCount; i++) {
+                vals += String.format("%.2f", values[i]);
+                if (i + 1 < valueCount) vals += ", ";
+            }
+            vals += "]";
+            return vals;
+        }
+
+        void update(SensorEvent event) {
+            for (int i = 0; i < valueCount; i++) {
+                values[i] = event.values[i];
+            }
+        }
     }
 
 
