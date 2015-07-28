@@ -575,10 +575,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             Cursor cursor;
 
             List<Bounce> bounces = new ArrayList<>();;  // last three bounces
-
-//            Triangle[] triangles;
             List<Triangle> triangles = new ArrayList<>();
-//            int triangleCount, triangleIterator;
             List<Triangle> triangleUpdateBuffer = new ArrayList<>();
 
             Paint linePaint;
@@ -620,11 +617,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 cursor.x = 0.50f * mWidth;
                 cursor.y = 0.01f * mHeight;
 
-//                triangles = new Triangle[MAX_TRIANGLE_COUNT];
                 triangles.clear();
                 triangleUpdateBuffer.clear();
-//                triangleCount = 0;
-//                triangleIterator = 0;
 
                 // Initialize three bounces for an initial triangle cursor
                 bounces.clear();
@@ -651,9 +645,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 // @TODO background is drawn before this call, change this at some point
 
                 if (ambientMode) {
-//                    for (int i = 0; i < triangleCount; i++) {
-//                        triangles[i].renderOutline(canvas, linePaint);
-//                    }
                     for (Triangle t : triangles) {
                         t.renderOutline(canvas, linePaint);
                     }
@@ -661,10 +652,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 } else {
                     update();
 
-//                    for (int i = 0; i < triangleCount; i++) {
-//                        int pos = (triangleIterator + i) % triangleCount;
-//                        triangles[pos].render(canvas, trianglePaint);
-//                    }
                     for (Triangle t : triangles) {
                         t.render(canvas, trianglePaint);
                     }
@@ -733,14 +720,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 if (bounceCount > 2) {
                     Triangle t = new Triangle(bounces.get(0), bounces.get(1), bounces.get(2));
-
-//                    triangles[triangleIterator++] = t;
-//                    if (triangleIterator >= MAX_TRIANGLE_COUNT) {
-//                        triangleIterator = 0;
-//                    }
-//                    if (triangleCount < MAX_TRIANGLE_COUNT) {
-//                        triangleCount++;
-//                    }
 
                     triangles.add(t);
                     triangleUpdateBuffer.add(t);
@@ -943,8 +922,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         }
 
         int generateTriangleColor() {
-            int totalHue = 360;
             // start range at the minute of the hour mapped to the total hue, minus half the range
+            int totalHue = 360;
             int startHue = (mMinuteInt * 6) - (RANGE_HUE/2) + 115;
             int endHue   = startHue + RANGE_HUE;
 
