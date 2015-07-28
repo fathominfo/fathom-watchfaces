@@ -34,11 +34,11 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
     private static final String TAG = "TheBlinkieFaceService";
 
+    private static final long  INTERACTIVE_UPDATE_RATE_MS = 33;
+
     private static final float TAU = (float) (2 * Math.PI);
     private static final float QUARTER_TAU = TAU / 4;
     private static final float TO_DEGS = 360.0f / TAU;
-
-    private static final long  INTERACTIVE_UPDATE_RATE_MS = 33;
 
     private static final int   BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
     private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
@@ -146,6 +146,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         private float mCenterX;
         private float mCenterY;
         private boolean mIsRound;
+        private float mRadius;
 
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
@@ -190,11 +191,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mTextGlancesPaintAmbient.setAntiAlias(false);
             mTextGlancesPaintAmbient.setTextAlign(Paint.Align.RIGHT);
 
-            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
-                    TheBlinkieFaceService.this, mSensorManager);
-            mSensorAccelerometer.register();
-
             eyeMosaic = new EyeMosaic();
             eyeMosaic.addEye(39, 21, 49);
             eyeMosaic.addEye(39, 73, 49);
@@ -221,6 +217,11 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mCurrentGlance = new Time();
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
+
+            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+            mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
+                    TheBlinkieFaceService.this, mSensorManager);
+            mSensorAccelerometer.register();
 
             registerScreenReceiver();
         }
@@ -261,7 +262,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
         @Override
         public void onVisibilityChanged(boolean visible) {
             Log.v(TAG, "onVisibilityChanged: " + visible);
-
             super.onVisibilityChanged(visible);
 
             if (visible)
@@ -315,6 +315,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
          * @param turnedOn
          */
         public void onScreenChange(boolean turnedOn) {
+            if (DEBUG_LOGS) Log.v(TAG, "onScreenChange: " + turnedOn);
 
             if (turnedOn) {
                 registerTimeZoneReceiver();
@@ -377,6 +378,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             mHeight = height;
             mCenterX = 0.50f * mWidth;
             mCenterY = 0.50f * mHeight;
+            mRadius  = 0.50f * mWidth;
 
             mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
@@ -624,7 +626,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         class Eye {
             // Constants
-            final int   EYELID_COLOR = Color.rgb(235, 220, 220);
+            final int          EYELID_COLOR = Color.rgb(235, 220, 220);
             static final int   PUPIL_COLOR = Color.BLACK;
             static final float BLINK_SPEED = 0.40f;
             static final int   ANIM_END_THRESHOLD = 1;  // pixel distance to stop animation
@@ -726,8 +728,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
 
                 return needsUpdate;
+            }
 
-        };
             void resetEyelidPath() {
                 eyelid.rewind();
                 eyelid.moveTo(-0.5f * width, 0);
@@ -779,8 +781,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 needsUpdate = false;
             }
         }
-
-
     }
 
 
