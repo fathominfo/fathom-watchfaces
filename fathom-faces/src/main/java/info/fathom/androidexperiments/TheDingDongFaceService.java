@@ -33,36 +33,31 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
     private static final String TAG = "TheDingDongFaceService";
 
-//    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
-//    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
     private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
     private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
 
-    private static final int   TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
-    private static final int   TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
-    private static final float TEXT_DIGITS_HEIGHT = 0.20f;  // as a factor of screen height
-    private static final float TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;  // as a factor of screen height
-    private static final float TEXT_DIGITS_RIGHT_MARGIN = 0.08f;  // as a factor of screen width
+    private static final String   RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
+    private static final int     TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
+    private static final int     TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
+    private static final float   TEXT_DIGITS_HEIGHT = 0.20f;  // as a factor of screen height
+    private static final float   TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;  // as a factor of screen height
+    private static final float   TEXT_DIGITS_RIGHT_MARGIN = 0.08f;  // as a factor of screen width
 
-    private static final int   TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
-    private static final int   TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
-    private static final float TEXT_STEPS_HEIGHT = 0.10f;  // as a factor of screen height
-    private static final float TEXT_STEPS_BASELINE_HEIGHT = TEXT_DIGITS_BASELINE_HEIGHT + 0.15f;  // as a factor of screen height
-    private static final float TEXT_STEPS_RIGHT_MARGIN = 0.07f;  // as a factor of screen width
+    private static final int     TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
+    private static final int     TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
+    private static final float   TEXT_STEPS_HEIGHT = 0.10f;  // as a factor of screen height
+    private static final float   TEXT_STEPS_BASELINE_HEIGHT = TEXT_DIGITS_BASELINE_HEIGHT + 0.15f;  // as a factor of screen height
+    private static final float   TEXT_STEPS_RIGHT_MARGIN = 0.07f;  // as a factor of screen width
 
-    private static final String RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
-    //    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
-    //    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-
-    private static final int   RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
+    private static final int     RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
+    private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int RANDOM_FAKE_STEPS = 500;
-    private static final int MAX_STEP_THRESHOLD = 21000;
+    private static final int     RANDOM_FAKE_STEPS = 500;
+    private static final int     MAX_STEP_THRESHOLD = 21000;
 
 
 
@@ -98,7 +93,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         switch (event.sensor.getType()) {
             case Sensor.TYPE_STEP_COUNTER:
                 if (!GENERATE_FAKE_STEPS) {
-                    Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
+                    if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
                     mCurrentSteps = Math.round(event.values[0]);
                 }
                 break;
@@ -279,7 +274,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             if (inAmbientMode) {
                 if (timelyReset()) {
-                    Log.v(TAG, "Resetting watchface");
+                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
                     mPrevSteps = 0;
                     mCurrentSteps = 0;
                     bubbleManager.updateSteps(mCurrentSteps);
@@ -315,26 +310,26 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         }
 
         private void updateStepCounts() {
-            Log.v(TAG, "mPrevSteps: " + mPrevSteps);
-            Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+            if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
+            if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
 
             if (GENERATE_FAKE_STEPS) {
                 int fakeSteps = (int) (RANDOM_FAKE_STEPS * Math.random());
-                Log.v(TAG, "Generating fake steps: " + fakeSteps);
+                if (DEBUG_LOGS) Log.v(TAG, "Generating fake steps: " + fakeSteps);
                 mCurrentSteps += fakeSteps;
             }
 
             int stepInc = mCurrentSteps - mPrevSteps;
             mPrevSteps = mCurrentSteps;
 
-            Log.v(TAG, stepInc + " new steps!");
+            if (DEBUG_LOGS) Log.v(TAG, stepInc + " new steps!");
 
             if (mCurrentSteps > MAX_STEP_THRESHOLD) {
-                Log.v(TAG, "Resetting step counts");
+                if (DEBUG_LOGS) Log.v(TAG, "Resetting step counts");
                 mPrevSteps = 0;
                 mCurrentSteps = 0;
-                Log.v(TAG, "mPrevSteps: " + mPrevSteps);
-                Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+                if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
+                if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
             }
 
             bubbleManager.updateSteps(mCurrentSteps);
@@ -366,34 +361,18 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
 
-//            mTime.setToNow();
-//
-////            final String hours = Integer.toString(mTime.hour % 12 == 0 ? 12 : mTime.hour % 12);
-////            final String minutes = String.format("%02d", mTime.minute);
-//
-//            final String time = (mTime.hour % 12 == 0 ? 12 : mTime.hour % 12) + ":" + String.format("%02d", mTime.minute);
-
-
             mTime.setToNow();
             mHourInt = mTime.hour;
             mMinuteInt = mTime.minute;
             mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
 
-            // Start drawing watch elements
-//            canvas.save();
-
             if (mAmbient) {
-                canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
+                canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
 
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
                 canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintAmbient);
-
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintAmbient, time,
-//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-//                drawTextVerticallyCentered(canvas, mTextStepsPaintAmbient, mTestStepFormatter.format(mCurrentSteps) + "#",
-//                        mWidth - mTextStepsRightMargin, mCenterY);
 
 
             } else {
@@ -407,11 +386,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
                 canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
-
-//                drawTextVerticallyCentered(canvas, mTextDigitsPaintInteractive, time,
-//                        mWidth - mTextDigitsRightMargin, 0.33f * mHeight);
-//                drawTextVerticallyCentered(canvas, mTextStepsPaintInteractive, mTestStepFormatter.format(mCurrentSteps) + "#",
-//                        mWidth - mTextStepsRightMargin, mCenterY);
 
             }
         }
@@ -540,12 +514,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             return isVisible() && !isInAmbientMode();
         }
 
-        // http://stackoverflow.com/a/24969713/1934487
-        private void drawTextVerticallyCentered(Canvas canvas, Paint paint, String text, float cx, float cy) {
-            paint.getTextBounds(text, 0, text.length(), textBounds);
-            canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
-        }
-
         // Checks if watchface should reset, like overnight
         boolean timelyReset() {
             boolean reset = false;
@@ -567,35 +535,40 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private final static int STEP_RATIO_BIG     = 1000;     // a BIG bubble represents this many steps
             private final static int STEP_RATIO_MEDIUM  = 100;
             private final static int STEP_RATIO_SMALL   = 10;
-
+            private final static int STEP_RATIO_XSMALL  = 1;
 
 //            private final static int RADIUS_XBIG = 75;
 //            private final static int RADIUS_BIG = 50;
 //            private final static int RADIUS_MEDIUM = 35;
 //            private final static int RADIUS_SMALL = 20;
 
-            private final static int RADIUS_XBIG = 70;
-            private final static int RADIUS_BIG = 45;
-            private final static int RADIUS_MEDIUM = 25;
-            private final static int RADIUS_SMALL = 15;
+            private final static int RADIUS_XBIG    = 70;
+            private final static int RADIUS_BIG     = 45;
+            private final static int RADIUS_MEDIUM  = 25;
+            private final static int RADIUS_SMALL   = 15;
+            private final static int RADIUS_XSMALL  = 5;
 
             private final static float WEIGHT_XBIG      = 5;
             private final static float WEIGHT_BIG       = 4;
             private final static float WEIGHT_MEDIUM    = 3;
             private final static float WEIGHT_SMALL     = 3;
+            private final static float WEIGHT_XSMALL    = 3;
 
             private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);  // pink
             private final int COLOR_BIG     = Color.argb(204, 255, 167, 39);  // red
             private final int COLOR_MEDIUM  = Color.argb(204, 39, 170, 225);  // blue
             private final int COLOR_SMALL   = Color.argb(204, 141, 198, 63);  // yellow
+            private final int COLOR_XSMALL  = Color.argb(204, 150, 150, 150);  // gray
 
             private final static float GAP_ANGLE_XBIG   = (float) (-0.75f * Math.PI);
             private final static float GAP_ANGLE_BIG    = (float) (-0.50f * Math.PI);
             private final static float GAP_ANGLE_MEDIUM = (float) (-1.00f * Math.PI);
             private final static float GAP_ANGLE_SMALL  = (float) (-0.75f * Math.PI);
+            private final static float GAP_ANGLE_XSMALL = (float) ( 0.50f * Math.PI);
 
-            private BubbleCollection bubblesXBig, bubblesBig, bubblesMedium, bubblesSmall;
-            private Paint paintXBig, paintBig, paintMedium, paintSmall;
+            private BubbleCollection bubblesXBig, bubblesBig, bubblesMedium,
+                    bubblesSmall, bubblesXSmall;
+            private Paint paintXBig, paintBig, paintMedium, paintSmall, paintXSmall;
             private int prevSteps, currentSteps;
 
             private int updateStep;  // @TODO add explanation here
@@ -621,10 +594,16 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 paintSmall.setAntiAlias(true);
                 paintSmall.setStyle(Paint.Style.FILL_AND_STROKE);
 
+                paintXSmall = new Paint();
+                paintXSmall.setColor(COLOR_XSMALL);
+                paintXSmall.setAntiAlias(true);
+                paintXSmall.setStyle(Paint.Style.FILL_AND_STROKE);
+
                 bubblesXBig = new BubbleCollection(this, RADIUS_XBIG, WEIGHT_XBIG, GAP_ANGLE_XBIG, paintXBig);
                 bubblesBig = new BubbleCollection(this, RADIUS_BIG, WEIGHT_BIG, GAP_ANGLE_BIG, paintBig);
                 bubblesMedium = new BubbleCollection(this, RADIUS_MEDIUM, WEIGHT_MEDIUM, GAP_ANGLE_MEDIUM, paintMedium);
                 bubblesSmall = new BubbleCollection(this, RADIUS_SMALL, WEIGHT_SMALL, GAP_ANGLE_SMALL, paintSmall);
+                bubblesXSmall = new BubbleCollection(this, RADIUS_XSMALL, WEIGHT_XSMALL, GAP_ANGLE_XSMALL, paintXSmall);
 
                 prevSteps = 0;
                 currentSteps = 0;
@@ -637,6 +616,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubblesBig.render(canvas);
                 bubblesMedium.render(canvas);
                 bubblesSmall.render(canvas);
+                bubblesXSmall.render(canvas);
             }
 
             public void update() {
@@ -644,15 +624,27 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 switch (updateStep) {
                     case 1:
                         int stepInc = currentSteps - prevSteps;
-                        currentSteps -= stepInc % STEP_RATIO_SMALL;  // account for the remainder of the division
-                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL);
+                        currentSteps -= stepInc % STEP_RATIO_XSMALL;  // account for the remainder of the division
+                        bubblesXSmall.add(stepInc / STEP_RATIO_XSMALL);
                         updateStep++;
                         break;
                     case 2:
+                        boolean continueUpdating0 = bubblesXSmall.update();
+                        if (!continueUpdating0) updateStep++;
+                        break;
+                    case 3:
+                        int scaleRatioSXS = STEP_RATIO_SMALL / STEP_RATIO_XSMALL;
+                        int xSmallBubbleCount = bubblesXSmall.bubbles.size();
+                        int newSmallBubbleCount = xSmallBubbleCount / scaleRatioSXS;
+                        bubblesXSmall.remove(newSmallBubbleCount * scaleRatioSXS);
+                        bubblesSmall.add(newSmallBubbleCount);
+                        updateStep++;
+                        break;
+                    case 4:
                         boolean continueUpdating1 = bubblesSmall.update();
                         if (!continueUpdating1) updateStep++;
                         break;
-                    case 3:
+                    case 5:
                         int scaleRatioMS = STEP_RATIO_MEDIUM / STEP_RATIO_SMALL;
                         int smallBubbleCount = bubblesSmall.bubbles.size();
                         int newMediumBubbleCount = smallBubbleCount / scaleRatioMS;
@@ -660,14 +652,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         bubblesMedium.add(newMediumBubbleCount);
                         updateStep++;
                         break;
-                    case 4:
+                    case 6:
                         bubblesSmall.update();
                         bubblesMedium.update();
                         boolean continueUpdating3 =
                                 bubblesSmall.needsUpdate || bubblesMedium.needsUpdate;
                         if (!continueUpdating3) updateStep++;
                         break;
-                    case 5:
+                    case 7:
                         int scaleRatioBM = STEP_RATIO_BIG / STEP_RATIO_MEDIUM;
                         int mediumBubbleCount = bubblesMedium.bubbles.size();
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
@@ -675,14 +667,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         bubblesBig.add(newBigBubbleCount);
                         updateStep++;
                         break;
-                    case 6:
+                    case 8:
                         bubblesMedium.update();
                         bubblesBig.update();
                         boolean continueUpdating5 =
                                 bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
                         if (!continueUpdating5) updateStep++;
                         break;
-                    case 7:
+                    case 9:
                         int scaleRatioBXB = STEP_RATIO_XBIG / STEP_RATIO_BIG;
                         int bigBubbleCount = bubblesBig.bubbles.size();
                         int newXBigBubbleCount = bigBubbleCount / scaleRatioBXB;
@@ -690,7 +682,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         bubblesXBig.add(newXBigBubbleCount);
                         updateStep++;
                         break;
-                    case 8:
+                    case 10:
                         bubblesBig.update();
                         bubblesXBig.update();
                         boolean continueUpdating6 =
@@ -699,18 +691,23 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         break;
 
 
+                    // WHAT WAS THIS FOR..?
                     case 11:
+                        bubblesXSmall.remove(bubblesXSmall.bubbles.size());
                         bubblesSmall.remove(bubblesSmall.bubbles.size());
                         bubblesMedium.remove(bubblesMedium.bubbles.size());
                         bubblesBig.remove(bubblesBig.bubbles.size());
+                        // Should add XBig bubbles here?
                         updateStep++;
                         break;
                     case 12:
+                        bubblesXSmall.update();
                         bubblesSmall.update();
                         bubblesMedium.update();
                         bubblesBig.update();
                         boolean continueUpdating12 =
-                                bubblesSmall.needsUpdate || bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
+                                bubblesXSmall.needsUpdate || bubblesSmall.needsUpdate ||
+                                bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
                         if (!continueUpdating12) updateStep = 0;  // stop animation transition
                         break;
 
@@ -733,6 +730,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubblesBig.updatePositions();
                 bubblesMedium.updatePositions();
                 bubblesSmall.updatePositions();
+                bubblesXSmall.updatePositions();
             }
 
             public void resetMotion() {
@@ -740,8 +738,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubblesBig.resetMotion();
                 bubblesMedium.resetMotion();
                 bubblesSmall.resetMotion();
+                bubblesXSmall.resetMotion();
             }
         }
+
 
         private class BubbleCollection {
 
@@ -863,8 +863,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 parent = parent_;
                 anchorX = (float) (mWidth * Math.random());
                 anchorY = (float) (mHeight * Math.random());
-//                x = anchorX;
-//                y = anchorY;
                 x = mCenterX;
                 y = mCenterY;
                 radius = radius_;
@@ -884,7 +882,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void render(Canvas canvas) {
-//                canvas.drawCircle(x, y, currentRadius, paint);
                 canvas.save();
                 canvas.translate(x, y);
                 canvas.scale(currentRadius, currentRadius);
