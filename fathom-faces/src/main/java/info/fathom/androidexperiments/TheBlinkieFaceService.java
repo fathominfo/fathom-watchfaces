@@ -88,7 +88,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final boolean DEBUG_LOGS = true;
     private static final boolean DEBUG_ACCELERATE_INTERACTION = true;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_ACCELERATE_RATE = 5;  // each glance has xN times the effect
-    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = true;
+    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
     private static final boolean DEBUG_EYES_ROTATION = false;  // @TODO if they are going to be off forever, deactivate all sensing
 
 
@@ -700,18 +700,19 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         class Eye {
             // Constants
-            final int          EYELID_COLOR = Color.rgb(235, 220, 220);
+            final int   EYE_COLOR    = Color.rgb(250,250,250);
+            final int   EYELID_COLOR = Color.rgb(20, 20, 20);
             static final int   PUPIL_COLOR = Color.BLACK;
             static final float BLINK_SPEED = 0.40f;
             static final int   ANIM_END_THRESHOLD = 1;      // pixel distance to stop animation
 //            static final float HEIGHT_RATIO = 0.68f;      // height/width ratio
-            static final float HEIGHT_RATIO = 0.43f;        // height/width ratio
-            static final float IRIS_RATIO = 0.45f;          // irisDiameter/width ratio
-            static final float PUPIL_RATIO = 0.29f;         // pupilDiameter/width ratio
-            static final float WIDE_OPEN_RATIO = 0.70f;
-            static final float HORIZONTAL_LOOK_RATIO = 0.50f;     // how far the pupil will travel laterally in relation to width/2
-            static final float VERTICAL_LOOK_RATIO = 0.25f;       // idem
-            static final float PUPIL_SPEED = 0.30f;
+            static final float HEIGHT_RATIO = 0.48f;        // height/width ratio
+            static final float IRIS_RATIO = 0.40f;          // irisDiameter/width ratio
+            static final float PUPIL_RATIO = 0.25f;         // pupilDiameter/width ratio
+            static final float WIDE_OPEN_RATIO = 0.60f;
+            static final float HORIZONTAL_LOOK_RATIO = 0.45f;     // how far the pupil will travel laterally in relation to width/2
+            static final float VERTICAL_LOOK_RATIO = 0.30f;       // idem
+            static final float PUPIL_SPEED = 0.50f;
 
             EyeMosaic parent;
 
@@ -761,7 +762,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 blinking = false;
 
                 eyelidPaint = new Paint();
-                eyelidPaint.setColor(EYELID_COLOR);
+                eyelidPaint.setColor(EYE_COLOR);
                 eyelidPaint.setAntiAlias(true);
 
                 irisPaint = new Paint();
@@ -789,8 +790,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 canvas.save();
                 canvas.clipPath(eyelid);
                 canvas.drawCircle(0, 0, 0.5f * width, eyelidPaint);
-                canvas.drawCircle(currentPupilX, currentPupilY, irisRadius, irisPaint);
-                canvas.drawCircle(currentPupilX, currentPupilY, pupilRadius, pupilPaint);
+                canvas.drawCircle(currentPupilX, currentPupilY - 1, irisRadius, irisPaint);
+                canvas.drawCircle(currentPupilX, currentPupilY - 1, pupilRadius, pupilPaint);
                 canvas.restore();
                 canvas.drawPath(eyelid, eyeLinerPaint);
                 canvas.restore();
