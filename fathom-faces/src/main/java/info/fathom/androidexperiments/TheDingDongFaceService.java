@@ -124,6 +124,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private float mRadius;
 
         private BubbleManager bubbleManager;
+        private Splash10KScreen splash10KScreen;
 
 
         @Override
@@ -169,7 +170,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             mBubbleTextPaint.setAntiAlias(true);
             mBubbleTextPaint.setTextAlign(Paint.Align.CENTER);
 
-            bubbleManager = new BubbleManager(){};
+            bubbleManager = new BubbleManager();
+            splash10KScreen = new Splash10KScreen();
 
             mTime  = new Time();
 
@@ -323,6 +325,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             mCenterY = 0.50f * mHeight;
             mRadius = 0.50f * mWidth;
 
+            splash10KScreen.initialize();
+
             mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
             mTextDigitsRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
@@ -386,7 +390,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
                 if (showSplash10KScreen) {
-                    canvas.drawColor(Color.argb(204, 255, 167, 39));
+                    splash10KScreen.render(canvas);
                 }
 
             }
@@ -986,6 +990,43 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 velX = velY = accX = accY = 0;
             }
 
+        }
+
+        private class Splash10KScreen {
+            private static final int R = 238;
+            private static final int G = 42;
+            private static final int B = 132;
+            private static final int FADE_IN_SPEED = 7;
+            private static final float TEXT_SIZE = 0.10f;  // as a factor of screen height
+            private static final float TEXT_SPEED = 0.25f;
+
+            private int alpha;
+            private float textSize;
+            private float textX, textY;
+
+            Splash10KScreen() { }
+
+            // Must be called after onSurfaceChanged
+            public void initialize() {
+                alpha = 0;
+                textSize = TEXT_SIZE * mHeight;
+                textX = mCenterX;
+                textY = 1.25f * mHeight;
+            }
+
+            public void render(Canvas canvas) {
+                canvas.drawColor(Color.argb(alpha, R, G, B));
+
+//                mBubbleTextPaint.setColor(Color.argb(alpha, 255, 255, 255));
+                mBubbleTextPaint.setTextSize(textSize);
+                drawTextVerticallyCentered(canvas, mBubbleTextPaint, "10,000!", textX, textY);
+//                mBubbleTextPaint.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);  // revert
+
+                alpha += FADE_IN_SPEED;
+                if (alpha > 255) alpha = 255;
+                textY -= TEXT_SPEED * (textY - mCenterY);
+                if (DEBUG_LOGS) Log.v(TAG, "textY: " + textY);
+            }
         }
 
     }
