@@ -608,10 +608,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 switch (updateStep) {
                     // @TODO verify if bubble count is working on the long run
                     case 1:
-                        bubblesXSmall.add((currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size(), false);
+                        bubblesXSmall.add((currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size(), false, 0);
                         int stepInc = currentSteps - prevSteps;
                         currentSteps -= stepInc % STEP_RATIO_SMALL;  // account for the remainder of the division
-                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL, false);
+                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL, false, 0);
                         updateStep++;
                         break;
                     case 2:
@@ -623,7 +623,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int smallBubbleCount = bubblesSmall.bubbles.size();
                         int newMediumBubbleCount = smallBubbleCount / scaleRatioMS;
                         bubblesSmall.remove(newMediumBubbleCount * scaleRatioMS);
-                        bubblesMedium.add(newMediumBubbleCount, false);
+                        bubblesMedium.add(newMediumBubbleCount, false, 0);
                         updateStep++;
                         break;
                     case 4:
@@ -638,7 +638,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int mediumBubbleCount = bubblesMedium.bubbles.size();
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
                         bubblesMedium.remove(newBigBubbleCount * scaleRatioBM);
-                        bubblesBig.add(newBigBubbleCount, true);
+                        bubblesBig.add(newBigBubbleCount, mCurrentSteps < STEP_RATIO_XBIG, 1);  // stop featuring after reaching 10k
                         updateStep++;
                         break;
                     case 6:
@@ -653,7 +653,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int bigBubbleCount = bubblesBig.bubbles.size();
                         int newXBigBubbleCount = bigBubbleCount / scaleRatioBXB;
                         bubblesBig.remove(newXBigBubbleCount * scaleRatioBXB);
-                        bubblesXBig.add(newXBigBubbleCount, true);
+                        bubblesXBig.add(newXBigBubbleCount, true, 3);
                         updateStep++;
                         break;
                     case 8:
@@ -715,9 +715,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             public void newGlance() {
                 for (Bubble bubble : toDefeatureBuffer) {
-                    bubble.isFeatured = false;
+                    if (--bubble.featuredGlanceDuration <= 0) {
+                        bubble.isFeatured = false;
+                    }
                 }
-                toDefeatureBuffer.clear();
+//                toDefeatureBuffer.clear();
+                for (int i = toDefeatureBuffer.size() - 1; i >= 0; i--) {
+                    if (!toDefeatureBuffer.get(i).isFeatured) toDefeatureBuffer.remove(i);
+                }
             }
         }
 
@@ -771,7 +776,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 }
             }
 
-            private void add(int count_, boolean shouldFeature) {
+            private void add(int count_, boolean shouldFeature, int glanceDuration_) {
                 if (count_ < 0) {
                     remove(-count_);
                     return;
@@ -781,7 +786,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 for (int i = 0; i < count_; i++) {
                     int newVal = ++bubbleCount * stepSize;
                     Bubble b = new Bubble(this, newVal, radius, weight, gapAngle,
-                            shouldFeature && i == count_ - 1, paint);  // @JAMES: Only the last bubble in the group gets featured
+                            shouldFeature && i == count_ - 1, glanceDuration_, paint);  // @JAMES: Only the last bubble in the group gets featured
                     b.grow();
                     bubbles.add(b);
                 }
@@ -848,11 +853,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             boolean mustDie = false;
             boolean isFeatured = false;
+            int featuredGlanceDuration;  // for how many glances is this bubble featured?
 
             Paint paint;
             Path path;
 
-            Bubble(BubbleCollection parent_, int value_, float radius_, float weight_, float gapAngle_, boolean isFeatured_, Paint paint_) {
+            Bubble(BubbleCollection parent_, int value_, float radius_, float weight_, float gapAngle_, boolean isFeatured_, int glanceDuration_, Paint paint_) {
                 value = value_;
                 valueStr = mTestStepFormatter.format(value);
                 parent = parent_;
@@ -870,6 +876,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
                 isFeatured = isFeatured_;
                 if (isFeatured) parent.parent.toDefeatureBuffer.add(this);
+                featuredGlanceDuration = glanceDuration_;
 
                 path = new Path();
                 path.addCircle(0, 0, 1.0f, Path.Direction.CW);
