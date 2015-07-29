@@ -109,6 +109,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private Typeface mTextTypeface;
         private float mStepCountDisplay;  // , mStepCountDisplayTarget;
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
+        private final Rect textBounds = new Rect();
+
+        private Paint mBubbleTextPaint;
 
         private int mWidth;
         private int mHeight;
@@ -155,6 +158,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             mTextStepsPaintAmbient.setTypeface(mTextTypeface);
             mTextStepsPaintAmbient.setAntiAlias(false);
             mTextStepsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+
+            mBubbleTextPaint = new Paint();
+            mBubbleTextPaint.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
+            mBubbleTextPaint.setTypeface(mTextTypeface);
+            mBubbleTextPaint.setAntiAlias(true);
+            mBubbleTextPaint.setTextAlign(Paint.Align.CENTER);
 
             bubbleManager = new BubbleManager(){};
 
@@ -467,6 +476,19 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         }
 
+        // http://stackoverflow.com/a/24969713/1934487
+        private void drawTextVerticallyCentered(Canvas canvas, Paint paint, String text, float cx, float cy) {
+            paint.getTextBounds(text, 0, text.length(), textBounds);
+            canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
+        }
+
+
+
+
+
+
+
+
 
 
 
@@ -569,10 +591,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 switch (updateStep) {
                     // @TODO verify if bubble count is working on the long run
                     case 1:
-                        bubblesXSmall.add( (currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size() );
+                        bubblesXSmall.add((currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size(), false);
                         int stepInc = currentSteps - prevSteps;
                         currentSteps -= stepInc % STEP_RATIO_SMALL;  // account for the remainder of the division
-                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL);
+                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL, false);
                         updateStep++;
                         break;
                     case 2:
@@ -584,7 +606,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int smallBubbleCount = bubblesSmall.bubbles.size();
                         int newMediumBubbleCount = smallBubbleCount / scaleRatioMS;
                         bubblesSmall.remove(newMediumBubbleCount * scaleRatioMS);
-                        bubblesMedium.add(newMediumBubbleCount);
+                        bubblesMedium.add(newMediumBubbleCount, false);
                         updateStep++;
                         break;
                     case 4:
@@ -599,7 +621,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int mediumBubbleCount = bubblesMedium.bubbles.size();
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
                         bubblesMedium.remove(newBigBubbleCount * scaleRatioBM);
-                        bubblesBig.add(newBigBubbleCount);
+                        bubblesBig.add(newBigBubbleCount, true);
                         updateStep++;
                         break;
                     case 6:
@@ -614,7 +636,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int bigBubbleCount = bubblesBig.bubbles.size();
                         int newXBigBubbleCount = bigBubbleCount / scaleRatioBXB;
                         bubblesBig.remove(newXBigBubbleCount * scaleRatioBXB);
-                        bubblesXBig.add(newXBigBubbleCount);
+                        bubblesXBig.add(newXBigBubbleCount, true);
                         updateStep++;
                         break;
                     case 8:
@@ -688,15 +710,15 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             BubbleManager parent;
             List<Bubble> bubbles;
             List<Bubble> killQueue;
-            int value;
+            int stepSize;
             float radius;
             float weight;
             float gapAngle;
             boolean needsUpdate;
             Paint paint;
 
-            BubbleCollection(BubbleManager parent_, int value_, float radius_, float weight_, float gapAngle_, Paint paint_) {
-                value = value_;
+            BubbleCollection(BubbleManager parent_, int stepSize_, float radius_, float weight_, float gapAngle_, Paint paint_) {
+                stepSize = stepSize_;
                 parent = parent_;
                 radius = radius_;
                 weight = weight_;
@@ -732,14 +754,17 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 }
             }
 
-            private void add(int count_) {
+            private void add(int count_, boolean shouldFeature) {
                 if (count_ < 0) {
                     remove(-count_);
                     return;
                 }
 
+                int bubbleCount = bubbles.size();
                 for (int i = 0; i < count_; i++) {
-                    Bubble b = new Bubble(this, value, radius, weight, gapAngle, true, paint);
+                    int newVal = ++bubbleCount * stepSize;
+                    Bubble b = new Bubble(this, newVal, radius, weight, gapAngle,
+                            shouldFeature && i == count_ - 1, paint);  // @JAMES: Only the last bubble in the group gets featured
                     b.grow();
                     bubbles.add(b);
                 }
@@ -785,10 +810,13 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             private static final float RANDOM_WEIGHT_FACTOR     = 0.50f; // how much variation between balls in the same category
 
+            private static final float TEXT_HEIGHT_FACTOR       = 0.20f; // as a factor of bubble radius
+
             BubbleCollection parent;
 
             int value;
-            float anchorX, anchorY, baseRadius;
+            String valueStr;
+            float anchorX, anchorY;
             float x, y;
             float gapAngle;
             float velX, velY;
@@ -809,6 +837,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             Bubble(BubbleCollection parent_, int value_, float radius_, float weight_, float gapAngle_, boolean isFeatured_, Paint paint_) {
                 value = value_;
+                valueStr = mTestStepFormatter.format(value);
                 parent = parent_;
                 anchorX = (float) (mWidth * Math.random());
                 anchorY = (float) (mHeight * Math.random());
@@ -840,6 +869,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 if (isFeatured) canvas.drawCircle(0, 0, 1.0f, paint);
                 canvas.drawPath(path, paint);
                 canvas.restore();
+
+                // Doing this outside the transform to avoid weirdness with tiny heighted text
+                if (isFeatured) {
+                    mBubbleTextPaint.setTextSize(2 * TEXT_HEIGHT_FACTOR * currentRadius);  // bubble size might be animated
+                    drawTextVerticallyCentered(canvas, mBubbleTextPaint, valueStr, x, y);
+                }
             }
 
             public boolean updateSize() {
