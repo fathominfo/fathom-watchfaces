@@ -34,6 +34,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
     private static final String TAG = "TheDingDongFaceService";
 
+    private static final float TAU = (float) (2 * Math.PI);
+
     private static final long INTERACTIVE_UPDATE_RATE_MS = 33;
 
     private static final int BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
@@ -55,15 +57,11 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final int     RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
+
     private static final boolean DEBUG_LOGS = false;
     private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int     RANDOM_FAKE_STEPS = 500;
     private static final int     MAX_STEP_THRESHOLD = 21000;
-
-
-
-
-
 
 
 
@@ -364,6 +362,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             }
         }
+
 
         private boolean mRegisteredTimeZoneReceiver = false;
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {

@@ -37,9 +37,15 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
     private static final long    INTERACTIVE_UPDATE_RATE_MS = 33;
 
+
     private static final int     BACKGROUND_COLOR_AMBIENT = Color.BLACK;
-    private final static int     COLOR_TRIANGLE_ALPHA = 100;
-    private final static int     RANGE_HUE = 165;
+
+    private final static int   BACKGROUND_COLORS_COUNT = 24;
+    private final int[] backgroundColors = new int[BACKGROUND_COLORS_COUNT];
+
+    private final static int   COLOR_TRIANGLE_ALPHA = 100;
+    private final static int   RANGE_HUE = 165;
+
 
     private static final String  RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     private static final int     TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
@@ -164,7 +170,34 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     TheTwinkieFaceService.this, mSensorManager);
             mSensorAccelerometer.register();
 
+
             registerScreenReceiver();
+
+            backgroundColors[0] =  Color.HSVToColor(new float[]{130.0f, 1.0f, 1.0f});
+            backgroundColors[1] =  Color.HSVToColor(new float[]{ 115.0f, 1.0f, 1.0f});
+            backgroundColors[2] =  Color.HSVToColor(new float[]{ 100.0f, 1.0f, 1.0f});
+            backgroundColors[3] =  Color.HSVToColor(new float[]{  85.0f, 1.0f, 1.0f});
+            backgroundColors[4] =  Color.HSVToColor(new float[]{  70.0f, 1.0f, 1.0f});
+            backgroundColors[5] =  Color.HSVToColor(new float[]{  55.0f, 1.0f, 1.0f});
+            backgroundColors[6] =  Color.HSVToColor(new float[]{  40.0f, 1.0f, 1.0f});
+            backgroundColors[7] =  Color.HSVToColor(new float[]{  25.0f, 1.0f, 1.0f});
+            backgroundColors[8] =  Color.HSVToColor(new float[]{  10.0f, 1.0f, 1.0f});
+            backgroundColors[9] =  Color.HSVToColor(new float[]{ 355.0f, 1.0f, 1.0f});
+            backgroundColors[10] = Color.HSVToColor(new float[]{ 340.0f, 1.0f, 1.0f});
+            backgroundColors[11] = Color.HSVToColor(new float[]{ 325.0f, 1.0f, 1.0f});
+            backgroundColors[12] = Color.HSVToColor(new float[]{ 310.0f, 1.0f, 1.0f});
+            backgroundColors[13] = Color.HSVToColor(new float[]{ 295.0f, 1.0f, 1.0f});
+            backgroundColors[14] = Color.HSVToColor(new float[]{ 280.0f, 1.0f, 1.0f});
+            backgroundColors[15] = Color.HSVToColor(new float[]{ 265.0f, 1.0f, 1.0f});
+            backgroundColors[16] = Color.HSVToColor(new float[]{ 250.0f, 1.0f, 1.0f});
+            backgroundColors[17] = Color.HSVToColor(new float[]{ 235.0f, 1.0f, 1.0f});
+            backgroundColors[18] = Color.HSVToColor(new float[]{ 220.0f, 1.0f, 1.0f});
+            backgroundColors[19] = Color.HSVToColor(new float[]{ 205.0f, 1.0f, 1.0f});
+            backgroundColors[20] = Color.HSVToColor(new float[]{ 190.0f, 1.0f, 1.0f});
+            backgroundColors[21] = Color.HSVToColor(new float[]{ 175.0f, 1.0f, 1.0f});
+            backgroundColors[22] = Color.HSVToColor(new float[]{ 160.0f, 1.0f, 1.0f});
+            backgroundColors[23] = Color.HSVToColor(new float[]{ 145.0f, 1.0f, 1.0f});
+
         }
 
         @Override
@@ -350,12 +383,13 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
             } else {
 //                canvas.drawColor(backgroundColors[randomColor]);
-                int tempBackHue = (mHourInt * 15) + 200;
-                if (tempBackHue > 360) {
-                    tempBackHue -= 360;
-                }
-                int tempBackColor = Color.HSVToColor(new float[]{ (float) tempBackHue, 1.0f, 1.0f });
-                canvas.drawColor(tempBackColor);
+//                int tempBackHue = (mHourInt * 15) + 200;
+//                if (tempBackHue > 360) {
+//                    tempBackHue -= 360;
+//                }
+//                int tempBackColor = Color.HSVToColor(new float[]{ (float) tempBackHue, 1.0f, 1.0f });
+//                canvas.drawColor(tempBackColor);
+                canvas.drawColor(backgroundColors[mHourInt - 1]);
 
 //                board.update();  // moved to class
                 board.render(canvas, false);
@@ -447,9 +481,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         class Cursor {
             private static final int COLOR = Color.WHITE;
             private static final float FRICTION = 0.999f;
-            private static final float ACCEL_FACTOR = 0.40f;
-//            private static final float FRICTION = 0.80f;
-//            private static final float ACCEL_FACTOR = 0.20f;
+
+            private static final float ACCEL_FACTOR = 0.45f;
 
             Board parent;
             float x, y;
@@ -685,8 +718,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                         cursorPaint.setShader(new LinearGradient(cursor.x, cursor.y, px, py,
                                 Color.argb(255, 255, 255, 255), Color.argb(COLOR_TRIANGLE_ALPHA, 255, 255, 255), Shader.TileMode.MIRROR));
                     } else {
+
                         cursorPaint.setShader(new LinearGradient(cursor.x, cursor.y, px, py,
-                                Color.argb(255, currentR, currentG, currentB),
+                                Color.argb(200, currentR, currentG, currentB),
                                 Color.argb(COLOR_TRIANGLE_ALPHA, currentR, currentG, currentB),
                                 Shader.TileMode.MIRROR));
                     }
@@ -924,7 +958,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         int generateTriangleColor() {
             // start range at the minute of the hour mapped to the total hue, minus half the range
             int totalHue = 360;
-            int startHue = (mMinuteInt * 6) - (RANGE_HUE/2) + 115;
+            int startHue = (mMinuteInt * 6) - (RANGE_HUE/2);
             int endHue   = startHue + RANGE_HUE;
 
             // find random number between the range
@@ -937,7 +971,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 randomHue -= totalHue;
             }
 
-            int currentTriangleColor = Color.HSVToColor(COLOR_TRIANGLE_ALPHA, new float[]{ (float) randomHue, 1.0f, 1.0f } );
+            int currentTriangleColor = Color.HSVToColor(randomRange(COLOR_TRIANGLE_ALPHA - 25, COLOR_TRIANGLE_ALPHA + 25), new float[]{ (float) randomHue, 1.0f, 1.0f } );
             currentR = Color.red(currentTriangleColor);
             currentG = Color.green(currentTriangleColor);
             currentB = Color.blue(currentTriangleColor);
