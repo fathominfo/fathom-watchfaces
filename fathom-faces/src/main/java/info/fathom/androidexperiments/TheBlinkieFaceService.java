@@ -77,7 +77,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final long  EYE_POPOUT_BASE_THRESHOLD = TimeUnit.MINUTES.toMillis(10);       // baseline threshold over which eyes will start popping out
     private static final long  EYE_POPOUT_PERIOD = TimeUnit.MINUTES.toMillis(5);                // beyond baseline, an eye will pop out every N millis
 
-    private static final long  CONSECUTIVE_GLANCE_THRESHOLD = TimeUnit.SECONDS.toMillis(20);    // max time between glances to be considered consecutive (ideal is ~60 secs)
+    private static final long  CONSECUTIVE_GLANCE_THRESHOLD = TimeUnit.SECONDS.toMillis(20);    // max time between glances to be considered consecutive
     private static final int   EYES_WIDE_OPEN_GLANCE_TRIGGER = 3;                               // how many consecutive glances are needed to trigger all eyes wide open
 
     private static final float GRAVITY_THRESHOLD = 1.0f;
@@ -531,19 +531,29 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
                         // TEMP TEST
                         if (!eye.isWideOpen) {
-                            if (eye.pupilPosition != 1) {
-                                eye.lookCenter();
-                            }
+//                            if (eye.pupilPositionH != 1) {
+//                                eye.lookCenterHorizontal();
+//                            }
                             double r = Math.random();
-                            if (r < 0.5) {
-                                eye.blink();  // may affect an already blinking eye but not a wide open one
+                            if (r < 0.17) {
+                                eye.lookLeft();
+                            } else if (r < 0.33) {
+                                eye.lookCenterHorizontal();
+                            } else if (r < 0.50) {
+                                eye.lookRight();
                             } else {
-                                if (r < 0.75) {
-                                    eye.lookLeft();
-                                } else {
-                                    eye.lookRight();
-                                }
+                                eye.blink();  // may affect an already blinking eye but not a wide open one
                             }
+
+                            r = Math.random();
+                            if (r < 0.17) {
+                                eye.lookUp();
+                            } else if (r < 0.33) {
+                                eye.lookCenterVertical();
+                            } else if (r < 0.50) {
+                                eye.lookDown();
+                            }
+
                         }
                     }
                 }
@@ -611,9 +621,9 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 // TEMP TEST
 //                switch (sideLookIter % 4) {
-//                    case 0: for (Eye eye : activeEyes) eye.lookCenter(); break;
+//                    case 0: for (Eye eye : activeEyes) eye.lookCenterHorizontal(); break;
 //                    case 1: for (Eye eye : activeEyes) eye.lookLeft(); break;
-//                    case 2: for (Eye eye : activeEyes) eye.lookCenter(); break;
+//                    case 2: for (Eye eye : activeEyes) eye.lookCenterHorizontal(); break;
 //                    case 3: for (Eye eye : activeEyes) eye.lookRight(); break;
 //                }
 //                sideLookIter++;
@@ -699,7 +709,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             static final float IRIS_RATIO = 0.45f;          // irisDiameter/width ratio
             static final float PUPIL_RATIO = 0.29f;         // pupilDiameter/width ratio
             static final float WIDE_OPEN_RATIO = 0.70f;
-            static final float SIDE_LOOK_RATIO = 0.50f;     // how far the pupil will travel laterally in relation to width/2
+            static final float HORIZONTAL_LOOK_RATIO = 0.50f;     // how far the pupil will travel laterally in relation to width/2
+            static final float VERTICAL_LOOK_RATIO = 0.25f;       // idem
             static final float PUPIL_SPEED = 0.30f;
 
             EyeMosaic parent;
@@ -711,8 +722,10 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             int irisColor;
 
             float currentAperture, targetAperture;
-            int pupilPosition;   // 0 = left, 1 = center, 2 = right
+            int pupilPositionH;   // 0 = left, 1 = center, 2 = right
             float currentPupilX, targetPupilX;  // in relative coordinates
+            int pupilPositionV;   // 0 = up, 1 = center, 2 = bottom
+            float currentPupilY, targetPupilY;
 
 
             Path eyelid;
@@ -738,9 +751,10 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 currentAperture = 0;
                 targetAperture = height;  // @TODO should this be 0?
 
-                pupilPosition = 1;
-                currentPupilX = 0;
-                targetPupilX = 0;
+                pupilPositionH = 1;
+                currentPupilX = targetPupilX = 0;
+                pupilPositionV = 1;
+                currentPupilY = targetPupilY = 0;
 
                 isActive = false;
                 needsUpdate = false;
@@ -775,8 +789,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 canvas.save();
                 canvas.clipPath(eyelid);
                 canvas.drawCircle(0, 0, 0.5f * width, eyelidPaint);
-                canvas.drawCircle(currentPupilX, 0, irisRadius, irisPaint);
-                canvas.drawCircle(currentPupilX, 0, pupilRadius, pupilPaint);
+                canvas.drawCircle(currentPupilX, currentPupilY, irisRadius, irisPaint);
+                canvas.drawCircle(currentPupilX, currentPupilY, pupilRadius, pupilPaint);
                 canvas.restore();
                 canvas.drawPath(eyelid, eyeLinerPaint);
                 canvas.restore();
@@ -793,11 +807,18 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                         targetPupilX :
                         currentPupilX + PUPIL_SPEED * (diffPX);
 
+                float diffPY = targetPupilY - currentPupilY;
+                currentPupilY = Math.abs(diffPY) < ANIM_END_THRESHOLD ?
+                        targetPupilY :
+                        currentPupilY + PUPIL_SPEED * (diffPY);
+
                 rewindEyelid();
 
                 // If completed an animation
                 if (currentAperture == targetAperture &&
-                        currentPupilX == targetPupilX) {
+                        currentPupilX == targetPupilX &&
+                        currentPupilY == targetPupilY) {
+
                     unregisterUpdate();
 
                     if (blinking) {
@@ -833,7 +854,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 isWideOpen = false;
                 currentAperture = 0;
                 targetAperture = height;  // @TODO should this be 0?
-                pupilPosition = 1;
+                pupilPositionH = 1;
                 currentPupilX = 0;
                 targetPupilX = 0;
             }
@@ -868,21 +889,44 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 registerUpdate();
             }
 
+            void lookCenter() {
+                lookCenterHorizontal();
+                lookCenterVertical();
+            }
+
             void lookLeft() {
-                targetPupilX = -SIDE_LOOK_RATIO * width / 2;
-                pupilPosition = 0;
+                targetPupilX = -HORIZONTAL_LOOK_RATIO * width / 2;
+                pupilPositionH = 0;
                 registerUpdate();
             }
 
-            void lookCenter() {
+            void lookCenterHorizontal() {
                 targetPupilX = 0;
-                pupilPosition = 1;
+                pupilPositionH = 1;
                 registerUpdate();
             }
 
             void lookRight() {
-                targetPupilX = SIDE_LOOK_RATIO * width / 2;
-                pupilPosition = 2;
+                targetPupilX = HORIZONTAL_LOOK_RATIO * width / 2;
+                pupilPositionH = 2;
+                registerUpdate();
+            }
+
+            void lookUp() {
+                targetPupilY = - VERTICAL_LOOK_RATIO * height / 2;
+                pupilPositionV = 0;
+                registerUpdate();
+            }
+
+            void lookCenterVertical() {
+                targetPupilY = 0;
+                pupilPositionV = 0;
+                registerUpdate();
+            }
+
+            void lookDown() {
+                targetPupilY = VERTICAL_LOOK_RATIO * height / 2;
+                pupilPositionV = 0;
                 registerUpdate();
             }
 
@@ -929,9 +973,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     }
 
     private void updateGravity(SensorEvent event) {
-        final float alpha = 0.90f;
+        final float alpha = 0.80f;
 
-        // Isolate the force of gravity with the low-pass filter.
         gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
         gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
         gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];

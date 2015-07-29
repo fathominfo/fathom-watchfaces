@@ -110,7 +110,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private Paint mTextStepsPaintInteractive, mTextStepsPaintAmbient;
         private float mTextStepsHeight, mTextStepsBaselineHeight, mTextStepsRightMargin;
         private Typeface mTextTypeface;
-        private final Rect textBounds = new Rect();
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
 
         private int mWidth;
@@ -134,8 +133,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             mTextTypeface = Typeface.createFromAsset(getApplicationContext().getAssets(),
                     RALEWAY_TYPEFACE_PATH);
-
-
 
             mTextDigitsPaintInteractive = new Paint();
             mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
