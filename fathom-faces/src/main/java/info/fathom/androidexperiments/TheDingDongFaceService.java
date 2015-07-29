@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.AssetManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -28,7 +27,6 @@ import android.view.WindowInsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimeZone;
 
 public class TheDingDongFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
@@ -44,22 +42,23 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private static final String   RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
     private static final int     TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int     TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
-    private static final float   TEXT_DIGITS_HEIGHT = 0.20f;  // as a factor of screen height
-    private static final float   TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;  // as a factor of screen height
-    private static final float   TEXT_DIGITS_RIGHT_MARGIN = 0.08f;  // as a factor of screen width
+    private static final float   TEXT_DIGITS_HEIGHT = 0.20f;                                        // as a factor of screen height
+    private static final float   TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;                               // as a factor of screen height
+    private static final float   TEXT_DIGITS_RIGHT_MARGIN = 0.08f;                                  // as a factor of screen width
 
     private static final int     TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int     TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
-    private static final float   TEXT_STEPS_HEIGHT = 0.10f;  // as a factor of screen height
+    private static final float   TEXT_STEPS_HEIGHT = 0.10f;                                         // as a factor of screen height
     private static final float   TEXT_STEPS_BASELINE_HEIGHT = TEXT_DIGITS_BASELINE_HEIGHT + 0.15f;  // as a factor of screen height
-    private static final float   TEXT_STEPS_RIGHT_MARGIN = 0.07f;  // as a factor of screen width
+    private static final float   TEXT_STEPS_RIGHT_MARGIN = 0.07f;                                   // as a factor of screen width
+    private static final float   TEXT_STEPS_ROLL_EASE_SPEED = 0.45f;                                // 0...1
 
-    private static final int     RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
+    private static final int     RESET_HOUR = 4;                                                    // at which hour will watch face reset [0...23], -1 to deactivate
+
 
     // DEBUG
-
-    private static final boolean DEBUG_LOGS = false;
-    private static final boolean GENERATE_FAKE_STEPS = false;
+    private static final boolean DEBUG_LOGS = true;
+    private static final boolean GENERATE_FAKE_STEPS = true;
     private static final int     RANDOM_FAKE_STEPS = 500;
     private static final int     MAX_STEP_THRESHOLD = 21000;
 
@@ -108,6 +107,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private Paint mTextStepsPaintInteractive, mTextStepsPaintAmbient;
         private float mTextStepsHeight, mTextStepsBaselineHeight, mTextStepsRightMargin;
         private Typeface mTextTypeface;
+        private float mStepCountDisplay;  // , mStepCountDisplayTarget;
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
 
         private int mWidth;
@@ -275,6 +275,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 updateStepCounts();
 
             } else {
+                bubbleManager.newGlance();
+
                 if (timelyReset()) {
                     if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
                     mPrevSteps = 0;
@@ -347,7 +349,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintAmbient);
 
-
             } else {
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
@@ -355,9 +356,19 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubbleManager.update();
                 bubbleManager.render(canvas);
 
+                if (mCurrentSteps != mStepCountDisplay) {
+                    if (DEBUG_LOGS) Log.v(TAG, "Updating step counter: " + mStepCountDisplay + " -> " + mCurrentSteps);
+                    float diff = mCurrentSteps - mStepCountDisplay;
+                    if (Math.abs(diff) > 1) {
+                        mStepCountDisplay += TEXT_STEPS_ROLL_EASE_SPEED * diff;
+                    } else {
+                        mStepCountDisplay = mCurrentSteps;
+                    }
+                }
+
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
-                canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
+                canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
             }
@@ -492,11 +503,11 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private final int COLOR_SMALL   = Color.argb(204, 141, 198, 63);  // yellow
             private final int COLOR_XSMALL  = Color.argb(204, 150, 150, 150);  // gray
 
-            private final static float GAP_ANGLE_XBIG   = (float) (-0.75f * Math.PI);
-            private final static float GAP_ANGLE_BIG    = (float) (-0.50f * Math.PI);
-            private final static float GAP_ANGLE_MEDIUM = (float) (-1.00f * Math.PI);
-            private final static float GAP_ANGLE_SMALL  = (float) (-0.75f * Math.PI);
-            private final static float GAP_ANGLE_XSMALL = (float) ( 0.50f * Math.PI);
+            private final static float GAP_ANGLE_XBIG   = (float) (-0.375f * TAU);
+            private final static float GAP_ANGLE_BIG    = (float) (-0.250f * TAU);
+            private final static float GAP_ANGLE_MEDIUM = (float) (-0.500f * TAU);
+            private final static float GAP_ANGLE_SMALL  = (float) (-0.375f * TAU);
+            private final static float GAP_ANGLE_XSMALL = (float) ( 0.500f * TAU);
 
             private BubbleCollection bubblesXBig, bubblesBig, bubblesMedium,
                     bubblesSmall, bubblesXSmall;
@@ -504,6 +515,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private int prevSteps, currentSteps;
 
             private int updateStep;  // @TODO add explanation here
+
+            List<Bubble> toDefeatureBuffer = new ArrayList<>();
 
             BubbleManager() {
                 paintXBig = new Paint();
@@ -531,11 +544,11 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 paintXSmall.setAntiAlias(true);
                 paintXSmall.setStyle(Paint.Style.FILL_AND_STROKE);
 
-                bubblesXBig = new BubbleCollection(this, RADIUS_XBIG, WEIGHT_XBIG, GAP_ANGLE_XBIG, paintXBig);
-                bubblesBig = new BubbleCollection(this, RADIUS_BIG, WEIGHT_BIG, GAP_ANGLE_BIG, paintBig);
-                bubblesMedium = new BubbleCollection(this, RADIUS_MEDIUM, WEIGHT_MEDIUM, GAP_ANGLE_MEDIUM, paintMedium);
-                bubblesSmall = new BubbleCollection(this, RADIUS_SMALL, WEIGHT_SMALL, GAP_ANGLE_SMALL, paintSmall);
-                bubblesXSmall = new BubbleCollection(this, RADIUS_XSMALL, WEIGHT_XSMALL, GAP_ANGLE_XSMALL, paintXSmall);
+                bubblesXBig = new BubbleCollection(this, STEP_RATIO_XBIG, RADIUS_XBIG, WEIGHT_XBIG, GAP_ANGLE_XBIG, paintXBig);
+                bubblesBig = new BubbleCollection(this, STEP_RATIO_BIG, RADIUS_BIG, WEIGHT_BIG, GAP_ANGLE_BIG, paintBig);
+                bubblesMedium = new BubbleCollection(this, STEP_RATIO_MEDIUM, RADIUS_MEDIUM, WEIGHT_MEDIUM, GAP_ANGLE_MEDIUM, paintMedium);
+                bubblesSmall = new BubbleCollection(this, STEP_RATIO_SMALL, RADIUS_SMALL, WEIGHT_SMALL, GAP_ANGLE_SMALL, paintSmall);
+                bubblesXSmall = new BubbleCollection(this, STEP_RATIO_XSMALL, RADIUS_XSMALL, WEIGHT_XSMALL, GAP_ANGLE_XSMALL, paintXSmall);
 
                 prevSteps = 0;
                 currentSteps = 0;
@@ -554,7 +567,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             public void update() {
 
                 switch (updateStep) {
-                    // XSMALL BALLS STILL NOT WORKING PROPERLY, THE NUMBER IS WEIRD...
+                    // @TODO verify if bubble count is working on the long run
                     case 1:
                         bubblesXSmall.add( (currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size() );
                         int stepInc = currentSteps - prevSteps;
@@ -660,6 +673,13 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubblesSmall.resetMotion();
                 bubblesXSmall.resetMotion();
             }
+
+            public void newGlance() {
+                for (Bubble bubble : toDefeatureBuffer) {
+                    bubble.isFeatured = false;
+                }
+                toDefeatureBuffer.clear();
+            }
         }
 
 
@@ -668,13 +688,15 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             BubbleManager parent;
             List<Bubble> bubbles;
             List<Bubble> killQueue;
-            Paint paint;
+            int value;
             float radius;
             float weight;
             float gapAngle;
             boolean needsUpdate;
+            Paint paint;
 
-            BubbleCollection(BubbleManager parent_, float radius_, float weight_, float gapAngle_, Paint paint_) {
+            BubbleCollection(BubbleManager parent_, int value_, float radius_, float weight_, float gapAngle_, Paint paint_) {
+                value = value_;
                 parent = parent_;
                 radius = radius_;
                 weight = weight_;
@@ -717,7 +739,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 }
 
                 for (int i = 0; i < count_; i++) {
-                    Bubble b = new Bubble(this, radius, weight, gapAngle, paint);
+                    Bubble b = new Bubble(this, value, radius, weight, gapAngle, true, paint);
                     b.grow();
                     bubbles.add(b);
                 }
@@ -765,26 +787,28 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             BubbleCollection parent;
 
+            int value;
             float anchorX, anchorY, baseRadius;
             float x, y;
-//            boolean needsPositionUpdate = false;
+            float gapAngle;
             float velX, velY;
-            float accX, accY;
 
+            float accX, accY;
             float radius, weight;
             float velR, accR;
 
             boolean needsSizeUpdate = false;
             float currentRadius = 0;
             float targetRadius = 0;
-            boolean mustDie = false;
 
-            float gapAngle;
+            boolean mustDie = false;
+            boolean isFeatured = false;
 
             Paint paint;
             Path path;
 
-            Bubble(BubbleCollection parent_, float radius_, float weight_, float gapAngle_, Paint paint_) {
+            Bubble(BubbleCollection parent_, int value_, float radius_, float weight_, float gapAngle_, boolean isFeatured_, Paint paint_) {
+                value = value_;
                 parent = parent_;
                 anchorX = (float) (mWidth * Math.random());
                 anchorY = (float) (mHeight * Math.random());
@@ -798,6 +822,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
                 gapAngle = gapAngle_;
 
+                isFeatured = isFeatured_;
+                if (isFeatured) parent.parent.toDefeatureBuffer.add(this);
+
                 path = new Path();
                 path.addCircle(0, 0, 1.0f, Path.Direction.CW);
                 path.close();
@@ -810,6 +837,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 canvas.save();
                 canvas.translate(x, y);
                 canvas.scale(currentRadius, currentRadius);
+                if (isFeatured) canvas.drawCircle(0, 0, 1.0f, paint);
                 canvas.drawPath(path, paint);
                 canvas.restore();
             }
