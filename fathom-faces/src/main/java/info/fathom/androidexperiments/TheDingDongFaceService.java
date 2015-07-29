@@ -876,7 +876,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 velX = velY = accX = accY = 0;
                 velR = accR = 0;
 
-                gapAngle = gapAngle_;
+//                gapAngle = gapAngle_;
+                gapAngle = TAU * (float) Math.random();
 
                 isFeatured = isFeatured_;
                 if (isFeatured) parent.parent.toDefeatureBuffer.add(this);
@@ -996,7 +997,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private static final int R = 238;
             private static final int G = 42;
             private static final int B = 132;
-            private static final int FADE_IN_SPEED = 7;
+            private static final int FADE_IN_SPEED = 8;
             private static final float TEXT_SIZE = 0.10f;  // as a factor of screen height
             private static final float TEXT_SPEED = 0.25f;
 
