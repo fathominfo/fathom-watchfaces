@@ -616,6 +616,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                         eye.openWide();
                     }
                     areWideOpen = true;
+                    consecutiveGlances = 1;  // @TERRENCE: do wide open once and reset
                 }
 
 
