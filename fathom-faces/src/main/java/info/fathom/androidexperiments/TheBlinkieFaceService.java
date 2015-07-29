@@ -77,8 +77,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final long  EYE_POPOUT_BASE_THRESHOLD = TimeUnit.MINUTES.toMillis(10);       // baseline threshold over which eyes will start popping out
     private static final long  EYE_POPOUT_PERIOD = TimeUnit.MINUTES.toMillis(5);                // beyond baseline, an eye will pop out every N millis
 
-    private static final long  CONSECUTIVE_GLANCE_THRESHOLD = TimeUnit.SECONDS.toMillis(60);    // max time between glances to be considered consecutive
-    private static final int   EYES_WIDE_OPEN_GLANCE_TRIGGER = 3;                                 // how many consecutive glances are needed to trigger all eyes wide open
+    private static final long  CONSECUTIVE_GLANCE_THRESHOLD = TimeUnit.SECONDS.toMillis(20);    // max time between glances to be considered consecutive (ideal is ~60 secs)
+    private static final int   EYES_WIDE_OPEN_GLANCE_TRIGGER = 3;                               // how many consecutive glances are needed to trigger all eyes wide open
 
     private static final float GRAVITY_THRESHOLD = 1.0f;
 
@@ -527,7 +527,24 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                     if (Math.random() < blinkChance / (eyeCount * BLINK_CHANCE_FACTOR)) {
                         int id = (int) (activeEyesCount * Math.random());
                         Eye eye = activeEyes.get(id);
-                        if (!eye.isWideOpen) eye.blink();  // may affect an already blinking eye but not a wide open one
+//                        if (!eye.isWideOpen) eye.blink();  // may affect an already blinking eye but not a wide open one
+
+                        // TEMP TEST
+                        if (!eye.isWideOpen) {
+                            if (eye.pupilPosition != 1) {
+                                eye.lookCenter();
+                            }
+                            double r = Math.random();
+                            if (r < 0.5) {
+                                eye.blink();  // may affect an already blinking eye but not a wide open one
+                            } else {
+                                if (r < 0.75) {
+                                    eye.lookLeft();
+                                } else {
+                                    eye.lookRight();
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -585,21 +602,22 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 // Trigger eyes wide open?
                 if (consecutiveGlances >= EYES_WIDE_OPEN_GLANCE_TRIGGER) {
                     for (Eye eye : activeEyes) {
+                        eye.lookCenter();
                         eye.openWide();
                     }
                     areWideOpen = true;
                 }
 
 
+                // TEMP TEST
+//                switch (sideLookIter % 4) {
+//                    case 0: for (Eye eye : activeEyes) eye.lookCenter(); break;
+//                    case 1: for (Eye eye : activeEyes) eye.lookLeft(); break;
+//                    case 2: for (Eye eye : activeEyes) eye.lookCenter(); break;
+//                    case 3: for (Eye eye : activeEyes) eye.lookRight(); break;
+//                }
+//                sideLookIter++;
 
-                // DEBUG
-                switch (sideLookIter % 4) {
-                    case 0: for (Eye eye : activeEyes) eye.lookCenter(); break;
-                    case 1: for (Eye eye : activeEyes) eye.lookLeft(); break;
-                    case 2: for (Eye eye : activeEyes) eye.lookCenter(); break;
-                    case 3: for (Eye eye : activeEyes) eye.lookRight(); break;
-                }
-                sideLookIter++;
             }
 
             // Creates inactive eyes to be activated later
@@ -624,20 +642,6 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                     activeEyesCount++;
                 }
 
-//                // DEBUG
-//                if (areWideOpen) {
-//                    for (Eye eye : activeEyes) {
-//                        eye.reset();
-//                    }
-//                    areWideOpen = false;
-//                }
-//
-//                if (glances % 15 == 0) {
-//                    for (Eye eye : activeEyes) {
-//                        eye.openWide();
-//                    }
-//                    areWideOpen = true;
-//                }
             }
 
             void deactivateRandomEye(int count) {
@@ -671,18 +675,13 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
             void reset() {
                 for (Eye eye : activeEyes) {
-                    // @TODO improve this programmatically
-//                    eye.isActive = false;
-//                    eye.needsUpdate = false;
-//                    eye.blinking = false;
-//                    eye.currentAperture = 0;
-//                    eye.targetAperture = 0;
                     eye.deactivate();
                     inactiveEyes.add(eye);
                 }
                 activeEyesCount = 0;
                 blinkChance = 0;
-                inactiveEyes.clear();
+//                inactiveEyes.clear();   // @TODO WAS THIS RIGHT???
+                activeEyes.clear();
                 updateList.clear();
             }
 
@@ -696,7 +695,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             static final float BLINK_SPEED = 0.40f;
             static final int   ANIM_END_THRESHOLD = 1;      // pixel distance to stop animation
 //            static final float HEIGHT_RATIO = 0.68f;      // height/width ratio
-            static final float HEIGHT_RATIO = 0.41f;        // height/width ratio
+            static final float HEIGHT_RATIO = 0.43f;        // height/width ratio
             static final float IRIS_RATIO = 0.45f;          // irisDiameter/width ratio
             static final float PUPIL_RATIO = 0.29f;         // pupilDiameter/width ratio
             static final float WIDE_OPEN_RATIO = 0.70f;
