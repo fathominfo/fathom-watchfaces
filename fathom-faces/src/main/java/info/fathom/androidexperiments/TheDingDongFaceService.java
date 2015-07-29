@@ -59,7 +59,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int     RANDOM_FAKE_STEPS = 500;
+    private static final int     RANDOM_FAKE_STEPS = 5000;
     private static final int     MAX_STEP_THRESHOLD = 21000;
 
 
@@ -107,9 +107,13 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private Paint mTextStepsPaintInteractive, mTextStepsPaintAmbient;
         private float mTextStepsHeight, mTextStepsBaselineHeight, mTextStepsRightMargin;
         private Typeface mTextTypeface;
-        private float mStepCountDisplay;  // , mStepCountDisplayTarget;
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
         private final Rect textBounds = new Rect();
+
+        private int mPrevSteps = 0;
+        private int mCurrentSteps = 0;
+        private float mStepCountDisplay;  // , mStepCountDisplayTarget;
+        private boolean showSplash10KScreen = false;
 
         private Paint mBubbleTextPaint;
 
@@ -359,6 +363,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         mTextStepsBaselineHeight, mTextStepsPaintAmbient);
 
             } else {
+
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
                 // draw bubbles
@@ -366,7 +371,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubbleManager.render(canvas);
 
                 if (mCurrentSteps != mStepCountDisplay) {
-                    if (DEBUG_LOGS) Log.v(TAG, "Updating step counter: " + mStepCountDisplay + " -> " + mCurrentSteps);
+//                    if (DEBUG_LOGS) Log.v(TAG, "Updating step counter: " + mStepCountDisplay + " -> " + mCurrentSteps);
                     float diff = mCurrentSteps - mStepCountDisplay;
                     if (Math.abs(diff) > 1) {
                         mStepCountDisplay += TEXT_STEPS_ROLL_EASE_SPEED * diff;
@@ -379,6 +384,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
                 canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
+
+                if (showSplash10KScreen) {
+                    canvas.drawColor(Color.argb(204, 255, 167, 39));
+                }
 
             }
         }
@@ -453,24 +462,32 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
             if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
 
+            mPrevSteps = mCurrentSteps;
+
             if (GENERATE_FAKE_STEPS) {
                 int fakeSteps = (int) (RANDOM_FAKE_STEPS * Math.random());
                 if (DEBUG_LOGS) Log.v(TAG, "Generating fake steps: " + fakeSteps);
                 mCurrentSteps += fakeSteps;
+            } else {
+                mCurrentSteps = (int) mSensorStep.values[0];  // read from the sensor
             }
 
             int stepInc = mCurrentSteps - mPrevSteps;
-            mPrevSteps = mCurrentSteps;
+//            mPrevSteps = mCurrentSteps;
 
             if (DEBUG_LOGS) Log.v(TAG, stepInc + " new steps!");
 
             if (mCurrentSteps > MAX_STEP_THRESHOLD) {
                 if (DEBUG_LOGS) Log.v(TAG, "Resetting step counts");
+//                mDayBufferedSteps += mCurrentSteps;  // @TODO Store previous day steps somwhere and account for them
                 mPrevSteps = 0;
                 mCurrentSteps = 0;
                 if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
                 if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
             }
+
+            showSplash10KScreen = mCurrentSteps > 10000 && mPrevSteps < 10000;
+            if (DEBUG_LOGS && showSplash10KScreen) Log.v(TAG, "REACHED 10K!");
 
             bubbleManager.updateSteps(mCurrentSteps);
 
@@ -981,8 +998,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private float[] linear_acceleration = new float[3];
 
     private SensorWrapper mSensorStep;
-    private int mPrevSteps = 0;
-    private int mCurrentSteps = 0;
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) { }
@@ -998,7 +1013,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 mSensorStep.update(event);
                 if (!GENERATE_FAKE_STEPS) {
                     if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
-                    mCurrentSteps = Math.round(event.values[0]);
+//                    mCurrentSteps = Math.round(event.values[0]);
+                    mSensorStep.update(event);
                 }
                 break;
         }
