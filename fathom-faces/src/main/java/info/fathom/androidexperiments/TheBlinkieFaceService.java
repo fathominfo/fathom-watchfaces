@@ -558,10 +558,10 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                     }
                 }
 
-                // A separate update call on each frame for pupil interaction with lin_acc
-                for (Eye eye : activeEyes) {
-                    eye.updatePupil();
-                }
+//                // A separate update call on each frame for pupil interaction with lin_acc
+//                for (Eye eye : activeEyes) {
+//                    eye.updatePupil();
+//                }
 
                 for (Eye eye : updateList) {
                     eye.update();
@@ -714,15 +714,19 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 //            static final float HEIGHT_RATIO = 0.68f;      // height/width ratio
             static final float HEIGHT_RATIO = 0.48f;        // height/width ratio
             static final float IRIS_RATIO = 0.40f;          // irisDiameter/width ratio
-            static final float PUPIL_RATIO = 0.25f;         // pupilDiameter/width ratio
+            static final float PUPIL_RATIO = 0.22f;         // pupilDiameter/width ratio
             static final float WIDE_OPEN_RATIO = 0.60f;
             static final float HORIZONTAL_LOOK_RATIO = 0.45f;     // how far the pupil will travel laterally in relation to width/2
             static final float VERTICAL_LOOK_RATIO = 0.30f;       // idem
-            static final float PUPIL_SPEED = 0.50f;
+            static final float PUPIL_SPEED_HORIZONTAL = 0.50f;
+            static final float PUPIL_SPEED_RADIUS = 0.15f;
+            static final float PUPIL_DILATION_SIZE = 1.20f;
+            static final float PUPIL_CONTRACTION_SIZE = 0.80f;
 
-            static final float DEPTH_ACCEL_FACTOR = 0.05f;
-            static final float DEPTH_SPRING_FACTOR = 0.025f;
-            static final float FRICTION_FACTOR = 0.60f;
+
+//            static final float DEPTH_ACCEL_FACTOR = 0.05f;
+//            static final float DEPTH_SPRING_FACTOR = 0.025f;
+//            static final float FRICTION_FACTOR = 0.60f;
 
             EyeMosaic parent;
 
@@ -730,8 +734,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             float x, y;
             float width, height;
             float irisRadius;
-            float pupilRadius, currentPupilRadius;
-            float accP, velP;
+            float pupilRadius;
+            float currentPupilRadius, targetPupilRadius;
 
             float currentAperture, targetAperture;
 
@@ -758,8 +762,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 width = width_;
                 height = HEIGHT_RATIO * width;
                 irisRadius = 0.5f * IRIS_RATIO * width;
-                currentPupilRadius = pupilRadius = 0.5f * PUPIL_RATIO * width;
-                velP = accP = 0;
+                targetPupilRadius = currentPupilRadius = pupilRadius = 0.5f * PUPIL_RATIO * width;
+//                velP = accP = 0;
                 irisColor = randomColor();
 
                 currentAperture = 0;
@@ -811,13 +815,13 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
 
-            void updatePupil() {
-                accP = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (pupilRadius - currentPupilRadius));
-                velP += accP;
-                velP *= FRICTION_FACTOR;
-                currentPupilRadius += velP;
-                if (currentPupilRadius > 0.90f * irisRadius) currentPupilRadius = 0.90f * irisRadius;
-            }
+//            void updatePupil() {
+//                accP = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (pupilRadius - currentPupilRadius));
+//                velP += accP;
+//                velP *= FRICTION_FACTOR;
+//                currentPupilRadius += velP;
+//                if (currentPupilRadius > 0.90f * irisRadius) currentPupilRadius = 0.90f * irisRadius;
+//            }
 
             boolean update() {
                 float diffH = targetAperture - currentAperture;
@@ -828,19 +832,24 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 float diffPX = targetPupilX - currentPupilX;
                 currentPupilX = Math.abs(diffPX) < ANIM_END_THRESHOLD ?
                         targetPupilX :
-                        currentPupilX + PUPIL_SPEED * (diffPX);
+                        currentPupilX + PUPIL_SPEED_HORIZONTAL * (diffPX);
 
                 float diffPY = targetPupilY - currentPupilY;
                 currentPupilY = Math.abs(diffPY) < ANIM_END_THRESHOLD ?
                         targetPupilY :
-                        currentPupilY + PUPIL_SPEED * (diffPY);
+                        currentPupilY + PUPIL_SPEED_HORIZONTAL * (diffPY);
 
+                float diffPR = targetPupilRadius - currentPupilRadius;
+                currentPupilRadius = Math.abs(diffPR) < ANIM_END_THRESHOLD ?
+                        targetPupilRadius :
+                        currentPupilRadius + PUPIL_SPEED_RADIUS * (diffPR);
                 rewindEyelid();
 
                 // If completed an animation
                 if (currentAperture == targetAperture &&
                         currentPupilX == targetPupilX &&
-                        currentPupilY == targetPupilY) {
+                        currentPupilY == targetPupilY &&
+                        currentPupilRadius == targetPupilRadius) {
 
                     unregisterUpdate();
 
@@ -892,11 +901,13 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
             void open() {
                 targetAperture = height;
+                targetPupilRadius = pupilRadius;
                 registerUpdate();
             }
 
             void close() {
                 targetAperture = 0;
+                targetPupilRadius = PUPIL_DILATION_SIZE * pupilRadius;
                 registerUpdate();
             }
 
@@ -907,8 +918,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
             void openWide() {
                 targetAperture = WIDE_OPEN_RATIO * width;
+                targetPupilRadius = PUPIL_CONTRACTION_SIZE * pupilRadius;
                 isWideOpen = true;
-//                lookCenter();
                 registerUpdate();
             }
 
