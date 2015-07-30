@@ -59,7 +59,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int     RANDOM_FAKE_STEPS = 500;
+    private static final int     RANDOM_FAKE_STEPS = 5000;
     private static final int     MAX_STEP_THRESHOLD = 21000;
 
 
@@ -107,9 +107,13 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private Paint mTextStepsPaintInteractive, mTextStepsPaintAmbient;
         private float mTextStepsHeight, mTextStepsBaselineHeight, mTextStepsRightMargin;
         private Typeface mTextTypeface;
-        private float mStepCountDisplay;  // , mStepCountDisplayTarget;
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
         private final Rect textBounds = new Rect();
+
+        private int mPrevSteps = 0;
+        private int mCurrentSteps = 0;
+        private float mStepCountDisplay;  // , mStepCountDisplayTarget;
+        private boolean showSplash10KScreen = false;
 
         private Paint mBubbleTextPaint;
 
@@ -120,6 +124,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         private float mRadius;
 
         private BubbleManager bubbleManager;
+        private Splash10KScreen splash10KScreen;
 
 
         @Override
@@ -165,7 +170,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             mBubbleTextPaint.setAntiAlias(true);
             mBubbleTextPaint.setTextAlign(Paint.Align.CENTER);
 
-            bubbleManager = new BubbleManager(){};
+            bubbleManager = new BubbleManager();
+            splash10KScreen = new Splash10KScreen();
 
             mTime  = new Time();
 
@@ -319,6 +325,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             mCenterY = 0.50f * mHeight;
             mRadius = 0.50f * mWidth;
 
+            splash10KScreen.initialize();
+
             mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
             mTextDigitsRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
@@ -359,6 +367,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         mTextStepsBaselineHeight, mTextStepsPaintAmbient);
 
             } else {
+
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
                 // draw bubbles
@@ -366,7 +375,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 bubbleManager.render(canvas);
 
                 if (mCurrentSteps != mStepCountDisplay) {
-                    if (DEBUG_LOGS) Log.v(TAG, "Updating step counter: " + mStepCountDisplay + " -> " + mCurrentSteps);
+//                    if (DEBUG_LOGS) Log.v(TAG, "Updating step counter: " + mStepCountDisplay + " -> " + mCurrentSteps);
                     float diff = mCurrentSteps - mStepCountDisplay;
                     if (Math.abs(diff) > 1) {
                         mStepCountDisplay += TEXT_STEPS_ROLL_EASE_SPEED * diff;
@@ -379,6 +388,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
                 canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
+
+                if (showSplash10KScreen) {
+                    splash10KScreen.render(canvas);
+                }
 
             }
         }
@@ -453,24 +466,32 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
             if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
 
+            mPrevSteps = mCurrentSteps;
+
             if (GENERATE_FAKE_STEPS) {
                 int fakeSteps = (int) (RANDOM_FAKE_STEPS * Math.random());
                 if (DEBUG_LOGS) Log.v(TAG, "Generating fake steps: " + fakeSteps);
                 mCurrentSteps += fakeSteps;
+            } else {
+                mCurrentSteps = (int) mSensorStep.values[0];  // read from the sensor
             }
 
             int stepInc = mCurrentSteps - mPrevSteps;
-            mPrevSteps = mCurrentSteps;
+//            mPrevSteps = mCurrentSteps;
 
             if (DEBUG_LOGS) Log.v(TAG, stepInc + " new steps!");
 
             if (mCurrentSteps > MAX_STEP_THRESHOLD) {
                 if (DEBUG_LOGS) Log.v(TAG, "Resetting step counts");
+//                mDayBufferedSteps += mCurrentSteps;  // @TODO Store previous day steps somwhere and account for them
                 mPrevSteps = 0;
                 mCurrentSteps = 0;
                 if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
                 if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
             }
+
+            showSplash10KScreen = mCurrentSteps > 10000 && mPrevSteps < 10000;
+            if (DEBUG_LOGS && showSplash10KScreen) Log.v(TAG, "REACHED 10K!");
 
             bubbleManager.updateSteps(mCurrentSteps);
 
@@ -591,10 +612,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 switch (updateStep) {
                     // @TODO verify if bubble count is working on the long run
                     case 1:
-                        bubblesXSmall.add((currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size(), false);
+                        bubblesXSmall.add((currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size(), false, 0);
                         int stepInc = currentSteps - prevSteps;
                         currentSteps -= stepInc % STEP_RATIO_SMALL;  // account for the remainder of the division
-                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL, false);
+                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL, false, 0);
                         updateStep++;
                         break;
                     case 2:
@@ -606,7 +627,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int smallBubbleCount = bubblesSmall.bubbles.size();
                         int newMediumBubbleCount = smallBubbleCount / scaleRatioMS;
                         bubblesSmall.remove(newMediumBubbleCount * scaleRatioMS);
-                        bubblesMedium.add(newMediumBubbleCount, false);
+                        bubblesMedium.add(newMediumBubbleCount, false, 0);
                         updateStep++;
                         break;
                     case 4:
@@ -621,7 +642,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int mediumBubbleCount = bubblesMedium.bubbles.size();
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
                         bubblesMedium.remove(newBigBubbleCount * scaleRatioBM);
-                        bubblesBig.add(newBigBubbleCount, true);
+                        bubblesBig.add(newBigBubbleCount, mCurrentSteps < STEP_RATIO_XBIG, 1);  // stop featuring after reaching 10k
                         updateStep++;
                         break;
                     case 6:
@@ -636,7 +657,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                         int bigBubbleCount = bubblesBig.bubbles.size();
                         int newXBigBubbleCount = bigBubbleCount / scaleRatioBXB;
                         bubblesBig.remove(newXBigBubbleCount * scaleRatioBXB);
-                        bubblesXBig.add(newXBigBubbleCount, true);
+                        bubblesXBig.add(newXBigBubbleCount, true, 3);
                         updateStep++;
                         break;
                     case 8:
@@ -698,9 +719,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             public void newGlance() {
                 for (Bubble bubble : toDefeatureBuffer) {
-                    bubble.isFeatured = false;
+                    if (--bubble.featuredGlanceDuration <= 0) {
+                        bubble.isFeatured = false;
+                    }
                 }
-                toDefeatureBuffer.clear();
+//                toDefeatureBuffer.clear();
+                for (int i = toDefeatureBuffer.size() - 1; i >= 0; i--) {
+                    if (!toDefeatureBuffer.get(i).isFeatured) toDefeatureBuffer.remove(i);
+                }
             }
         }
 
@@ -754,7 +780,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 }
             }
 
-            private void add(int count_, boolean shouldFeature) {
+            private void add(int count_, boolean shouldFeature, int glanceDuration_) {
                 if (count_ < 0) {
                     remove(-count_);
                     return;
@@ -764,7 +790,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 for (int i = 0; i < count_; i++) {
                     int newVal = ++bubbleCount * stepSize;
                     Bubble b = new Bubble(this, newVal, radius, weight, gapAngle,
-                            shouldFeature && i == count_ - 1, paint);  // @JAMES: Only the last bubble in the group gets featured
+                            shouldFeature && i == count_ - 1, glanceDuration_, paint);  // @JAMES: Only the last bubble in the group gets featured
                     b.grow();
                     bubbles.add(b);
                 }
@@ -802,7 +828,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             private static final float FRICTION                 = 0.95f; // 0 - 1, 0 is total friction
             private static final float PLANE_ACCEL_FACTOR       = 0.25f; // when level, how much shake?
-            private static final float GRAVITY_FACTOR           = 1.00f; //
+            private static final float GRAVITY_FACTOR           = 0.15f; // how much does gravity weight in global forces
             private static final float ANCHOR_SPRING_FACTOR     = 0.01f; // how much spring from lock position
 
             private static final float DEPTH_ACCEL_FACTOR       = 0.40f;
@@ -831,11 +857,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             boolean mustDie = false;
             boolean isFeatured = false;
+            int featuredGlanceDuration;  // for how many glances is this bubble featured?
 
             Paint paint;
             Path path;
 
-            Bubble(BubbleCollection parent_, int value_, float radius_, float weight_, float gapAngle_, boolean isFeatured_, Paint paint_) {
+            Bubble(BubbleCollection parent_, int value_, float radius_, float weight_, float gapAngle_, boolean isFeatured_, int glanceDuration_, Paint paint_) {
                 value = value_;
                 valueStr = mTestStepFormatter.format(value);
                 parent = parent_;
@@ -849,10 +876,12 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 velX = velY = accX = accY = 0;
                 velR = accR = 0;
 
-                gapAngle = gapAngle_;
+//                gapAngle = gapAngle_;
+                gapAngle = TAU * (float) Math.random();
 
                 isFeatured = isFeatured_;
                 if (isFeatured) parent.parent.toDefeatureBuffer.add(this);
+                featuredGlanceDuration = glanceDuration_;
 
                 path = new Path();
                 path.addCircle(0, 0, 1.0f, Path.Direction.CW);
@@ -964,6 +993,43 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         }
 
+        private class Splash10KScreen {
+            private static final int R = 238;
+            private static final int G = 42;
+            private static final int B = 132;
+            private static final int FADE_IN_SPEED = 8;
+            private static final float TEXT_SIZE = 0.10f;  // as a factor of screen height
+            private static final float TEXT_SPEED = 0.25f;
+
+            private int alpha;
+            private float textSize;
+            private float textX, textY;
+
+            Splash10KScreen() { }
+
+            // Must be called after onSurfaceChanged
+            public void initialize() {
+                alpha = 0;
+                textSize = TEXT_SIZE * mHeight;
+                textX = mCenterX;
+                textY = 1.25f * mHeight;
+            }
+
+            public void render(Canvas canvas) {
+                canvas.drawColor(Color.argb(alpha, R, G, B));
+
+//                mBubbleTextPaint.setColor(Color.argb(alpha, 255, 255, 255));
+                mBubbleTextPaint.setTextSize(textSize);
+                drawTextVerticallyCentered(canvas, mBubbleTextPaint, "10,000!", textX, textY);
+//                mBubbleTextPaint.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);  // revert
+
+                alpha += FADE_IN_SPEED;
+                if (alpha > 255) alpha = 255;
+                textY -= TEXT_SPEED * (textY - mCenterY);
+                if (DEBUG_LOGS) Log.v(TAG, "textY: " + textY);
+            }
+        }
+
     }
 
 
@@ -981,8 +1047,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     private float[] linear_acceleration = new float[3];
 
     private SensorWrapper mSensorStep;
-    private int mPrevSteps = 0;
-    private int mCurrentSteps = 0;
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) { }
@@ -998,7 +1062,8 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 mSensorStep.update(event);
                 if (!GENERATE_FAKE_STEPS) {
                     if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
-                    mCurrentSteps = Math.round(event.values[0]);
+//                    mCurrentSteps = Math.round(event.values[0]);
+                    mSensorStep.update(event);
                 }
                 break;
         }
