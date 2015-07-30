@@ -389,7 +389,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 //                }
 //                int tempBackColor = Color.HSVToColor(new float[]{ (float) tempBackHue, 1.0f, 1.0f });
 //                canvas.drawColor(tempBackColor);
-                canvas.drawColor(backgroundColors[mHourInt - 1]);
+                canvas.drawColor(backgroundColors[mHourInt]);
 
 //                board.update();  // moved to class
                 board.render(canvas, false);
