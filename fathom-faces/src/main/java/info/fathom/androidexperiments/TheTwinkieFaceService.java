@@ -58,9 +58,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final long    INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = true;
-    private static final int     RESET_CRACK_THRESHOLD = 5;  // every nth glance, cracks will be reset (0 does no resetting)
-    private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean DEBUG_LOGS = false;
+    private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
+    private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
     private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
     private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
     private static final boolean GRADIENT_CURSOR = true;
@@ -255,7 +255,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-            Log.v(TAG, "onVisibilityChanged: " + visible);
+            if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
             if (visible)
