@@ -828,7 +828,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             private static final float FRICTION                 = 0.95f; // 0 - 1, 0 is total friction
             private static final float PLANE_ACCEL_FACTOR       = 0.25f; // when level, how much shake?
-            private static final float GRAVITY_FACTOR           = 1.00f; //
+            private static final float GRAVITY_FACTOR           = 0.15f; // how much does gravity weight in global forces
             private static final float ANCHOR_SPRING_FACTOR     = 0.01f; // how much spring from lock position
 
             private static final float DEPTH_ACCEL_FACTOR       = 0.40f;
