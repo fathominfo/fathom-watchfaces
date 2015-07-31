@@ -582,7 +582,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         class Board {
 
-            static final int     MAX_TRIANGLE_COUNT = 3;
+            static final int     MAX_TRIANGLE_COUNT = 15;
 
             int width, height;
             Cursor cursor;
