@@ -723,6 +723,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             static final float PUPIL_DILATION_SIZE = 1.20f;
             static final float PUPIL_CONTRACTION_SIZE = 0.80f;
 
+            static final float IRIS_OFFSET_RATIO = 0.058f;
+
 
 //            static final float DEPTH_ACCEL_FACTOR = 0.05f;
 //            static final float DEPTH_SPRING_FACTOR = 0.025f;
@@ -733,7 +735,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             int id;
             float x, y;
             float width, height;
-            float irisRadius;
+            float irisRadius, irisOffset;
             float pupilRadius;
             float currentPupilRadius, targetPupilRadius;
 
@@ -765,6 +767,9 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 targetPupilRadius = currentPupilRadius = pupilRadius = 0.5f * PUPIL_RATIO * width;
 //                velP = accP = 0;
                 irisColor = randomColor();
+
+                // calculate the offset of the iris one time per new eye
+                irisOffset = irisRadius * IRIS_OFFSET_RATIO;
 
                 currentAperture = 0;
                 targetAperture = height;  // @TODO should this be 0?
@@ -807,8 +812,8 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 canvas.save();
                 canvas.clipPath(eyelid);
                 canvas.drawCircle(0, 0, 0.5f * width, eyelidPaint);
-                canvas.drawCircle(currentPupilX, currentPupilY - (irisRadius / 17), irisRadius, irisPaint);
-                canvas.drawCircle(currentPupilX, currentPupilY - (irisRadius / 17), currentPupilRadius, pupilPaint);
+                canvas.drawCircle(currentPupilX, currentPupilY - irisOffset, irisRadius, irisPaint);
+                canvas.drawCircle(currentPupilX, currentPupilY - irisOffset, currentPupilRadius, pupilPaint);
                 canvas.restore();
                 canvas.drawPath(eyelid, eyeLinerPaint);
                 canvas.restore();
