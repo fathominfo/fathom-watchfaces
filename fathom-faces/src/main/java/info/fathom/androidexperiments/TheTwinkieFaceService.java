@@ -58,11 +58,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final boolean DEBUG_LOGS = false;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
     private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
-    private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
-    private static final boolean TRIANGLES_ANIMATE_COLOR_ON_CREATION = true;
-    private static final boolean GRADIENT_CURSOR = true;
-    private static final boolean WHITE_GRADIENT_CURSOR = false;
-
 
 
 

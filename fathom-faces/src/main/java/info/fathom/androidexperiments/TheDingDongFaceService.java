@@ -57,7 +57,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_LOGS = false;
     private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int     RANDOM_FAKE_STEPS = 500;
     private static final int     MAX_STEP_THRESHOLD = 21000;
