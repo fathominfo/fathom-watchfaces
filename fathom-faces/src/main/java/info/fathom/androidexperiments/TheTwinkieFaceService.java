@@ -463,7 +463,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             private static final float FRICTION = 0.999f;
             private static final float ACCEL_FACTOR = 0.45f;
 //            private static final float FRICTION = 0.80f;
-//            private static final float ACCEL_FACTOR = 0.25f;
+//            private static final float ACCEL_FACTOR = 0.45f;
 
             Board parent;
             float x, y;
@@ -582,7 +582,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         class Board {
 
-            static final boolean AVOID_DUPLICATE_SIDES = true;
             static final int     MAX_TRIANGLE_COUNT = 15;
 
             int width, height;
@@ -700,7 +699,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                         cursorProjectionX, cursorProjectionY,
                         Color.argb(CURSOR_TIP_ALPHA, currentR, currentG, currentB),
                         Color.argb(COLOR_TRIANGLE_ALPHA, currentR, currentG, currentB),
-                        Shader.TileMode.MIRROR));
+                        Shader.TileMode.CLAMP));
                 canvas.drawPath(cursorPath, cursorPaint);
                 cursorPaint.setShader(null);
             }
@@ -723,9 +722,10 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
 
                 if (bounceCount > 2) {
-                    Triangle t = new Triangle(this, bounces.get(0), bounces.get(1), bounces.get(2), cursorProjectionX, cursorProjectionY);
+                    Triangle t = new Triangle(this, bounces.get(0), bounces.get(1), bounces.get(2),
+                            cursorProjectionX, cursorProjectionY);
                     triangles.add(t);
-                    triangleUpdateBuffer.add(t);
+//                    triangleUpdateBuffer.add(t);  // added to Triangle.constructor
 
                     if (triangles.size() > MAX_TRIANGLE_COUNT) {
                         // Remove however many triangles above the limit
@@ -756,9 +756,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             private final static int   VERTICES_ANIM_END_THRESHOLD = 5;
             private final static float COLOR_ANIM_SPEED = 0.10f;
 
-            Board parent;
-
             int id;
+            Board parent;
 
             Bounce start, middle, end, corner;
             Path pathFull, pathOutline;
@@ -768,14 +767,17 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             float cornerX, cornerY;
 
             int baseColor, currentColor, targetColor;
+            int currA, currR, currG, currB;
+            int currentTipAlpha;
             Paint paint;
 
             float gradEndX, gradEndY;  // gradient target passed by Cursor
-            boolean gradientFill;
+            boolean animateGradient;
 
             boolean mustDie;
 
-            Triangle(Board parent_, Bounce start_, Bounce middle_, Bounce end_, float gradEndX_, float gradEndY_) {
+            Triangle(Board parent_, Bounce start_, Bounce middle_, Bounce end_,
+                     float gradEndX_, float gradEndY_) {
 
                 id = triangleCounter++;
                 parent = parent_;
@@ -798,15 +800,9 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
 
                 if (containsCornerBounce) {
-//                    if (TRIANGLES_ANIMATE_VERTEX_ON_CREATION) {
-                        animateVertices = true;
-                        cornerX = Math.min(start.x, middle.x) + 0.5f * Math.abs(start.x - middle.x);
-                        cornerY = Math.min(start.y, middle.y) + 0.5f * Math.abs(start.y - middle.y);
-//                    } else {
-//                        animateVertices = false;
-//                        cornerX = corner.x;
-//                        cornerY = corner.y;
-//                    }
+                    animateVertices = true;
+                    cornerX = Math.min(start.x, middle.x) + 0.5f * Math.abs(start.x - middle.x);
+                    cornerY = Math.min(start.y, middle.y) + 0.5f * Math.abs(start.y - middle.y);
                 }
 
                 pathFull = new Path();
@@ -821,31 +817,34 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 pathOutline.lineTo(middle.x, middle.y);
                 if (!containsCornerBounce) pathOutline.close();
 
+                baseColor = triangleColorNew;
+                currentColor = targetColor = baseColor;
+                animateColor = false;
+                interpolateColor(currentColor, targetColor, 1);  // initialize currentARGBs
+
                 gradEndX = gradEndX_;
                 gradEndY = gradEndY_;
-                gradientFill = true;  // start with a gradient, transition to solid fill
-                baseColor = triangleColorNew;
-                animateColor = false;
-                currentColor = targetColor = baseColor;
+//                gradientFill = true;  // start with a gradient, transition to solid fill
+                currentTipAlpha = CURSOR_TIP_ALPHA;
+                animateGradient = true;  // kick off transition from the beginning
 
                 paint = new Paint();
-                paint.setColor(currentColor);
+                paint.setColor(Color.WHITE);
                 paint.setStyle(Paint.Style.FILL);
                 paint.setAntiAlias(true);
+                // start off a gradient fill
+                paint.setShader(new LinearGradient(end.x, end.y,
+                        gradEndX, gradEndY,
+                        Color.argb(currentTipAlpha, currR, currG, currB),
+                        Color.argb(COLOR_TRIANGLE_ALPHA, currR, currG, currB),
+                        Shader.TileMode.CLAMP));
 
-                needsUpdate = animateColor || animateVertices;
-            }
-
-            void kill() {
-//                if (DEBUG_LOGS) Log.v(TAG, "killing triangle " + id);
-                mustDie = true;
-                targetColor = Color.argb(0, Color.red(currentColor),
-                        Color.green(currentColor), Color.blue(currentColor));
-                animateColor = true;
+//                needsUpdate = animateVertices || animateColor || animateGradient;
                 needsUpdate = true;
+                parent.triangleUpdateBuffer.add(this);
             }
 
-            boolean update() {
+            public boolean update() {
 
                 if (animateVertices) {
                     float diffX = corner.x - cornerX,
@@ -873,10 +872,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     currentColor = interpolateColor(currentColor, targetColor, COLOR_ANIM_SPEED);
 
                     if (prevColor == currentColor) {
-//                        if (DEBUG_LOGS) Log.v(TAG, "reached color target for triangle " + id);
                         animateColor = false;
                         if (mustDie) {
-//                            if (DEBUG_LOGS) Log.v(TAG, "removing triangle " + id);
                             parent.triangles.remove(this);
                         }
                     }
@@ -884,66 +881,76 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                     paint.setColor(currentColor);
                 }
 
-                needsUpdate = animateColor || animateVertices;
+                if (animateGradient) {
+                    if (DEBUG_LOGS) Log.v(TAG, "  animating gradient " + id);
+
+                    paint.setShader(null);  // reset gradient fill
+                    int prevAlpha = currentTipAlpha;
+                    currentTipAlpha += COLOR_ANIM_SPEED * (COLOR_TRIANGLE_ALPHA - currentTipAlpha);
+
+                    if (prevAlpha == currentTipAlpha) {
+                        animateGradient = false;
+                        paint.setColor(currentColor);
+
+                    } else {
+                        paint.setShader(new LinearGradient(end.x, end.y,
+                                gradEndX, gradEndY,
+                                Color.argb(currentTipAlpha, currR, currG, currB),
+                                Color.argb(COLOR_TRIANGLE_ALPHA, currR, currG, currB),
+                                Shader.TileMode.CLAMP));
+                    }
+                }
+
+                needsUpdate = animateVertices || animateColor || animateGradient;
                 if (!needsUpdate) parent.triangleStopUpdatingBuffer.add(this);
                 return needsUpdate;
             }
 
-            void render(Canvas canvas) {
-//                canvas.drawPath(pathFull, paint);
-
-                if (gradientFill) {
-//                    cursorPaint.setShader(new LinearGradient(cursor.x, cursor.y,
-//                            cursorProjectionX, cursorProjectionY,
-//                            Color.argb(CURSOR_TIP_ALPHA, currentR, currentG, currentB),
-//                            Color.argb(COLOR_TRIANGLE_ALPHA, currentR, currentG, currentB),
-//                            Shader.TileMode.MIRROR));
-//                    canvas.drawPath(cursorPath, cursorPaint);
-//                    cursorPaint.setShader(null);
-
-
-                    paint.setShader(new LinearGradient(end.x, end.y,
-                            gradEndX, gradEndY,
-                            Color.argb(CURSOR_TIP_ALPHA, Color.red(currentColor), Color.green(currentColor), Color.blue(currentColor)),
-                            Color.argb(COLOR_TRIANGLE_ALPHA, Color.red(currentColor), Color.green(currentColor), Color.blue(currentColor)),
-                            Shader.TileMode.MIRROR));
-                    canvas.drawPath(pathFull, paint);
-                    paint.setShader(null);
-
-                } else {
-                    canvas.drawPath(pathFull, paint);
-                }
+            public void render(Canvas canvas) {
+                canvas.drawPath(pathFull, paint);
 
             }
 
-            void renderOutline(Canvas canvas, Paint paint) {
+            public void renderOutline(Canvas canvas, Paint paint) {
                 canvas.drawPath(pathOutline, paint);
             }
 
-
-            int interpolateColor(int sourceColor, int targetColor, float parameter) {
-                int sA = (sourceColor >> 24) & 0xFF;
-                int sR = (sourceColor >> 16) & 0xFF;
-                int sG = (sourceColor >> 8) & 0xFF;
-                int sB = (sourceColor) & 0xFF;
-
-                int tA = (targetColor >> 24) & 0xFF;
-                int tR = (targetColor >> 16) & 0xFF;
-                int tG = (targetColor >> 8) & 0xFF;
-                int tB = (targetColor) & 0xFF;
-
-//                int a = sA + (int) (parameter * (tA - sA));
-//                int r = sR + (int) (parameter * (tR - sR));
-//                int g = sG + (int) (parameter * (tG - sG));
-//                int b = sB + (int) (parameter * (tB - sB));
-
-                return Color.argb(sA + (int) (parameter * (tA - sA)),
-                        sR + (int) (parameter * (tR - sR)),
-                        sG + (int) (parameter * (tG - sG)),
-                        sB + (int) (parameter * (tB - sB)));
+            public void kill() {
+                mustDie = true;
+                targetColor = Color.argb(0, currR, currG, currB);
+                animateColor = true;
+                needsUpdate = true;
             }
 
-            Bounce generateCornerBounce() {
+            private int interpolateColor(int sourceColor, int targetColor, float parameter) {
+//                int sA = (sourceColor >> 24) & 0xFF;
+//                int sR = (sourceColor >> 16) & 0xFF;
+//                int sG = (sourceColor >> 8) & 0xFF;
+//                int sB = (sourceColor) & 0xFF;
+//
+//                int tA = (targetColor >> 24) & 0xFF;
+//                int tR = (targetColor >> 16) & 0xFF;
+//                int tG = (targetColor >> 8) & 0xFF;
+//                int tB = (targetColor) & 0xFF;
+//
+//                currA = sA + (int) (parameter * (tA - sA));
+//                currR = sR + (int) (parameter * (tR - sR));
+//                currG = sG + (int) (parameter * (tG - sG));
+//                currB = sB + (int) (parameter * (tB - sB));
+
+                currA = (sourceColor >> 24) & 0xFF
+                        + (int) (parameter * ((targetColor >> 24) & 0xFF - (sourceColor >> 24) & 0xFF));
+                currR = (sourceColor >> 16) & 0xFF
+                        + (int) (parameter * ((targetColor >> 16) & 0xFF - (sourceColor >> 16) & 0xFF));
+                currG = (sourceColor >> 8) & 0xFF
+                        + (int) (parameter * ((targetColor >> 8) & 0xFF - (sourceColor >> 8) & 0xFF));
+                currB = (sourceColor) & 0xFF
+                        + (int) (parameter * ((targetColor) & 0xFF - (sourceColor) & 0xFF));
+
+                return Color.argb(currA, currR, currG, currB);
+            }
+
+            private Bounce generateCornerBounce() {
                 switch (start.side) {
                     case 0:
                         return new Bounce(mWidth, 0);
@@ -1011,7 +1018,8 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 randomHue -= totalHue;
             }
 
-            int currentTriangleColor = Color.HSVToColor(randomRange(COLOR_TRIANGLE_ALPHA - 25, COLOR_TRIANGLE_ALPHA + 25), new float[]{ (float) randomHue, 1.0f, 1.0f } );
+//            int currentTriangleColor = Color.HSVToColor(randomRange(COLOR_TRIANGLE_ALPHA - 25, COLOR_TRIANGLE_ALPHA + 25), new float[]{ (float) randomHue, 1.0f, 1.0f } );
+            int currentTriangleColor = Color.HSVToColor(COLOR_TRIANGLE_ALPHA, new float[]{ (float) randomHue, 1.0f, 1.0f } );
             currentR = Color.red(currentTriangleColor);
             currentG = Color.green(currentTriangleColor);
             currentB = Color.blue(currentTriangleColor);
