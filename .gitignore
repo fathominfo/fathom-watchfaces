@@ -39,3 +39,5 @@ proguard/
 *.xml
 
 fathom-faces/fathom-faces.iml
+.idea/workspace.xml
+*.xml
