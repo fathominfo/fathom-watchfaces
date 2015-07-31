@@ -85,10 +85,10 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final int   RESET_HOUR = 4;                                                  // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
-    private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
-    private static final int     DEBUG_ACCELERATE_RATE = 2;  // each glance has xN times the effect
-    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
+    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_ACCELERATE_INTERACTION = true;  // adds more eyes and blink factor per glance
+    private static final int     DEBUG_ACCELERATE_RATE = 5;  // each glance has xN times the effect
+    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = true;
     private static final boolean DEBUG_EYES_ROTATION = false;  // @TODO if they are going to be off forever, deactivate all sensing
 
 
