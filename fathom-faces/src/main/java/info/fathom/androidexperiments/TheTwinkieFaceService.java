@@ -582,7 +582,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
         class Board {
 
-            static final int     MAX_TRIANGLE_COUNT = 15;
+            static final int     MAX_TRIANGLE_COUNT = 3;
 
             int width, height;
             Cursor cursor;
@@ -824,7 +824,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
 
                 gradEndX = gradEndX_;
                 gradEndY = gradEndY_;
-//                gradientFill = true;  // start with a gradient, transition to solid fill
                 currentTipAlpha = CURSOR_TIP_ALPHA;
                 animateGradient = true;  // kick off transition from the beginning
 
@@ -839,7 +838,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                         Color.argb(COLOR_TRIANGLE_ALPHA, currR, currG, currB),
                         Shader.TileMode.CLAMP));
 
-//                needsUpdate = animateVertices || animateColor || animateGradient;
                 needsUpdate = true;
                 parent.triangleUpdateBuffer.add(this);
             }
@@ -882,8 +880,6 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
 
                 if (animateGradient) {
-                    if (DEBUG_LOGS) Log.v(TAG, "  animating gradient " + id);
-
                     paint.setShader(null);  // reset gradient fill
                     int prevAlpha = currentTipAlpha;
                     currentTipAlpha += COLOR_ANIM_SPEED * (COLOR_TRIANGLE_ALPHA - currentTipAlpha);
@@ -902,6 +898,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
                 }
 
                 needsUpdate = animateVertices || animateColor || animateGradient;
+                if (DEBUG_LOGS) Log.v(TAG, "  needsUpdate: " + needsUpdate);
                 if (!needsUpdate) parent.triangleStopUpdatingBuffer.add(this);
                 return needsUpdate;
             }
@@ -923,29 +920,20 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
             }
 
             private int interpolateColor(int sourceColor, int targetColor, float parameter) {
-//                int sA = (sourceColor >> 24) & 0xFF;
-//                int sR = (sourceColor >> 16) & 0xFF;
-//                int sG = (sourceColor >> 8) & 0xFF;
-//                int sB = (sourceColor) & 0xFF;
-//
-//                int tA = (targetColor >> 24) & 0xFF;
-//                int tR = (targetColor >> 16) & 0xFF;
-//                int tG = (targetColor >> 8) & 0xFF;
-//                int tB = (targetColor) & 0xFF;
-//
-//                currA = sA + (int) (parameter * (tA - sA));
-//                currR = sR + (int) (parameter * (tR - sR));
-//                currG = sG + (int) (parameter * (tG - sG));
-//                currB = sB + (int) (parameter * (tB - sB));
+                int sA = (sourceColor >> 24) & 0xFF;
+                int sR = (sourceColor >> 16) & 0xFF;
+                int sG = (sourceColor >> 8) & 0xFF;
+                int sB = (sourceColor) & 0xFF;
 
-                currA = (sourceColor >> 24) & 0xFF
-                        + (int) (parameter * ((targetColor >> 24) & 0xFF - (sourceColor >> 24) & 0xFF));
-                currR = (sourceColor >> 16) & 0xFF
-                        + (int) (parameter * ((targetColor >> 16) & 0xFF - (sourceColor >> 16) & 0xFF));
-                currG = (sourceColor >> 8) & 0xFF
-                        + (int) (parameter * ((targetColor >> 8) & 0xFF - (sourceColor >> 8) & 0xFF));
-                currB = (sourceColor) & 0xFF
-                        + (int) (parameter * ((targetColor) & 0xFF - (sourceColor) & 0xFF));
+                int tA = (targetColor >> 24) & 0xFF;
+                int tR = (targetColor >> 16) & 0xFF;
+                int tG = (targetColor >> 8) & 0xFF;
+                int tB = (targetColor) & 0xFF;
+
+                currA = sA + (int) (parameter * (tA - sA));
+                currR = sR + (int) (parameter * (tR - sR));
+                currG = sG + (int) (parameter * (tG - sG));
+                currB = sB + (int) (parameter * (tB - sB));
 
                 return Color.argb(currA, currR, currG, currB);
             }
