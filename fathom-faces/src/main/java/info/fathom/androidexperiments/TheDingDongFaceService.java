@@ -59,7 +59,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int     RANDOM_FAKE_STEPS = 5000;
+    private static final int     RANDOM_FAKE_STEPS = 2000;
     private static final int     MAX_STEP_THRESHOLD = 21000;
 
 
@@ -532,19 +532,19 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             private final static int RADIUS_BIG     = 45;
             private final static int RADIUS_MEDIUM  = 25;
             private final static int RADIUS_SMALL   = 15;
-            private final static int RADIUS_XSMALL  = 5;
+            private final static int RADIUS_XSMALL  = 7;
 
-            private final static float WEIGHT_XBIG      = 5;
-            private final static float WEIGHT_BIG       = 4;
+            private final static float WEIGHT_XBIG      = 3;
+            private final static float WEIGHT_BIG       = 3;
             private final static float WEIGHT_MEDIUM    = 3;
-            private final static float WEIGHT_SMALL     = 3;
-            private final static float WEIGHT_XSMALL    = 3;
+            private final static float WEIGHT_SMALL     = 2;
+            private final static float WEIGHT_XSMALL    = 2;
 
-            private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);  // pink
-            private final int COLOR_BIG     = Color.argb(204, 255, 167, 39);  // red
-            private final int COLOR_MEDIUM  = Color.argb(204, 39, 170, 225);  // blue
-            private final int COLOR_SMALL   = Color.argb(204, 141, 198, 63);  // yellow
-            private final int COLOR_XSMALL  = Color.argb(204, 150, 150, 150);  // gray
+            private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);
+            private final int COLOR_BIG     = Color.argb(204, 255, 167, 39);
+            private final int COLOR_MEDIUM  = Color.argb(204, 146, 39, 143);
+            private final int COLOR_SMALL   = Color.argb(204, 39, 170, 225);
+            private final int COLOR_XSMALL  = Color.argb(204, 141, 198, 63);
 
             private final static float GAP_ANGLE_XBIG   = (float) (-0.375f * TAU);
             private final static float GAP_ANGLE_BIG    = (float) (-0.250f * TAU);
@@ -828,11 +828,11 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             private static final float FRICTION                 = 0.95f; // 0 - 1, 0 is total friction
             private static final float PLANE_ACCEL_FACTOR       = 0.25f; // when level, how much shake?
-            private static final float GRAVITY_FACTOR           = 0.15f; // how much does gravity weight in global forces
-            private static final float ANCHOR_SPRING_FACTOR     = 0.01f; // how much spring from lock position
+            private static final float GRAVITY_FACTOR           = 0.80f; // how much does gravity weight in global forces
+            private static final float ANCHOR_SPRING_FACTOR     = 0.02f; // how much spring from lock position
 
             private static final float DEPTH_ACCEL_FACTOR       = 0.40f;
-            private static final float DEPTH_SPRING_FACTOR      = 0.15f;
+            private static final float DEPTH_SPRING_FACTOR      = 0.10f;
 
             private static final float RANDOM_WEIGHT_FACTOR     = 0.50f; // how much variation between balls in the same category
 
