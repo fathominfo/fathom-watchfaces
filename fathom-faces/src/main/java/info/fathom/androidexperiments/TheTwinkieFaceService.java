@@ -55,7 +55,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
     private static final long    INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_LOGS = false;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
     private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
     private static final boolean TRIANGLES_ANIMATE_VERTEX_ON_CREATION = true;
@@ -460,7 +460,7 @@ public class TheTwinkieFaceService extends CanvasWatchFaceService implements Sen
         class Cursor {
             private static final int COLOR = Color.WHITE;
 
-            private static final float FRICTION = 0.999f;
+            private static final float FRICTION = 0.995f;
             private static final float ACCEL_FACTOR = 0.45f;
 //            private static final float FRICTION = 0.80f;
 //            private static final float ACCEL_FACTOR = 0.45f;
