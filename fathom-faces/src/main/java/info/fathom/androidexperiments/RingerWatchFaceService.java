@@ -1186,8 +1186,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private static final int MAX_ALPHA = 215;
 
             private int alpha;
-            private float textSize;
-            private float textX, textY;
+//            private float textSize;
+            private float textX, textDigitsY, textStepsY;
 
             private int bgColor;
             private int r, g, b;
@@ -1196,16 +1196,36 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private String text;
             private boolean active;
 
-            SplashScreen() { }
+            private Paint digitsPaint, stepsPaint;
+
+            SplashScreen() {
+                digitsPaint = new Paint();
+                digitsPaint.setColor(BACKGROUND_COLOR_AMBIENT);
+                digitsPaint.setTypeface(mTextTypeface);
+                digitsPaint.setAntiAlias(true);
+                digitsPaint.setTextAlign(Paint.Align.LEFT);
+
+                stepsPaint = new Paint();
+                stepsPaint.setColor(BACKGROUND_COLOR_AMBIENT);
+                stepsPaint.setTypeface(mTextTypeface);
+                stepsPaint.setAntiAlias(true);
+                stepsPaint.setTextAlign(Paint.Align.LEFT);
+            }
 
             // Must be called after onSurfaceChanged
             public void reset() {
                 alpha = 0;
-                textSize = TEXT_SIZE * mHeight;
-                textX = mCenterX;
-                textY = 1.25f * mHeight;
+//                textX = mCenterX;
+                textX = mWidth * TEXT_DIGITS_RIGHT_MARGIN;
+//                textY = 1.25f * mHeight;
+                textDigitsY = mTextDigitsBaselineHeight + mHeight;
+                textStepsY = mTextStepsBaselineHeight + mHeight;
                 active = false;
                 bgColorIterator = 0;
+
+//                textSize = TEXT_SIZE * mHeight;
+                digitsPaint.setTextSize(mTextDigitsHeight);
+                stepsPaint.setTextSize(mTextStepsHeight);
             }
 
             public void trigger(int value_, int color_) {
@@ -1229,8 +1249,16 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 if (DEBUG_LOGS) Log.v(TAG, "Rendering splashscreen, alpha: " + alpha);
                 canvas.drawColor(Color.argb(alpha, r, g, b));
 
-                mBubbleTextPaint.setTextSize(textSize);
-                drawTextVerticallyCentered(canvas, mBubbleTextPaint, text, textX, textY);
+//                mBubbleTextPaint.setTextSize(textSize);
+//                drawTextVerticallyCentered(canvas, mBubbleTextPaint, text, textX, textY);
+
+                canvas.drawText(text, textX, textDigitsY, digitsPaint);
+                canvas.drawText("steps", textX, textStepsY, stepsPaint);
+
+//                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+//                        mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
+//                canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
+//                        mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
                 if (alpha < MAX_ALPHA) {
                     alpha += FADE_IN_SPEED;
@@ -1243,7 +1271,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         setColor(bubbleManager.GROUP_COLORS[0]);
                     }
                 }
-                textY -= TEXT_SPEED * (textY - mCenterY);
+//                textY -= TEXT_SPEED * (textY - mCenterY);
+                textDigitsY -= TEXT_SPEED * (textDigitsY - mTextDigitsBaselineHeight);
+                textStepsY -= TEXT_SPEED * (textStepsY- mTextStepsBaselineHeight);
             }
 
             private void setColor(int color_) {
