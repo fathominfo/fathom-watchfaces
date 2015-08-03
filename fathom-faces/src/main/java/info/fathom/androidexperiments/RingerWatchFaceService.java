@@ -60,6 +60,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final boolean GENERATE_FAKE_STEPS = true;
     private static final int     RANDOM_FAKE_STEPS = 1000;
     private static final int     MAX_STEP_THRESHOLD = 21000;
+    private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
 
 
 
@@ -523,11 +524,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private final static int STEP_RATIO_SMALL   = 10;
             private final static int STEP_RATIO_XSMALL  = 1;
 
-//            private final static int RADIUS_XBIG = 75;
-//            private final static int RADIUS_BIG = 50;
-//            private final static int RADIUS_MEDIUM = 35;
-//            private final static int RADIUS_SMALL = 20;
-
             private final static int RADIUS_XBIG    = 100;
             private final static int RADIUS_MBIG    = 70;
             private final static int RADIUS_BIG     = 45;
@@ -654,7 +650,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int mediumBubbleCount = bubblesMedium.bubbles.size();
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
                         bubblesMedium.remove(newBigBubbleCount * scaleRatioBM);
-                        bubblesBig.add(newBigBubbleCount, mCurrentSteps < STEP_RATIO_XBIG, 0);  // stop featuring after reaching 10k
+                        bubblesBig.add(newBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS, 0);  // stop featuring after reaching 10k
                         updateStep++;
                         break;
                     case 6:
@@ -686,7 +682,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int bigBubbleCount = bubblesBig.bubbles.size();
                         int newMBigBubbleCount = bigBubbleCount / scaleRatioBMB;
                         bubblesBig.remove(newMBigBubbleCount * scaleRatioBMB);
-                        bubblesMBig.add(newMBigBubbleCount, true, 0);
+                        bubblesMBig.add(newMBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS, 0);
                         updateStep++;
                         break;
                     case 8:
@@ -701,7 +697,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int mBigBubbleCount = bubblesMBig.bubbles.size();
                         int newXBigBubbleCount = mBigBubbleCount / scaleRatioMBXB;
                         bubblesMBig.remove(newXBigBubbleCount * scaleRatioMBXB);
-                        bubblesXBig.add(newXBigBubbleCount, true, 0);
+                        bubblesXBig.add(newXBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS, 0);
                         updateStep++;
                         break;
                     case 10:
