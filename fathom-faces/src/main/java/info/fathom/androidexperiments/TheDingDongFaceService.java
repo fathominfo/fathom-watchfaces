@@ -57,9 +57,9 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = true;
-    private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int     RANDOM_FAKE_STEPS = 2000;
+    private static final boolean DEBUG_LOGS = false;
+    private static final boolean GENERATE_FAKE_STEPS = false;
+    private static final int     RANDOM_FAKE_STEPS = 500;
     private static final int     MAX_STEP_THRESHOLD = 21000;
 
 
@@ -1020,7 +1020,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
 //                mBubbleTextPaint.setColor(Color.argb(alpha, 255, 255, 255));
                 mBubbleTextPaint.setTextSize(textSize);
-                drawTextVerticallyCentered(canvas, mBubbleTextPaint, "10,000!", textX, textY);
+                drawTextVerticallyCentered(canvas, mBubbleTextPaint, "10,000", textX, textY);
 //                mBubbleTextPaint.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);  // revert
 
                 alpha += FADE_IN_SPEED;
@@ -1059,7 +1059,6 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 updateGravity(event);
                 break;
             case Sensor.TYPE_STEP_COUNTER:
-                mSensorStep.update(event);
                 if (!GENERATE_FAKE_STEPS) {
                     if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
 //                    mCurrentSteps = Math.round(event.values[0]);
