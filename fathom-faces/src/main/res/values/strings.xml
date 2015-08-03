@@ -16,13 +16,7 @@
 
 <resources>
     <string name="app_name">Fathom Watchfaces</string>
-    <string name="simple_digital_name">Fathom Terrence</string>
-    <string name="time_and_motion_name">Fathom Time Motion</string>
-    <string name="sensor_name">Fathom Motion Sensing</string>
-    <string name="bouncing_ball_name">Fathom Bouncing Ball</string>
-    <string name="fit_data_name">Fathom Fit Data</string>
-    <string name="all_sensors_name">Fathom All Sensors</string>
-    <string name="ding_dong_name">Fathom Rings</string>
-    <string name="twinkie_name">Fathom Triangles</string>
-    <string name="blinkie_name">Fathom Blinkie</string>
+    <string name="ringer_name">Fathom Ringer</string>
+    <string name="triangular_name">Fathom Triangular</string>
+    <string name="blinker_name">Fathom Blinker</string>
 </resources>

@@ -36,17 +36,17 @@
 
         <service
             android:name=".RingerWatchFaceService"
-            android:label="@string/ding_dong_name"
+            android:label="@string/ringer_name"
             android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                 android:name="android.service.wallpaper"
                 android:resource="@xml/watch_face" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview"
-                android:resource="@drawable/preview_dingdong" />
+                android:resource="@drawable/preview_ringer" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview_circular"
-                android:resource="@drawable/preview_dingdong" />
+                android:resource="@drawable/preview_ringer" />
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
                 <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
@@ -55,17 +55,17 @@
 
         <service
             android:name=".TriangularWatchFaceService"
-            android:label="@string/twinkie_name"
+            android:label="@string/triangular_name"
             android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                 android:name="android.service.wallpaper"
                 android:resource="@xml/watch_face" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview"
-                android:resource="@drawable/preview_twinkie" />
+                android:resource="@drawable/preview_triangular" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview_circular"
-                android:resource="@drawable/preview_twinkie" />
+                android:resource="@drawable/preview_triangular" />
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
                 <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
@@ -74,17 +74,17 @@
 
         <service
             android:name=".BlinkerWatchFaceService"
-            android:label="@string/blinkie_name"
+            android:label="@string/blinker_name"
             android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
                 android:name="android.service.wallpaper"
                 android:resource="@xml/watch_face" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview"
-                android:resource="@drawable/preview_blinkie" />
+                android:resource="@drawable/preview_blinker" />
             <meta-data
                 android:name="com.google.android.wearable.watchface.preview_circular"
-                android:resource="@drawable/preview_blinkie" />
+                android:resource="@drawable/preview_blinker" />
             <intent-filter>
                 <action android:name="android.service.wallpaper.WallpaperService" />
                 <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
