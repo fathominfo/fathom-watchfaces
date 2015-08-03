@@ -30,9 +30,9 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 
-public class TheBlinkieFaceService extends CanvasWatchFaceService implements SensorEventListener {
+public class BlinkerWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
-    private static final String TAG = "TheBlinkieFaceService";
+    private static final String TAG = "BlinkerWatchFaceService";
 
     private static final long  INTERACTIVE_UPDATE_RATE_MS = 33;
 
@@ -161,7 +161,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             Log.v(TAG, "onCreate");
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(TheBlinkieFaceService.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(BlinkerWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
@@ -223,7 +223,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
-                    TheBlinkieFaceService.this, mSensorManager);
+                    BlinkerWatchFaceService.this, mSensorManager);
             mSensorAccelerometer.register();
 
             registerScreenReceiver();
@@ -236,7 +236,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             unregisterTimeZoneReceiver();
             unregisterScreenReceiver();
             mSensorAccelerometer.unregister();
-            mSensorManager.unregisterListener(TheBlinkieFaceService.this);
+            mSensorManager.unregisterListener(BlinkerWatchFaceService.this);
             super.onDestroy();
         }
 
@@ -303,14 +303,14 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
 
         private void registerScreenReceiver() {
             if (DEBUG_LOGS) Log.v(TAG, "ScreenReceiver registered");
-            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver,
+            BlinkerWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_ON));
-            TheBlinkieFaceService.this.registerReceiver(mScreenReceiver,
+            BlinkerWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_OFF));
         }
 
         private void unregisterScreenReceiver() {
-            TheBlinkieFaceService.this.unregisterReceiver(mScreenReceiver);
+            BlinkerWatchFaceService.this.unregisterReceiver(mScreenReceiver);
         }
 
         /**
@@ -444,7 +444,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
             }
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            TheBlinkieFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
+            BlinkerWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
         private void unregisterTimeZoneReceiver() {
@@ -452,7 +452,7 @@ public class TheBlinkieFaceService extends CanvasWatchFaceService implements Sen
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
-            TheBlinkieFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+            BlinkerWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
         private void updateTimer() {
