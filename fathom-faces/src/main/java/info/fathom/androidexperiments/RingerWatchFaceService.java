@@ -886,7 +886,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private static final float ANCHOR_SPRING_FACTOR     = 0.02f; // how much spring from lock position
             private static final float DEPTH_ACCEL_FACTOR       = 0.40f;
             private static final float DEPTH_SPRING_FACTOR      = 0.10f;
-            private static final float RANDOM_WEIGHT_FACTOR     = 0.50f; // how much variation between balls in the same category
+            private static final float RANDOM_WEIGHT_FACTOR     = 0.75f; // how much variation between balls in the same category
             private static final float TEXT_HEIGHT_FACTOR       = 0.20f; // as a factor of bubble radius
             private static final float INNER_RING_OFFSET_FACTOR = 0.10f;
 
