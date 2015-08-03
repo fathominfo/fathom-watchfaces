@@ -989,7 +989,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 y += velY;
 
                 if (DEPTH_BOUNCING && !needsSizeUpdate) {
-                    accR = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (radius - currentRadius)) / weight;
+//                    accR = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (radius - currentRadius)) / weight;
+                    accR = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (radius - currentRadius)) / 3;  // Z movement is equally weighted
                     velR += accR;
 //                    velR *= FRICTION;
                     velR *= bubbleManager.currentFriction;
