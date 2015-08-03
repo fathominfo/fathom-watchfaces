@@ -53,6 +53,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final float   TEXT_STEPS_RIGHT_MARGIN = 0.07f;                                   // as a factor of screen width
     private static final float   TEXT_STEPS_ROLL_EASE_SPEED = 0.45f;                                // 0...1
 
+    private static final int     TEXT_AMBIENT_SHADOW_RADIUS = 1;
+
     private static final int     RESET_HOUR = 4;                                                    // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
@@ -92,7 +94,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
         };
 
-
         //        private boolean mLowBitAmbient;
         //        private boolean mBurnInProtection;
         private boolean mAmbient, mScreenOn;
@@ -106,6 +107,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
         private Paint mTextStepsPaintInteractive, mTextStepsPaintAmbient;
         private float mTextStepsHeight, mTextStepsBaselineHeight, mTextStepsRightMargin;
+        private Paint mTextDigitsShadowPaintInteractive, mTextStepsShadowPaintInteractive;
         private Typeface mTextTypeface;
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
         private final Rect textBounds = new Rect();
@@ -164,6 +166,18 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mTextStepsPaintAmbient.setAntiAlias(false);
             mTextStepsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
 
+            mTextDigitsShadowPaintInteractive = new Paint();
+            mTextDigitsShadowPaintInteractive.setColor(BACKGROUND_COLOR_AMBIENT);
+            mTextDigitsShadowPaintInteractive.setTypeface(mTextTypeface);
+            mTextDigitsShadowPaintInteractive.setAntiAlias(false);
+            mTextDigitsShadowPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+
+            mTextStepsShadowPaintInteractive = new Paint();
+            mTextStepsShadowPaintInteractive.setColor(BACKGROUND_COLOR_AMBIENT);
+            mTextStepsShadowPaintInteractive.setTypeface(mTextTypeface);
+            mTextStepsShadowPaintInteractive.setAntiAlias(false);
+            mTextStepsShadowPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+
             mBubbleTextPaint = new Paint();
             mBubbleTextPaint.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
             mBubbleTextPaint.setTypeface(mTextTypeface);
@@ -211,6 +225,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 invalidate();
+            }
+
+            // Last bubble must be updated here because onDraw() happens before
+            // receiving the SCREEN_OFF Intent, and this is useless in non-ambient mode anyway...
+            if (inAmbientMode) {
+                bubbleManager.updateLatestBubble();
             }
 
             /*
@@ -342,6 +362,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mTextStepsRightMargin = TEXT_STEPS_RIGHT_MARGIN * mWidth;
             mTextStepsPaintInteractive.setTextSize(mTextStepsHeight);
             mTextStepsPaintAmbient.setTextSize(mTextStepsHeight);
+
+            mTextDigitsShadowPaintInteractive.setTextSize(mTextDigitsHeight);
+            mTextStepsShadowPaintInteractive.setTextSize(mTextStepsHeight);
         }
 
         @Override
@@ -363,12 +386,23 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
 
             if (mAmbient) {
+                if (DEBUG_LOGS) Log.v(TAG, "Drawing ambient canvas");
+
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
 
-                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
-                        mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
-                canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
-                        mTextStepsBaselineHeight, mTextStepsPaintAmbient);
+                bubbleManager.renderAmbient(canvas);
+
+                drawFakeShadowedText(canvas, mTimeStr,
+                        mWidth - (int) mTextDigitsRightMargin, (int) mTextDigitsBaselineHeight,
+                        TEXT_AMBIENT_SHADOW_RADIUS, mTextDigitsShadowPaintInteractive, mTextDigitsPaintAmbient);
+                drawFakeShadowedText(canvas, mTestStepFormatter.format(mCurrentSteps) + "#",
+                        mWidth - (int) mTextStepsRightMargin, (int) mTextStepsBaselineHeight,
+                        TEXT_AMBIENT_SHADOW_RADIUS, mTextStepsShadowPaintInteractive, mTextStepsPaintAmbient);
+
+//                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+//                        mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
+//                canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
+//                        mTextStepsBaselineHeight, mTextStepsPaintAmbient);
 
             } else {
 
@@ -505,6 +539,16 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             canvas.drawText(text, cx, cy - textBounds.exactCenterY(), paint);
         }
 
+        private void drawFakeShadowedText(Canvas canvas, String txt, int x, int y, int radius,
+                                          Paint shadowPaint, Paint drawPaint) {
+            for (int i = x - radius; i <= x + radius; i++) {
+                for (int j = y - radius; j <= y + radius; j++) {
+                    canvas.drawText(txt, i, j, shadowPaint);
+                }
+            }
+            canvas.drawText(txt, x, y, drawPaint);
+        }
+
 
 
 
@@ -530,12 +574,20 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private final static int STEP_RATIO_SMALL   = 10;
             private final static int STEP_RATIO_XSMALL  = 1;
 
-            private final static int RADIUS_XBIG    = 100;
-            private final static int RADIUS_MBIG    = 70;
-            private final static int RADIUS_BIG     = 45;
-            private final static int RADIUS_MEDIUM  = 25;
-            private final static int RADIUS_SMALL   = 15;
-            private final static int RADIUS_XSMALL  = 7;
+//            private final static int RADIUS_XBIG    = 100;
+//            private final static int RADIUS_MBIG    = 70;
+//            private final static int RADIUS_BIG     = 45;
+//            private final static int RADIUS_MEDIUM  = 25;
+//            private final static int RADIUS_SMALL   = 15;
+//            private final static int RADIUS_XSMALL  = 7;
+
+            // Radii as a factor of screen width
+            private final static float RADIUS_XBIG    = 0.37500f;
+            private final static float RADIUS_MBIG    = 0.25000f;
+            private final static float RADIUS_BIG     = 0.12500f;
+            private final static float RADIUS_MEDIUM  = 0.06250f;
+            private final static float RADIUS_SMALL   = 0.03125f;
+            private final static float RADIUS_XSMALL  = 0.01562f;
 
             private final static float WEIGHT_XBIG      = 3;
             private final static float WEIGHT_MBIG      = 3;
@@ -572,10 +624,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private BubbleCollection bubblesXBig, bubblesBig, bubblesMBig,
                     bubblesMedium, bubblesSmall, bubblesXSmall;
 
+            private Bubble lastBubble;  // last created bubble with the greatest value
+
             private int prevSteps, currentSteps;
             private int updateStep;  // @TODO add explanation here
 
             private float currentFriction;
+
+            private Paint bubblePaintAmbient;
 
             List<Bubble> toDefeatureBuffer = new ArrayList<>();
 
@@ -599,6 +655,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 updateStep = 0;  // do not update
 
                 currentFriction = FRICTION_START;
+
+                bubblePaintAmbient = new Paint();
+                bubblePaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
+                bubblePaintAmbient.setAntiAlias(false);
+                bubblePaintAmbient.setStyle(Paint.Style.STROKE);
             }
 
             public void render(Canvas canvas) {
@@ -608,6 +669,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 bubblesBig.render(canvas);
                 bubblesMBig.render(canvas);
                 bubblesXBig.render(canvas);
+            }
+
+            public void renderAmbient(Canvas canvas) {
+                if (lastBubble != null) lastBubble.renderAmbient(canvas, bubblePaintAmbient);
             }
 
             public void update() {
@@ -771,6 +836,29 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     if (!toDefeatureBuffer.get(i).isFeatured) toDefeatureBuffer.remove(i);
                 }
             }
+
+            public void updateLatestBubble() {
+                lastBubble = getLatestBubble();
+                if (lastBubble != null && DEBUG_LOGS) Log.v(TAG, "lastBubble.value: " + lastBubble.value);
+            }
+
+            private Bubble getLatestBubble() {
+                if (bubblesXBig.bubbles.size() != 0)
+                    return bubblesXBig.bubbles.get(bubblesXBig.bubbles.size() - 1);
+                if (bubblesMBig.bubbles.size() != 0)
+                    return bubblesMBig.bubbles.get(bubblesMBig.bubbles.size() - 1);
+                if (bubblesBig.bubbles.size() != 0)
+                    return bubblesBig.bubbles.get(bubblesBig.bubbles.size() - 1);
+                if (bubblesMedium.bubbles.size() != 0)
+                    return bubblesMedium.bubbles.get(bubblesMedium.bubbles.size() - 1);
+                if (bubblesSmall.bubbles.size() != 0)
+                    return bubblesSmall.bubbles.get(bubblesSmall.bubbles.size() - 1);
+                if (bubblesXSmall.bubbles.size() != 0)
+                    return bubblesXSmall.bubbles.get(bubblesXSmall.bubbles.size() - 1);
+
+                return null;
+            }
+
         }
 
 
@@ -791,7 +879,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                              int color_, float innerRingFactor_) {
                 stepSize = stepSize_;
                 parent = parent_;
-                radius = radius_;
+                radius = mWidth * radius_;
                 weight = weight_;
                 innerRingFactor = innerRingFactor_;
                 color = color_;
@@ -959,6 +1047,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     mBubbleTextPaint.setTextSize(2 * TEXT_HEIGHT_FACTOR * currentRadius);  // bubble size might be animated
                     drawTextVerticallyCentered(canvas, mBubbleTextPaint, valueStr, x, y);
                 }
+            }
+
+            public void renderAmbient(Canvas canvas, Paint paint_) {
+                canvas.save();
+                canvas.translate(x, y);
+                canvas.scale(currentRadius, currentRadius);
+                canvas.drawPath(path, paint_);
+                canvas.restore();
             }
 
             public boolean updateSize() {
