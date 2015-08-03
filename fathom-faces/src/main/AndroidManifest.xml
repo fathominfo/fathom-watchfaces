@@ -153,7 +153,7 @@
         </service>
 
         <service
-            android:name=".TheDingDongFaceService"
+            android:name=".RingerWatchFaceService"
             android:label="@string/ding_dong_name"
             android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
@@ -172,7 +172,7 @@
         </service>
 
         <service
-            android:name=".TheTwinkieFaceService"
+            android:name=".TriangularWatchFaceService"
             android:label="@string/twinkie_name"
             android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data
@@ -191,7 +191,7 @@
         </service>
 
         <service
-            android:name=".TheBlinkieFaceService"
+            android:name=".BlinkerWatchFaceService"
             android:label="@string/blinkie_name"
             android:permission="android.permission.BIND_WALLPAPER" >
             <meta-data

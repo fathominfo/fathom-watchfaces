@@ -28,9 +28,9 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TheDingDongFaceService extends CanvasWatchFaceService implements SensorEventListener {
+public class RingerWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
-    private static final String TAG = "TheDingDongFaceService";
+    private static final String TAG = "RingerWatchFaceService";
 
     private static final float TAU = (float) (2 * Math.PI);
 
@@ -130,7 +130,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(TheDingDongFaceService.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(RingerWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
@@ -176,10 +176,10 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
-                    TheDingDongFaceService.this, mSensorManager);
+                    RingerWatchFaceService.this, mSensorManager);
             mSensorAccelerometer.register();
             mSensorStep = new SensorWrapper("Steps", Sensor.TYPE_STEP_COUNTER, 1,
-                    TheDingDongFaceService.this, mSensorManager);
+                    RingerWatchFaceService.this, mSensorManager);
             mSensorStep.register();
 
             registerScreenReceiver();
@@ -261,14 +261,14 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
 
         private void registerScreenReceiver() {
             if (DEBUG_LOGS) Log.v(TAG, "ScreenReceiver registered");
-            TheDingDongFaceService.this.registerReceiver(mScreenReceiver,
+            RingerWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_ON));
-            TheDingDongFaceService.this.registerReceiver(mScreenReceiver,
+            RingerWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_OFF));
         }
 
         private void unregisterScreenReceiver() {
-            TheDingDongFaceService.this.unregisterReceiver(mScreenReceiver);
+            RingerWatchFaceService.this.unregisterReceiver(mScreenReceiver);
         }
 
         /**
@@ -411,7 +411,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
             }
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            TheDingDongFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
+            RingerWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
         private void unregisterTimeZoneReceiver() {
@@ -419,7 +419,7 @@ public class TheDingDongFaceService extends CanvasWatchFaceService implements Se
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
-            TheDingDongFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+            RingerWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
 
