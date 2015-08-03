@@ -113,7 +113,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private int mPrevSteps = 0;
         private int mCurrentSteps = 0;
         private float mStepCountDisplay;  // , mStepCountDisplayTarget;
-        private boolean showSplash10KScreen = false;
+//        private boolean showSplash10KScreen = false;
 
         private Paint mBubbleTextPaint;
 
@@ -124,7 +124,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private float mRadius;
 
         private BubbleManager bubbleManager;
-        private Splash10KScreen splash10KScreen;
+        private SplashScreen splashScreen;
 
 
         @Override
@@ -171,7 +171,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mBubbleTextPaint.setTextAlign(Paint.Align.CENTER);
 
             bubbleManager = new BubbleManager();
-            splash10KScreen = new Splash10KScreen();
+            splashScreen = new SplashScreen();
 
             mTime  = new Time();
 
@@ -288,6 +288,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 mSensorAccelerometer.register();
 
                 updateStepCounts();
+                splashScreen.check();
 
             } else {
                 bubbleManager.newGlance();
@@ -325,7 +326,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mCenterY = 0.50f * mHeight;
             mRadius = 0.50f * mWidth;
 
-            splash10KScreen.initialize();
+            splashScreen.reset();
 
             mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
@@ -389,9 +390,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
-                if (showSplash10KScreen) {
-                    splash10KScreen.render(canvas);
-                }
+                if (splashScreen.active) splashScreen.render(canvas);
+//                if (showSplash10KScreen) {
+//                    splashScreen.render(canvas);
+//                }
 
             }
         }
@@ -490,8 +492,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
             }
 
-            showSplash10KScreen = mCurrentSteps > 10000 && mPrevSteps < 10000;
-            if (DEBUG_LOGS && showSplash10KScreen) Log.v(TAG, "REACHED 10K!");
+//            showSplash10KScreen = mCurrentSteps > 10000 && mPrevSteps < 10000;
+//            if (DEBUG_LOGS && showSplash10KScreen) Log.v(TAG, "REACHED 10K!");
 
             bubbleManager.updateSteps(mCurrentSteps);
 
@@ -545,17 +547,24 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private final int COLOR_SMALL   = Color.argb(204, 39, 170, 225);
             private final int COLOR_XSMALL  = Color.argb(204, 141, 198, 63);
 
-            private final static float GAP_ANGLE_XBIG   = (float) (-0.375f * TAU);
-            private final static float GAP_ANGLE_MBIG   = (float) (-0.250f * TAU);
-            private final static float GAP_ANGLE_BIG    = (float) (-0.250f * TAU);
-            private final static float GAP_ANGLE_MEDIUM = (float) (-0.500f * TAU);
-            private final static float GAP_ANGLE_SMALL  = (float) (-0.375f * TAU);
-            private final static float GAP_ANGLE_XSMALL = (float) ( 0.500f * TAU);
+//            private final static float GAP_ANGLE_XBIG   = (float) (-0.375f * TAU);
+//            private final static float GAP_ANGLE_MBIG   = (float) (-0.250f * TAU);
+//            private final static float GAP_ANGLE_BIG    = (float) (-0.250f * TAU);
+//            private final static float GAP_ANGLE_MEDIUM = (float) (-0.500f * TAU);
+//            private final static float GAP_ANGLE_SMALL  = (float) (-0.375f * TAU);
+//            private final static float GAP_ANGLE_XSMALL = (float) ( 0.500f * TAU);
+
+            private final static float INNER_RING_RADIUS_FACTOR_XBIG   = 0.8f;
+            private final static float INNER_RING_RADIUS_FACTOR_MBIG   = 0.8f;
+            private final static float INNER_RING_RADIUS_FACTOR_BIG    = 0.8f;
+            private final static float INNER_RING_RADIUS_FACTOR_MEDIUM = 0.8f;
+            private final static float INNER_RING_RADIUS_FACTOR_SMALL  = 0.7f;
+            private final static float INNER_RING_RADIUS_FACTOR_XSMALL = 0.6f;
 
             private BubbleCollection bubblesXBig, bubblesBig, bubblesMBig,
                     bubblesMedium, bubblesSmall, bubblesXSmall;
-            private Paint paintXBig, paintMBig, paintBig,
-                    paintMedium, paintSmall, paintXSmall;
+//            private Paint paintXBig, paintMBig, paintBig,
+//                    paintMedium, paintSmall, paintXSmall;
             private int prevSteps, currentSteps;
 
             private int updateStep;  // @TODO add explanation here
@@ -563,42 +572,48 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             List<Bubble> toDefeatureBuffer = new ArrayList<>();
 
             BubbleManager() {
-                paintXBig = new Paint();
-                paintXBig.setColor(COLOR_XBIG);
-                paintXBig.setAntiAlias(true);
-                paintXBig.setStyle(Paint.Style.FILL_AND_STROKE);
+//                paintXBig = new Paint();
+//                paintXBig.setColor(COLOR_XBIG);
+//                paintXBig.setAntiAlias(true);
+//                paintXBig.setStyle(Paint.Style.FILL_AND_STROKE);
+//
+//                paintMBig = new Paint();
+//                paintMBig.setColor(COLOR_MBIG);
+//                paintMBig.setAntiAlias(true);
+//                paintMBig.setStyle(Paint.Style.FILL_AND_STROKE);
+//
+//                paintBig = new Paint();
+//                paintBig.setColor(COLOR_BIG);
+//                paintBig.setAntiAlias(true);
+//                paintBig.setStyle(Paint.Style.FILL_AND_STROKE);
+//
+//                paintMedium = new Paint();
+//                paintMedium.setColor(COLOR_MEDIUM);
+//                paintMedium.setAntiAlias(true);
+//                paintMedium.setStyle(Paint.Style.FILL_AND_STROKE);
+//
+//                paintSmall = new Paint();
+//                paintSmall.setColor(COLOR_SMALL);
+//                paintSmall.setAntiAlias(true);
+//                paintSmall.setStyle(Paint.Style.FILL_AND_STROKE);
+//
+//                paintXSmall = new Paint();
+//                paintXSmall.setColor(COLOR_XSMALL);
+//                paintXSmall.setAntiAlias(true);
+//                paintXSmall.setStyle(Paint.Style.FILL_AND_STROKE);
 
-                paintMBig = new Paint();
-                paintMBig.setColor(COLOR_MBIG);
-                paintMBig.setAntiAlias(true);
-                paintMBig.setStyle(Paint.Style.FILL_AND_STROKE);
-
-                paintBig = new Paint();
-                paintBig.setColor(COLOR_BIG);
-                paintBig.setAntiAlias(true);
-                paintBig.setStyle(Paint.Style.FILL_AND_STROKE);
-
-                paintMedium = new Paint();
-                paintMedium.setColor(COLOR_MEDIUM);
-                paintMedium.setAntiAlias(true);
-                paintMedium.setStyle(Paint.Style.FILL_AND_STROKE);
-
-                paintSmall = new Paint();
-                paintSmall.setColor(COLOR_SMALL);
-                paintSmall.setAntiAlias(true);
-                paintSmall.setStyle(Paint.Style.FILL_AND_STROKE);
-
-                paintXSmall = new Paint();
-                paintXSmall.setColor(COLOR_XSMALL);
-                paintXSmall.setAntiAlias(true);
-                paintXSmall.setStyle(Paint.Style.FILL_AND_STROKE);
-
-                bubblesXBig = new BubbleCollection(this, STEP_RATIO_XBIG, RADIUS_XBIG, WEIGHT_XBIG, GAP_ANGLE_XBIG, paintXBig);
-                bubblesMBig = new BubbleCollection(this, STEP_RATIO_MBIG, RADIUS_MBIG, WEIGHT_MBIG, GAP_ANGLE_MBIG, paintMBig);
-                bubblesBig = new BubbleCollection(this, STEP_RATIO_BIG, RADIUS_BIG, WEIGHT_BIG, GAP_ANGLE_BIG, paintBig);
-                bubblesMedium = new BubbleCollection(this, STEP_RATIO_MEDIUM, RADIUS_MEDIUM, WEIGHT_MEDIUM, GAP_ANGLE_MEDIUM, paintMedium);
-                bubblesSmall = new BubbleCollection(this, STEP_RATIO_SMALL, RADIUS_SMALL, WEIGHT_SMALL, GAP_ANGLE_SMALL, paintSmall);
-                bubblesXSmall = new BubbleCollection(this, STEP_RATIO_XSMALL, RADIUS_XSMALL, WEIGHT_XSMALL, GAP_ANGLE_XSMALL, paintXSmall);
+                bubblesXBig = new BubbleCollection(this, STEP_RATIO_XBIG, RADIUS_XBIG,
+                        WEIGHT_XBIG, COLOR_XBIG, INNER_RING_RADIUS_FACTOR_XBIG);
+                bubblesMBig = new BubbleCollection(this, STEP_RATIO_MBIG, RADIUS_MBIG,
+                        WEIGHT_MBIG, COLOR_MBIG, INNER_RING_RADIUS_FACTOR_MBIG);
+                bubblesBig = new BubbleCollection(this, STEP_RATIO_BIG, RADIUS_BIG,
+                        WEIGHT_BIG, COLOR_BIG, INNER_RING_RADIUS_FACTOR_BIG);
+                bubblesMedium = new BubbleCollection(this, STEP_RATIO_MEDIUM, RADIUS_MEDIUM,
+                        WEIGHT_MEDIUM, COLOR_MEDIUM, INNER_RING_RADIUS_FACTOR_MEDIUM);
+                bubblesSmall = new BubbleCollection(this, STEP_RATIO_SMALL, RADIUS_SMALL,
+                        WEIGHT_SMALL, COLOR_SMALL, INNER_RING_RADIUS_FACTOR_SMALL);
+                bubblesXSmall = new BubbleCollection(this, STEP_RATIO_XSMALL, RADIUS_XSMALL,
+                        WEIGHT_XSMALL, COLOR_XSMALL, INNER_RING_RADIUS_FACTOR_XSMALL);
 
                 prevSteps = 0;
                 currentSteps = 0;
@@ -620,10 +635,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 switch (updateStep) {
                     // @TODO verify if bubble count is working on the long run
                     case 1:
-                        bubblesXSmall.add((currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size(), false, 0);
+                        bubblesXSmall.add((currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size(), false, false, 0);
                         int stepInc = currentSteps - prevSteps;
                         currentSteps -= stepInc % STEP_RATIO_SMALL;  // account for the remainder of the division
-                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL, false, 0);
+                        bubblesSmall.add(stepInc / STEP_RATIO_SMALL, false, false, 0);
                         updateStep++;
                         break;
                     case 2:
@@ -635,7 +650,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int smallBubbleCount = bubblesSmall.bubbles.size();
                         int newMediumBubbleCount = smallBubbleCount / scaleRatioMS;
                         bubblesSmall.remove(newMediumBubbleCount * scaleRatioMS);
-                        bubblesMedium.add(newMediumBubbleCount, false, 0);
+                        bubblesMedium.add(newMediumBubbleCount, false, false, 0);
                         updateStep++;
                         break;
                     case 4:
@@ -650,7 +665,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int mediumBubbleCount = bubblesMedium.bubbles.size();
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
                         bubblesMedium.remove(newBigBubbleCount * scaleRatioBM);
-                        bubblesBig.add(newBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS, 0);  // stop featuring after reaching 10k
+                        bubblesBig.add(newBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
+                                mPrevSteps < STEP_RATIO_BIG && mCurrentSteps > STEP_RATIO_BIG, 0);
                         updateStep++;
                         break;
                     case 6:
@@ -682,7 +698,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int bigBubbleCount = bubblesBig.bubbles.size();
                         int newMBigBubbleCount = bigBubbleCount / scaleRatioBMB;
                         bubblesBig.remove(newMBigBubbleCount * scaleRatioBMB);
-                        bubblesMBig.add(newMBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS, 0);
+                        bubblesMBig.add(newMBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
+                                mPrevSteps < STEP_RATIO_MBIG && mCurrentSteps > STEP_RATIO_MBIG, 0);
                         updateStep++;
                         break;
                     case 8:
@@ -697,7 +714,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int mBigBubbleCount = bubblesMBig.bubbles.size();
                         int newXBigBubbleCount = mBigBubbleCount / scaleRatioMBXB;
                         bubblesMBig.remove(newXBigBubbleCount * scaleRatioMBXB);
-                        bubblesXBig.add(newXBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS, 0);
+                        bubblesXBig.add(newXBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
+                                (mPrevSteps < STEP_RATIO_XBIG && mCurrentSteps > STEP_RATIO_XBIG) ||  // 10k
+                                (mPrevSteps < 2 * STEP_RATIO_XBIG && mCurrentSteps > 2 * STEP_RATIO_XBIG),  // 20k
+                                0);
                         updateStep++;
                         break;
                     case 10:
@@ -794,19 +814,28 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             int stepSize;
             float radius;
             float weight;
-            float gapAngle;
+//            float gapAngle;
+            float innerRingFactor;
             boolean needsUpdate;
+            int color;
             Paint paint;
 
-            BubbleCollection(BubbleManager parent_, int stepSize_, float radius_, float weight_, float gapAngle_, Paint paint_) {
+            BubbleCollection(BubbleManager parent_, int stepSize_, float radius_, float weight_,
+                             int color_, float innerRingFactor_) {
                 stepSize = stepSize_;
                 parent = parent_;
                 radius = radius_;
                 weight = weight_;
-                gapAngle = gapAngle_;
-                paint = paint_;
+//                gapAngle = gapAngle_;
+                innerRingFactor = innerRingFactor_;
+                color = color_;
                 bubbles = new ArrayList<>();
                 killQueue = new ArrayList<>();
+
+                paint = new Paint();
+                paint.setColor(color);
+                paint.setAntiAlias(true);
+                paint.setStyle(Paint.Style.FILL_AND_STROKE);
             }
 
             public void render(Canvas canvas) {
@@ -835,7 +864,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 }
             }
 
-            private void add(int count_, boolean shouldFeature, int glanceDuration_) {
+            private void add(int count_, boolean shouldFeature, boolean showSplashScreen, int glanceDuration_) {
                 if (count_ < 0) {
                     remove(-count_);
                     return;
@@ -844,10 +873,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 int bubbleCount = bubbles.size();
                 for (int i = 0; i < count_; i++) {
                     int newVal = ++bubbleCount * stepSize;
-                    Bubble b = new Bubble(this, newVal, radius, weight, gapAngle,
+                    Bubble b = new Bubble(this, newVal, radius, weight, innerRingFactor,
                             shouldFeature && i == count_ - 1, glanceDuration_, paint);  // @JAMES: Only the last bubble in the group gets featured
                     b.grow();
                     bubbles.add(b);
+                }
+
+                if (showSplashScreen) {
+                    splashScreen.trigger(stepSize, color);
                 }
             }
 
@@ -885,13 +918,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private static final float PLANE_ACCEL_FACTOR       = 0.25f; // when level, how much shake?
             private static final float GRAVITY_FACTOR           = 0.80f; // how much does gravity weight in global forces
             private static final float ANCHOR_SPRING_FACTOR     = 0.02f; // how much spring from lock position
-
             private static final float DEPTH_ACCEL_FACTOR       = 0.40f;
             private static final float DEPTH_SPRING_FACTOR      = 0.10f;
-
             private static final float RANDOM_WEIGHT_FACTOR     = 0.50f; // how much variation between balls in the same category
-
             private static final float TEXT_HEIGHT_FACTOR       = 0.20f; // as a factor of bubble radius
+            private static final float INNER_RING_OFFSET_FACTOR = 0.10f;
 
             BubbleCollection parent;
 
@@ -903,7 +934,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             float velX, velY;
 
             float accX, accY;
-            float radius, weight;
+            float radius, weight, innerRingFactor;
             float velR, accR;
 
             boolean needsSizeUpdate = false;
@@ -917,7 +948,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             Paint paint;
             Path path;
 
-            Bubble(BubbleCollection parent_, int value_, float radius_, float weight_, float gapAngle_, boolean isFeatured_, int glanceDuration_, Paint paint_) {
+            Bubble(BubbleCollection parent_, int value_, float radius_, float weight_,
+                   float innerRingFactor_, boolean isFeatured_, int glanceDuration_, Paint paint_) {
                 value = value_;
                 valueStr = mTestStepFormatter.format(value);
                 parent = parent_;
@@ -927,11 +959,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 y = mCenterY;
                 radius = radius_;
                 weight = weight_ + (float) (weight_ * RANDOM_WEIGHT_FACTOR * Math.random());  // slight random weight variation
+                innerRingFactor = innerRingFactor_;
                 paint = paint_;
                 velX = velY = accX = accY = 0;
                 velR = accR = 0;
 
-//                gapAngle = gapAngle_;
                 gapAngle = TAU * (float) Math.random();
 
                 isFeatured = isFeatured_;
@@ -941,7 +973,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 path = new Path();
                 path.addCircle(0, 0, 1.0f, Path.Direction.CW);
                 path.close();
-                path.addCircle(0.1f * (float) Math.cos(gapAngle), 0.1f * (float) Math.sin(gapAngle), 0.8f, Path.Direction.CW);
+                path.addCircle(INNER_RING_OFFSET_FACTOR * (float) Math.cos(gapAngle),
+                        INNER_RING_OFFSET_FACTOR * (float) Math.sin(gapAngle),
+                        innerRingFactor, Path.Direction.CW);
                 path.close();
                 path.setFillType(Path.FillType.EVEN_ODD);
             }
@@ -1048,40 +1082,61 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
         }
 
-        private class Splash10KScreen {
-            private static final int R = 238;
-            private static final int G = 42;
-            private static final int B = 132;
+        private class SplashScreen {
+//            private static final int R = 238;
+//            private static final int G = 42;
+//            private static final int B = 132;
             private static final int FADE_IN_SPEED = 8;
             private static final float TEXT_SIZE = 0.10f;  // as a factor of screen height
             private static final float TEXT_SPEED = 0.25f;
+            private static final int MAX_ALPHA = 200;
 
             private int alpha;
             private float textSize;
             private float textX, textY;
 
-            Splash10KScreen() { }
+            private int r, g, b;
+            private String text;
+            private boolean active;
+
+            SplashScreen() { }
 
             // Must be called after onSurfaceChanged
-            public void initialize() {
+            public void reset() {
                 alpha = 0;
                 textSize = TEXT_SIZE * mHeight;
                 textX = mCenterX;
                 textY = 1.25f * mHeight;
+                active = false;
+            }
+
+            public void trigger(int value_, int color_) {
+                if (DEBUG_LOGS) Log.v(TAG, "SS trigger: " + value_);
+                text = mTestStepFormatter.format(value_);
+                r = Color.red(color_);
+                g = Color.green(color_);
+                b = Color.blue(color_);
+                reset();
+                active = true;
+            }
+
+            // deactivate it
+            public void check() {
+                if (active) {
+                    active = false;
+                    Log.v(TAG, "Deactivated splashscreen");
+                }
             }
 
             public void render(Canvas canvas) {
-                canvas.drawColor(Color.argb(alpha, R, G, B));
+                canvas.drawColor(Color.argb(alpha, r, g, b));
 
-//                mBubbleTextPaint.setColor(Color.argb(alpha, 255, 255, 255));
                 mBubbleTextPaint.setTextSize(textSize);
-                drawTextVerticallyCentered(canvas, mBubbleTextPaint, "10,000", textX, textY);
-//                mBubbleTextPaint.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);  // revert
+                drawTextVerticallyCentered(canvas, mBubbleTextPaint, text, textX, textY);
 
                 alpha += FADE_IN_SPEED;
-                if (alpha > 255) alpha = 255;
+                if (alpha > MAX_ALPHA) alpha = MAX_ALPHA;
                 textY -= TEXT_SPEED * (textY - mCenterY);
-                if (DEBUG_LOGS) Log.v(TAG, "textY: " + textY);
             }
         }
 
