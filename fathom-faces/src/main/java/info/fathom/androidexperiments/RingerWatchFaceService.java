@@ -58,7 +58,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int     RANDOM_FAKE_STEPS = 1000;
+    private static final int     RANDOM_FAKE_STEPS = 4000;
     private static final int     MAX_STEP_THRESHOLD = 21000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
 
@@ -546,22 +546,23 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //            private final int COLOR_XSMALL  = Color.argb(204, 141, 198, 63);
 
             private final int[] GROUP_COLORS = {
-                    Color.argb(204, 238, 42, 123),  // XBIG
-                    Color.argb(204, 141, 198, 63),  // MBIG
-                    Color.argb(204, 255, 167, 39),  // BIG
-                    Color.argb(204, 146, 39, 143),  // MEDIUM
-                    Color.argb(204, 39, 170, 225),  // SMALL
-                    Color.argb(204, 141, 198, 63)   // XSMALL
+                    Color.argb(204, 255, 0, 116),  // XBIG
+                    Color.argb(204, 146, 0, 146),  // MBIG
+                    Color.argb(204, 134, 73, 255),  // BIG
+                    Color.argb(204, 255, 167, 39),  // MEDIUM
+                    Color.argb(204, 141, 198, 63),  // SMALL
+                    Color.argb(204, 39, 170, 225)   // XSMALL
             };
 
             private final int GROUP_COUNT = GROUP_COLORS.length;
 
-            private final static float INNER_RING_RADIUS_FACTOR_XBIG   = 0.8f;
-            private final static float INNER_RING_RADIUS_FACTOR_MBIG   = 0.8f;
-            private final static float INNER_RING_RADIUS_FACTOR_BIG    = 0.8f;
-            private final static float INNER_RING_RADIUS_FACTOR_MEDIUM = 0.8f;
-            private final static float INNER_RING_RADIUS_FACTOR_SMALL  = 0.7f;
-            private final static float INNER_RING_RADIUS_FACTOR_XSMALL = 0.6f;
+            private final static float INNER_RING_RADIUS_FACTOR_XBIG   = 0.80f;
+            private final static float INNER_RING_RADIUS_FACTOR_MBIG   = 0.78f;
+            private final static float INNER_RING_RADIUS_FACTOR_BIG    = 0.75f;
+            private final static float INNER_RING_RADIUS_FACTOR_MEDIUM = 0.7f;
+            private final static float INNER_RING_RADIUS_FACTOR_SMALL  = 0.6f;
+            private final static float INNER_RING_RADIUS_FACTOR_XSMALL = 0.5f;
+
 
             private BubbleCollection bubblesXBig, bubblesBig, bubblesMBig,
                     bubblesMedium, bubblesSmall, bubblesXSmall;
