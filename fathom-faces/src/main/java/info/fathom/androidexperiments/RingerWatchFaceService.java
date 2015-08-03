@@ -283,6 +283,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             if (DEBUG_LOGS) Log.v(TAG, "onScreenChange: " + turnedOn);
 
             if (turnedOn) {
+                bubbleManager.newGlance();
+
                 registerTimeZoneReceiver();
                 mSensorStep.register();
                 mSensorAccelerometer.register();
@@ -290,7 +292,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 updateStepCounts();
 
             } else {
-                bubbleManager.newGlance();
+                bubbleManager.byeGlance();
 
                 if (timelyReset()) {
                     if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
@@ -515,7 +517,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
         private class BubbleManager {
 
-            private final static float ANIMATION_RATE = 0.25f;
+            private final static float ANIMATION_RATE           = 0.25f;
+
+            private final static float FRICTION_START           = 0.95f;
+            private final static float FRICTION_TARGET          = 0.55f;
+            private final static float FRICTION_ANIMATION_RATE  = 0.02f;
 
             private final static int STEP_RATIO_XBIG    = 10000;
             private final static int STEP_RATIO_MBIG    = 5000;
@@ -567,8 +573,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     bubblesMedium, bubblesSmall, bubblesXSmall;
 
             private int prevSteps, currentSteps;
-
             private int updateStep;  // @TODO add explanation here
+
+            private float currentFriction;
 
             List<Bubble> toDefeatureBuffer = new ArrayList<>();
 
@@ -590,6 +597,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 currentSteps = 0;
 
                 updateStep = 0;  // do not update
+
+                currentFriction = FRICTION_START;
             }
 
             public void render(Canvas canvas) {
@@ -683,8 +692,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         break;
 
 
-
-
 //                    // WHAT WAS THIS FOR..?
 //                    case 11:
 //                        bubblesXSmall.remove(bubblesXSmall.bubbles.size());
@@ -705,6 +712,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //                        if (!continueUpdating12) updateStep = 0;  // stop animation transition
 //                        break;
 
+
                     // DEBUG
                     case 11:
                         Log.v(TAG, "CASE 11");
@@ -718,6 +726,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     default:
                         break;
                 }
+
+                currentFriction += FRICTION_ANIMATION_RATE * (FRICTION_TARGET - currentFriction);
+                if (DEBUG_LOGS) Log.v(TAG, "currentFriction: " + currentFriction);
 
                 updatePositions();
             }
@@ -747,6 +758,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void newGlance() {
+                currentFriction = FRICTION_START;
+            }
+
+            public void byeGlance() {
                 for (Bubble bubble : toDefeatureBuffer) {
                     if (--bubble.featuredGlanceDuration <= 0) {
                         bubble.isFeatured = false;
@@ -865,7 +880,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //
 //            private static final float RANDOM_WEIGHT_FACTOR     = 0.20f;
 
-            private static final float FRICTION                 = 0.95f; // 0 - 1, 0 is total friction
+//            private static final float FRICTION                 = 0.95f; // 0 - 1, 0 is total friction  --> Replaced by global bubbleManager.currentFriction
             private static final float PLANE_ACCEL_FACTOR       = 0.25f; // when level, how much shake?
             private static final float GRAVITY_FACTOR           = 0.80f; // how much does gravity weight in global forces
             private static final float ANCHOR_SPRING_FACTOR     = 0.02f; // how much spring from lock position
@@ -966,15 +981,18 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
                 velX += accX;
                 velY += accY;
-                velX *= FRICTION;
-                velY *= FRICTION;
+//                velX *= FRICTION;
+//                velY *= FRICTION;
+                velX *= bubbleManager.currentFriction;
+                velY *= bubbleManager.currentFriction;
                 x += velX;
                 y += velY;
 
                 if (DEPTH_BOUNCING && !needsSizeUpdate) {
                     accR = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (radius - currentRadius)) / weight;
                     velR += accR;
-                    velR *= FRICTION;
+//                    velR *= FRICTION;
+                    velR *= bubbleManager.currentFriction;
                     currentRadius += velR;
                 }
 
