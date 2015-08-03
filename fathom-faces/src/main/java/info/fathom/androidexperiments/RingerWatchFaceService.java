@@ -365,6 +365,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             mTextDigitsShadowPaintInteractive.setTextSize(mTextDigitsHeight);
             mTextStepsShadowPaintInteractive.setTextSize(mTextStepsHeight);
+
+
+            bubbleManager.setScreenWidth(mWidth);
         }
 
         @Override
@@ -859,6 +862,15 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 return null;
             }
 
+            public void setScreenWidth(float width_) {
+                bubblesXBig.setScreenWidth(width_);
+                bubblesMBig.setScreenWidth(width_);
+                bubblesBig.setScreenWidth(width_);
+                bubblesMedium.setScreenWidth(width_);
+                bubblesSmall.setScreenWidth(width_);
+                bubblesXSmall.setScreenWidth(width_);
+            }
+
         }
 
 
@@ -879,7 +891,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                              int color_, float innerRingFactor_) {
                 stepSize = stepSize_;
                 parent = parent_;
-                radius = mWidth * radius_;
+                radius = radius_;
                 weight = weight_;
                 innerRingFactor = innerRingFactor_;
                 color = color_;
@@ -950,6 +962,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 }
             }
 
+            public void setScreenWidth(float width_) {
+                for (Bubble bub : bubbles) {
+                    bub.setScreenWidth(width_);
+                }
+            }
+
         }
 
         private class Bubble {
@@ -988,6 +1006,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             float velX, velY;
 
             float accX, accY;
+            float screenW, relRadius;
             float radius, weight, innerRingFactor;
             float velR, accR;
 
@@ -1011,7 +1030,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 anchorY = (float) (mHeight * Math.random());
                 x = mCenterX;
                 y = mCenterY;
-                radius = radius_;
+//                radius = radius_;
+                screenW = mWidth;  // this may have been initialized already, or be zero...
+                relRadius = radius_;
+                radius = screenW * relRadius;
                 weight = weight_ + (float) (weight_ * RANDOM_WEIGHT_FACTOR * Math.random());  // slight random weight variation
                 innerRingFactor = innerRingFactor_;
                 paint = paint_;
@@ -1144,6 +1166,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             public void resetMotion() {
                 velX = velY = accX = accY = 0;
+            }
+
+            public void setScreenWidth(float width_) {
+                if (DEBUG_LOGS) Log.v(TAG, "Setting swidth = for bubble " + value);
+                screenW = width_;
+                radius = screenW * relRadius;
+                grow();
+                if (DEBUG_LOGS) Log.v(TAG, "set relRadius: " + relRadius + ", radius: " + radius);
             }
 
         }
