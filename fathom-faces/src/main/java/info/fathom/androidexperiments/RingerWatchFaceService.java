@@ -538,20 +538,20 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private final static float WEIGHT_SMALL     = 2;
             private final static float WEIGHT_XSMALL    = 2;
 
-            private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);
-            private final int COLOR_MBIG    = Color.argb(204, 141, 198, 63);
-            private final int COLOR_BIG     = Color.argb(204, 255, 167, 39);
-            private final int COLOR_MEDIUM  = Color.argb(204, 146, 39, 143);
-            private final int COLOR_SMALL   = Color.argb(204, 39, 170, 225);
-            private final int COLOR_XSMALL  = Color.argb(204, 141, 198, 63);
+//            private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);
+//            private final int COLOR_MBIG    = Color.argb(204, 141, 198, 63);
+//            private final int COLOR_BIG     = Color.argb(204, 255, 167, 39);
+//            private final int COLOR_MEDIUM  = Color.argb(204, 146, 39, 143);
+//            private final int COLOR_SMALL   = Color.argb(204, 39, 170, 225);
+//            private final int COLOR_XSMALL  = Color.argb(204, 141, 198, 63);
 
             private final int[] GROUP_COLORS = {
-                    Color.argb(204, 238, 42, 123),
-                    Color.argb(204, 141, 198, 63),
-                    Color.argb(204, 255, 167, 39),
-                    Color.argb(204, 146, 39, 143),
-                    Color.argb(204, 39, 170, 225),
-                    Color.argb(204, 141, 198, 63)
+                    Color.argb(204, 238, 42, 123),  // XBIG
+                    Color.argb(204, 141, 198, 63),  // MBIG
+                    Color.argb(204, 255, 167, 39),  // BIG
+                    Color.argb(204, 146, 39, 143),  // MEDIUM
+                    Color.argb(204, 39, 170, 225),  // SMALL
+                    Color.argb(204, 141, 198, 63)   // XSMALL
             };
 
             private final int GROUP_COUNT = GROUP_COLORS.length;
@@ -574,17 +574,17 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             BubbleManager() {
                 bubblesXBig = new BubbleCollection(this, STEP_RATIO_XBIG, RADIUS_XBIG,
-                        WEIGHT_XBIG, COLOR_XBIG, INNER_RING_RADIUS_FACTOR_XBIG);
+                        WEIGHT_XBIG, GROUP_COLORS[0], INNER_RING_RADIUS_FACTOR_XBIG);
                 bubblesMBig = new BubbleCollection(this, STEP_RATIO_MBIG, RADIUS_MBIG,
-                        WEIGHT_MBIG, COLOR_MBIG, INNER_RING_RADIUS_FACTOR_MBIG);
+                        WEIGHT_MBIG, GROUP_COLORS[1], INNER_RING_RADIUS_FACTOR_MBIG);
                 bubblesBig = new BubbleCollection(this, STEP_RATIO_BIG, RADIUS_BIG,
-                        WEIGHT_BIG, COLOR_BIG, INNER_RING_RADIUS_FACTOR_BIG);
+                        WEIGHT_BIG, GROUP_COLORS[2], INNER_RING_RADIUS_FACTOR_BIG);
                 bubblesMedium = new BubbleCollection(this, STEP_RATIO_MEDIUM, RADIUS_MEDIUM,
-                        WEIGHT_MEDIUM, COLOR_MEDIUM, INNER_RING_RADIUS_FACTOR_MEDIUM);
+                        WEIGHT_MEDIUM, GROUP_COLORS[3], INNER_RING_RADIUS_FACTOR_MEDIUM);
                 bubblesSmall = new BubbleCollection(this, STEP_RATIO_SMALL, RADIUS_SMALL,
-                        WEIGHT_SMALL, COLOR_SMALL, INNER_RING_RADIUS_FACTOR_SMALL);
+                        WEIGHT_SMALL, GROUP_COLORS[4], INNER_RING_RADIUS_FACTOR_SMALL);
                 bubblesXSmall = new BubbleCollection(this, STEP_RATIO_XSMALL, RADIUS_XSMALL,
-                        WEIGHT_XSMALL, COLOR_XSMALL, INNER_RING_RADIUS_FACTOR_XSMALL);
+                        WEIGHT_XSMALL, GROUP_COLORS[5], INNER_RING_RADIUS_FACTOR_XSMALL);
 
                 prevSteps = 0;
                 currentSteps = 0;
@@ -1098,8 +1098,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     }
                 }
                 textY -= TEXT_SPEED * (textY - mCenterY);
-
-
             }
 
             private void setColor(int color_) {
