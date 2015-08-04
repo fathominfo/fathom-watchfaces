@@ -27,6 +27,7 @@ import android.view.WindowInsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RingerWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
@@ -62,9 +63,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
     private static final int     RANDOM_FAKE_STEPS = 4000;
-    private static final int     MAX_STEP_THRESHOLD = 21000;
+    private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
-    private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 500;
     private static final boolean VARIABLE_FRICTION = false;
 
 
@@ -101,7 +103,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         //        private boolean mBurnInProtection;
         private boolean mAmbient, mScreenOn;
 
-        private Time mTime;
+//        private Time mTime;
+        private TimeManager mTimeManager;
         private String mTimeStr;
         private int mHourInt, mMinuteInt;
         private int mLastAmbientHour;
@@ -119,8 +122,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private int mStepBuffer = 0;
         private int mPrevSteps = 0;
         private int mCurrentSteps = 0;
-        private float mStepCountDisplay;  // , mStepCountDisplayTarget;
-//        private boolean showSplash10KScreen = false;
+        private float mStepCountDisplay;
 
         private Paint mBubbleTextPaint;
 
@@ -192,7 +194,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             bubbleManager = new BubbleManager();
             splashScreen = new SplashScreen();
 
-            mTime = new Time();
+//            mTime = new Time();
+            mTimeManager = new TimeManager();
+            mTimeManager.setOvernightResetHour(RESET_HOUR);
             glances = 0;
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -313,6 +317,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
                 bubbleManager.newGlance();
 
+                if (RANDOM_TIME_PER_GLANCE) {
+                    mTimeManager.addRandomInc();
+                    mTimeManager.toDebugLog();
+                }
+
                 registerTimeZoneReceiver();
                 mSensorStep.register();
                 mSensorAccelerometer.register();
@@ -327,6 +336,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     mPrevSteps = 0;
                     mCurrentSteps = 0;
                     bubbleManager.updateSteps(mCurrentSteps);
+                }
+
+                if (mTimeManager.resetCheck()) {
+                    Log.v(TAG, "SHOULD RESET WATCH NOW");
                 }
 
                 unregisterTimeZoneReceiver();
@@ -391,13 +404,22 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         public void onDraw(Canvas canvas, Rect bounds) {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
-            mTime.setToNow();
-            mHourInt = mTime.hour;
-            if (NEW_HOUR_PER_GLANCE) {
-                mHourInt = (mHourInt + glances) % 24;
-            }
-            mMinuteInt = mTime.minute;
-            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
+//            mTime.setToNow();
+//            mHourInt = mTime.hour;
+//            if (RANDOM_TIME_PER_GLANCE) {
+//                mHourInt = (mHourInt + glances) % 24;
+//            }
+//            mMinuteInt = mTime.minute;
+//            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
+
+//            if (RANDOM_TIME_PER_GLANCE) {
+//
+//            } else {
+                mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
+//            }
+
+            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":" + String.format("%02d", mTimeManager.minute);
+
 
             if (mAmbient) {
                 if (DEBUG_LOGS) Log.v(TAG, "Drawing ambient canvas");
@@ -451,8 +473,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+//                mTime.clear(intent.getStringExtra("time-zone"));
+//                mTime.setToNow();
+                mTimeManager.setTimeZone(intent);
             }
         };
 
@@ -516,46 +539,175 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             return reset;
         }
 
+
+
+
+        private class TimeManager {
+
+            private static final boolean DEBUG_FAKE_TIME = RANDOM_TIME_PER_GLANCE;
+            private final long DEBUG_FAKE_TIME_INC = TimeUnit.MINUTES.toMillis(RANDOM_MINUTES_INC);
+            private static final long DAY_IN_MILLIS = 86400000;
+
+            private Time currentTime;
+            public int year, month, monthDay, hour, minute, second;
+
+            private int overnightResetHour;
+            private Time nextResetTime;
+
+            TimeManager() {
+                overnightResetHour = 0;
+
+                currentTime = new Time();
+                currentTime.setToNow();
+
+                setToNow();
+            }
+
+            public void setToNow() {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+            }
+
+            public void setTimeZone(Intent intent) {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.clear(intent.getStringExtra("time-zone"));
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+            }
+
+            public void addRandomInc() {
+                long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
+                if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
+
+                currentTime.set(currentTime.toMillis(false) + rInc);
+
+                updateFields();
+            }
+
+            public boolean resetCheck() {
+                boolean reset = currentTime.after(nextResetTime);
+
+                if (reset) nextResetTime = computeNextResetTime();
+
+                if (DEBUG_LOGS) Log.v(TAG, "Reset check: " + reset);
+
+                return reset;
+            }
+
+            public void setOvernightResetHour(int hour_) {
+                overnightResetHour = hour_;
+
+                nextResetTime = computeNextResetTime();
+            }
+
+            private Time computeNextResetTime() {
+                Time resetTime = new Time();
+                resetTime.set(0, 0, overnightResetHour, monthDay, month, year);  // Set to today's reset time
+
+                // If already past, add a day
+                if (currentTime.after(resetTime)) {
+                    resetTime.set(resetTime.toMillis(false) + DAY_IN_MILLIS);
+                }
+
+                if (DEBUG_LOGS) Log.v(TAG, "Next reset time: " + resetTime.format2445());
+
+                return resetTime;
+            }
+
+            private void updateFields() {
+                year = currentTime.year;
+                month = currentTime.month;
+                monthDay = currentTime.monthDay;
+                hour = currentTime.hour;
+                minute = currentTime.minute;
+                second = currentTime.second;
+            }
+
+            public void toDebugLog() {
+                Log.v(TAG, "--> Curr time: " + currentTime.format2445());
+            }
+
+
+        }
+
+
+
+
+
 //        private class HourCheck {
 //
-//            int hourThreshold, inactivityThreshold;
-//            Time prevCheck;
-//            Time currentCheck;
+//            private static final long DAY_IN_MILLIS = 86400000;
+//
+//            int hourThreshold;
+//            long inactivityThreshold;
+//            Time prevCheck, currentCheck;
+//            long prevCheckMillis, currentCheckMillis;
 //            boolean wasResetToday;
 //
-//            HourCheck(int hourThreshold_, int inactivityThreshold_) {
+//            HourCheck(int hourThreshold_, int hoursInactiveThreshold_) {
 //                wasResetToday = false;
 //
 //                hourThreshold = hourThreshold_;
-//                inactivityThreshold = inactivityThreshold_;
+//                inactivityThreshold = TimeUnit.HOURS.toMillis(hoursInactiveThreshold_);
 //
 //                prevCheck = new Time();
 //                prevCheck.setToNow();
+//                prevCheckMillis = prevCheck.toMillis(false);
+//
 //                currentCheck = new Time();
 //                currentCheck.setToNow();
+//                currentCheckMillis = currentCheck.toMillis(false);
 //            }
 //
 //            public boolean shouldReset() {
 //
 //                prevCheck.set(currentCheck);
+//                prevCheckMillis = prevCheck.toMillis(false);
 //                currentCheck.setToNow();
+//                currentCheckMillis = currentCheck.toMillis(false);
 //
+//                if (DEBUG_LOGS) {
+//                    Log.v(TAG, "--> TIME, prev check: " + prevCheck.format2445());
+//                    Log.v(TAG, "--> TIME, curr check: " + currentCheck.format2445());
+//                }
 //
+//                // If day has changed from previous check
+//                if (prevCheck.yearDay < currentCheck.yearDay) {
+//                    wasResetToday = false;
+//                }
 //
+//                if (wasResetToday) return false;
 //
-//                return false;
+//                wasResetToday = timeReset() || inactivityReset();
+//
+//                Log.v(TAG, "--> wasResetToday: " + wasResetToday);
+//
+//                return wasResetToday;
 //            }
 //
 //            private boolean timeReset() {
 //                // If last check was before midnight
-//                if (prevCheck.yearDay < currentCheck.yearDay) {
-//
+//                if (prevCheck.yearDay < currentCheck.yearDay) {  // @TODO Wouldn't work for newyear's eve!
 //                    if (prevCheck.yearDay < currentCheck.yearDay - 1) return true;  // If a whole day has passed
+//                    if (currentCheck.hour >= hourThreshold) return true;
 //
-//                    if (currentCheck.hour >= )
-//
+//                // If last check was this same day
+//                } else {
+//                    if (prevCheck.hour < hourThreshold && currentCheck.hour >= hourThreshold) return true;
 //                }
 //
+//                // Else
+//                return false;
+//            }
+//
+//
+//            private boolean inactivityReset() {
+//                return (currentCheck.toMillis(false) - prevCheck.toMillis(false)) > inactivityThreshold;
 //            }
 //
 //
@@ -1314,7 +1466,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void render(Canvas canvas) {
-                if (DEBUG_LOGS) Log.v(TAG, "Rendering splashscreen, alpha: " + alpha);
+//                if (DEBUG_LOGS) Log.v(TAG, "Rendering splashscreen, alpha: " + alpha);
                 canvas.drawColor(Color.argb(alpha, r, g, b));
 
 //                mBubbleTextPaint.setTextSize(textSize);
@@ -1352,7 +1504,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
 
             private void cycleBGColor() {
-                if (DEBUG_LOGS) Log.v(TAG, "Cycling BGColor");
+//                if (DEBUG_LOGS) Log.v(TAG, "Cycling BGColor");
                 int newColor = bubbleManager.GROUP_COLORS[bgColorIterator];
                 setColor(newColor);
                 if (++bgColorIterator >= bubbleManager.GROUP_COUNT) bgColorIterator = 0;
