@@ -715,7 +715,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             static final float HEIGHT_RATIO = 0.50f;        // height/width ratio
             static final float IRIS_RATIO = 0.40f;          // irisDiameter/width ratio
             static final float PUPIL_RATIO = 0.22f;         // pupilDiameter/width ratio
-            static final float WIDE_OPEN_RATIO = 0.60f;
+            static final float WIDE_OPEN_RATIO = 0.65f;
             static final float HORIZONTAL_LOOK_RATIO = 0.45f;     // how far the pupil will travel laterally in relation to width/2
             static final float VERTICAL_LOOK_RATIO = 0.30f;       // idem
             static final float PUPIL_SPEED_HORIZONTAL = 0.50f;
