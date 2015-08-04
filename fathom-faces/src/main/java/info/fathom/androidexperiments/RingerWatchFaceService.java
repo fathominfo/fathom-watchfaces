@@ -41,6 +41,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
 
     private static final String  RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
+    private static final String  RALEWAY_MED_TYPEFACE_PATH = "fonts/Raleway-Medium.ttf";
+    private static final String  RALEWAY_SEMI_TYPEFACE_PATH = "fonts/Raleway-SemiBold.ttf";
 
     private static final int     TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int     TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
@@ -114,7 +116,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private Paint mTextStepsPaintInteractive, mTextStepsPaintAmbient;
         private float mTextStepsHeight, mTextStepsBaselineHeight, mTextStepsRightMargin;
         private Paint mTextDigitsShadowPaintInteractive, mTextStepsShadowPaintInteractive;
-        private Typeface mTextTypeface;
+        private Typeface mTextTypeface, mTextTypefaceMed, mTextTypefaceSemi;
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
         private final Rect textBounds = new Rect();
 
@@ -147,6 +149,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             mTextTypeface = Typeface.createFromAsset(getApplicationContext().getAssets(),
                     RALEWAY_TYPEFACE_PATH);
+            mTextTypefaceMed = Typeface.createFromAsset(getApplicationContext().getAssets(),
+                    RALEWAY_MED_TYPEFACE_PATH);
+            mTextTypefaceSemi = Typeface.createFromAsset(getApplicationContext().getAssets(),
+                    RALEWAY_SEMI_TYPEFACE_PATH);
 
             mTextDigitsPaintInteractive = new Paint();
             mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
@@ -734,12 +740,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private final static float RADIUS_SMALL   = 0.03125f;
             private final static float RADIUS_XSMALL  = 0.01562f;
 
-            private final static float WEIGHT_XBIG      = 3;
-            private final static float WEIGHT_MBIG      = 3;
-            private final static float WEIGHT_BIG       = 3;
+            private final static float WEIGHT_XBIG      = 2;
+            private final static float WEIGHT_MBIG      = 2;
+            private final static float WEIGHT_BIG       = 2;
             private final static float WEIGHT_MEDIUM    = 3;
-            private final static float WEIGHT_SMALL     = 2;
-            private final static float WEIGHT_XSMALL    = 2;
+            private final static float WEIGHT_SMALL     = 3;
+            private final static float WEIGHT_XSMALL    = 3;
 
 //            private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);
 //            private final int COLOR_MBIG    = Color.argb(204, 141, 198, 63);
@@ -749,22 +755,22 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //            private final int COLOR_XSMALL  = Color.argb(204, 141, 198, 63);
 
             private final int[] GROUP_COLORS = {
-                    Color.argb(204, 255, 0, 116),  // XBIG
-                    Color.argb(204, 146, 0, 146),  // MBIG
-                    Color.argb(204, 134, 73, 255),  // BIG
-                    Color.argb(204, 255, 167, 39),  // MEDIUM
-                    Color.argb(204, 141, 198, 63),  // SMALL
-                    Color.argb(204, 39, 170, 225)   // XSMALL
+                    Color.argb(204, 255, 255, 0),  // XBIG
+                    Color.argb(204, 237, 41, 122),  // MBIG
+                    Color.argb(204, 140, 199, 64),  // BIG
+                    Color.argb(204, 0, 173, 240),  // MEDIUM
+                    Color.argb(204, 242, 102, 33),  // SMALL
+                    Color.argb(204, 128, 130, 133)   // XSMALL
             };
 
             private final int GROUP_COUNT = GROUP_COLORS.length;
 
-            private final static float INNER_RING_RADIUS_FACTOR_XBIG   = 0.80f;
-            private final static float INNER_RING_RADIUS_FACTOR_MBIG   = 0.78f;
-            private final static float INNER_RING_RADIUS_FACTOR_BIG    = 0.75f;
-            private final static float INNER_RING_RADIUS_FACTOR_MEDIUM = 0.7f;
-            private final static float INNER_RING_RADIUS_FACTOR_SMALL  = 0.6f;
-            private final static float INNER_RING_RADIUS_FACTOR_XSMALL = 0.5f;
+            private final static float INNER_RING_RADIUS_FACTOR_XBIG   = 0.82f;
+            private final static float INNER_RING_RADIUS_FACTOR_MBIG   = 0.80f;
+            private final static float INNER_RING_RADIUS_FACTOR_BIG    = 0.78f;
+            private final static float INNER_RING_RADIUS_FACTOR_MEDIUM = 0.75f;
+            private final static float INNER_RING_RADIUS_FACTOR_SMALL  = 0.70f;
+            private final static float INNER_RING_RADIUS_FACTOR_XSMALL = 0.65f;
 
 
             private BubbleCollection bubblesXBig, bubblesBig, bubblesMBig,
@@ -1311,7 +1317,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private static final int FADE_IN_SPEED = 8;
             private static final float TEXT_SIZE = 0.10f;  // as a factor of screen height
             private static final float TEXT_SPEED = 0.25f;
-            private static final int MAX_ALPHA = 215;
+            private static final int MAX_ALPHA = 225;
 
             private int alpha;
 //            private float textSize;
@@ -1328,14 +1334,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             SplashScreen() {
                 digitsPaint = new Paint();
-                digitsPaint.setColor(BACKGROUND_COLOR_AMBIENT);
-                digitsPaint.setTypeface(mTextTypeface);
+                digitsPaint.setColor( BACKGROUND_COLOR_AMBIENT );
+                digitsPaint.setTypeface(mTextTypefaceMed);
                 digitsPaint.setAntiAlias(true);
                 digitsPaint.setTextAlign(Paint.Align.LEFT);
 
                 stepsPaint = new Paint();
-                stepsPaint.setColor(BACKGROUND_COLOR_AMBIENT);
-                stepsPaint.setTypeface(mTextTypeface);
+                stepsPaint.setColor( BACKGROUND_COLOR_AMBIENT );
+                stepsPaint.setTypeface(mTextTypefaceSemi);
                 stepsPaint.setAntiAlias(true);
                 stepsPaint.setTextAlign(Paint.Align.LEFT);
             }
