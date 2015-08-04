@@ -40,6 +40,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final int BACKGROUND_COLOR_AMBIENT = Color.BLACK;
 
     private static final String  RALEWAY_TYPEFACE_PATH = "fonts/raleway-regular-enhanced.ttf";
+
     private static final int     TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int     TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float   TEXT_DIGITS_HEIGHT = 0.20f;                                        // as a factor of screen height
@@ -63,6 +64,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final int     RANDOM_FAKE_STEPS = 4000;
     private static final int     MAX_STEP_THRESHOLD = 21000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
+    private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean VARIABLE_FRICTION = false;
 
 
 
@@ -102,6 +105,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private String mTimeStr;
         private int mHourInt, mMinuteInt;
         private int mLastAmbientHour;
+        private int glances;
 
         private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
         private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
@@ -112,6 +116,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
         private final Rect textBounds = new Rect();
 
+        private int mStepBuffer = 0;
         private int mPrevSteps = 0;
         private int mCurrentSteps = 0;
         private float mStepCountDisplay;  // , mStepCountDisplayTarget;
@@ -187,7 +192,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             bubbleManager = new BubbleManager();
             splashScreen = new SplashScreen();
 
-            mTime  = new Time();
+            mTime = new Time();
+            glances = 0;
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
@@ -303,6 +309,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             if (DEBUG_LOGS) Log.v(TAG, "onScreenChange: " + turnedOn);
 
             if (turnedOn) {
+                glances++;
+
                 bubbleManager.newGlance();
 
                 registerTimeZoneReceiver();
@@ -385,6 +393,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             mTime.setToNow();
             mHourInt = mTime.hour;
+            if (NEW_HOUR_PER_GLANCE) {
+                mHourInt = (mHourInt + glances) % 24;
+            }
             mMinuteInt = mTime.minute;
             mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
 
@@ -491,6 +502,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //            mBurnInProtection = properties.getBoolean(PROPERTY_BURN_IN_PROTECTION, false);
         }
 
+
+
+
+
         // Checks if watchface should reset, like overnight
         private boolean timelyReset() {
             boolean reset = false;
@@ -500,6 +515,56 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mLastAmbientHour = mHourInt;
             return reset;
         }
+
+//        private class HourCheck {
+//
+//            int hourThreshold, inactivityThreshold;
+//            Time prevCheck;
+//            Time currentCheck;
+//            boolean wasResetToday;
+//
+//            HourCheck(int hourThreshold_, int inactivityThreshold_) {
+//                wasResetToday = false;
+//
+//                hourThreshold = hourThreshold_;
+//                inactivityThreshold = inactivityThreshold_;
+//
+//                prevCheck = new Time();
+//                prevCheck.setToNow();
+//                currentCheck = new Time();
+//                currentCheck.setToNow();
+//            }
+//
+//            public boolean shouldReset() {
+//
+//                prevCheck.set(currentCheck);
+//                currentCheck.setToNow();
+//
+//
+//
+//
+//                return false;
+//            }
+//
+//            private boolean timeReset() {
+//                // If last check was before midnight
+//                if (prevCheck.yearDay < currentCheck.yearDay) {
+//
+//                    if (prevCheck.yearDay < currentCheck.yearDay - 1) return true;  // If a whole day has passed
+//
+//                    if (currentCheck.hour >= )
+//
+//                }
+//
+//            }
+//
+//
+//        }
+
+
+
+
+
 
         private void updateStepCounts() {
             if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
@@ -562,11 +627,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
 
 
+
         private class BubbleManager {
 
             private final static float ANIMATION_RATE           = 0.25f;
 
-            private final static float FRICTION_START           = 0.95f;
+            private final static float FRICTION_START           = 0.99f;
             private final static float FRICTION_TARGET          = 0.55f;
             private final static float FRICTION_ANIMATION_RATE  = 0.02f;
 
@@ -796,8 +862,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         break;
                 }
 
-                currentFriction += FRICTION_ANIMATION_RATE * (FRICTION_TARGET - currentFriction);
-                if (DEBUG_LOGS) Log.v(TAG, "currentFriction: " + currentFriction);
+                if (VARIABLE_FRICTION) {
+                    currentFriction += FRICTION_ANIMATION_RATE * (FRICTION_TARGET - currentFriction);
+                    if (DEBUG_LOGS) Log.v(TAG, "currentFriction: " + currentFriction);
+                }
 
                 updatePositions();
             }
