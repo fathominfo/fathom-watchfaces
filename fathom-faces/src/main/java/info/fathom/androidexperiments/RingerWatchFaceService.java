@@ -196,7 +196,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 @Override
                 public void onReset() {
                     Log.v(TAG, "RESET SOMETHING HERE!!");
-//                    bubbleManager.reset();
+                    bubbleManager.reset();
                 }
             };
             if (RESET_HOUR >= 0) {
@@ -879,37 +879,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         break;
 
 
-//                    // WHAT WAS THIS FOR..?
-//                    case 11:
-//                        bubblesXSmall.remove(bubblesXSmall.bubbles.size());
-//                        bubblesSmall.remove(bubblesSmall.bubbles.size());
-//                        bubblesMedium.remove(bubblesMedium.bubbles.size());
-//                        bubblesBig.remove(bubblesBig.bubbles.size());
-//                        // Should add XBig bubbles here?
-//                        updateStep++;
-//                        break;
-//                    case 12:
-//                        bubblesXSmall.update();
-//                        bubblesSmall.update();
-//                        bubblesMedium.update();
-//                        bubblesBig.update();
-//                        boolean continueUpdating12 =
-//                                bubblesXSmall.needsUpdate || bubblesSmall.needsUpdate ||
-//                                bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
-//                        if (!continueUpdating12) updateStep = 0;  // stop animation transition
-//                        break;
-
-
-                    // DEBUG
-                    case 11:
-                        Log.v(TAG, "CASE 11");
-                        updateStep++;
-                        break;
-                    case 12:
-                        Log.v(TAG, "CASE 12");
-                        updateStep = 0;
-                        break;
-
                     default:
                         break;
                 }
@@ -990,6 +959,15 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 bubblesMedium.setScreenWidth(width_);
                 bubblesSmall.setScreenWidth(width_);
                 bubblesXSmall.setScreenWidth(width_);
+            }
+
+            public void reset() {
+                bubblesXBig.reset();
+                bubblesMBig.reset();
+                bubblesBig.reset();
+                bubblesMedium.reset();
+                bubblesSmall.reset();
+                bubblesXSmall.reset();
             }
 
         }
@@ -1086,6 +1064,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             public void setScreenWidth(float width_) {
                 for (Bubble bub : bubbles) {
                     bub.setScreenWidth(width_);
+                }
+            }
+
+            public void reset() {
+                for (Bubble bub : bubbles) {
+                    bub.kill();
                 }
             }
 
