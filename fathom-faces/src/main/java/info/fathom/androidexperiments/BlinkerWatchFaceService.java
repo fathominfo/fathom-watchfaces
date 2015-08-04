@@ -10,10 +10,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -30,7 +26,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 
-public class BlinkerWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
+public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
     private static final String TAG = "BlinkerWatchFaceService";
 
@@ -217,11 +213,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
 
-            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
-                    BlinkerWatchFaceService.this, mSensorManager);
-            mSensorAccelerometer.register();
-
             registerScreenReceiver();
         }
 
@@ -231,8 +222,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             unregisterTimeZoneReceiver();
             unregisterScreenReceiver();
-            mSensorAccelerometer.unregister();
-            mSensorManager.unregisterListener(BlinkerWatchFaceService.this);
             super.onDestroy();
         }
 
@@ -263,13 +252,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         public void onVisibilityChanged(boolean visible) {
             Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
-
-            if (visible) {
-                mSensorAccelerometer.register();
-
-            } else {
-                mSensorAccelerometer.unregister();
-            }
 
             /*
             * Whether the timer should be running depends on whether we're visible
@@ -321,7 +303,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
 
             if (turnedOn) {
                 registerTimeZoneReceiver();
-                mSensorAccelerometer.register();
 
                 if (RANDOM_TIME_PER_GLANCE) {
                     mTimeManager.addRandomInc();
@@ -349,7 +330,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
                 }
 
                 unregisterTimeZoneReceiver();
-                mSensorAccelerometer.unregister();
 
                 mCurrentGlance.setToNow();
                 mPrevGlance = mCurrentGlance.toMillis(false);
@@ -921,7 +901,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             void render(Canvas canvas) {
                 canvas.save();
                 canvas.translate(x, y);
-                canvas.rotate(screenRotation);
                 canvas.save();
                 canvas.clipPath(eyelid);
                 canvas.drawCircle(0, 0, 0.5f * width, eyelidPaint);
@@ -1099,117 +1078,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         }
     }
 
-
-
-
-
-
-
-    // Sensors
-    private SensorManager mSensorManager;
-    private SensorWrapper mSensorAccelerometer;
-    private float[] gravity = new float[3];
-    private float[] linear_acceleration = new float[3];
-    private float screenRotation = 0;
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        switch (event.sensor.getType()) {
-            case Sensor.TYPE_ACCELEROMETER:
-                mSensorAccelerometer.update(event);
-                updateGravity(event);
-                break;
-        }
-    }
-
-    private void updateGravity(SensorEvent event) {
-        final float alpha = 0.80f;
-
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-
-        //linear_acceleration[0] = event.values[0] - gravity[0];
-        //linear_acceleration[1] = event.values[1] - gravity[1];
-        linear_acceleration[2] = event.values[2] - gravity[2];
-
-        if (DEBUG_EYES_ROTATION && Math.abs(gravity[0]) > GRAVITY_THRESHOLD && Math.abs(gravity[1]) > GRAVITY_THRESHOLD) {
-            screenRotation = alpha * screenRotation + (1 - alpha) * (float) (-(Math.atan2(gravity[1], gravity[0]) - QUARTER_TAU) * TO_DEGS);
-        }
-    }
-
-
-
-    private class SensorWrapper {
-
-        SensorEventListener listener;
-        SensorManager manager;
-        String name;
-        int type;
-        Sensor sensor;
-        boolean isActive, isRegistered;
-        int valueCount;
-        float[] values;
-
-        SensorWrapper(String name_, int sensorType_, int valueCount_, SensorEventListener listener_, SensorManager manager_) {
-            listener = listener_;
-            manager = manager_;
-            name = name_;
-            type = sensorType_;
-            valueCount = valueCount_;
-            values = new float[valueCount];
-
-            // Initialize the sensor
-            sensor = manager.getDefaultSensor(type);
-
-            // http://developer.android.com/guide/topics/sensors/sensors_overview.html#sensors-identify
-            if (sensor == null) {
-                if (DEBUG_LOGS) Log.v(TAG, "Sensor " + name + " not available in this device");
-                isActive = false;
-                isRegistered = false;
-            } else {
-                isActive = true;
-                isRegistered = true;
-            }
-        }
-
-        boolean register() {
-            if (!isActive) return false;
-            if (isRegistered) return true;
-            isRegistered = manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
-            if (DEBUG_LOGS) Log.i(TAG, "Registered " + name + ": " + isRegistered);
-            return isRegistered;
-        }
-
-        boolean unregister() {
-            if (!isActive) return false;
-            if (!isRegistered) return false;
-            manager.unregisterListener(listener);
-            isRegistered = false;
-            if (DEBUG_LOGS) Log.i(TAG, "Unregistered " + name);
-            return false;
-        }
-
-        String stringify() {
-            if (!isActive) return name + " sensor not available in this device";
-            String vals = name + ": [";
-            for (int i = 0; i < valueCount; i++) {
-                vals += String.format("%.2f", values[i]);
-                if (i + 1 < valueCount) vals += ", ";
-            }
-            vals += "]";
-            return vals;
-        }
-
-        void update(SensorEvent event) {
-            for (int i = 0; i < valueCount; i++) {
-                values[i] = event.values[i];
-            }
-        }
-    }
 
 
 
