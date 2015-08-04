@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 public class TriangularWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
-    private static final String  TAG = "TriangularWatchFaceService";
+    private static final String  TAG = "TriangularWFService";
 
     private static final long    INTERACTIVE_UPDATE_RATE_MS = 33;
 
