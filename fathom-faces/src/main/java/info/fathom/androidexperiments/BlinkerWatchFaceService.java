@@ -85,10 +85,10 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
     private static final int   RESET_HOUR = 4;                                                  // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
-    private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
+    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_ACCELERATE_INTERACTION = true;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_ACCELERATE_RATE = 5;  // each glance has xN times the effect
-    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
+    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = true;
     private static final boolean DEBUG_EYES_ROTATION = false;  // @TODO if they are going to be off forever, deactivate all sensing
 
     private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
@@ -158,6 +158,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         private long mPrevGlance;
 
         private EyeMosaic eyeMosaic;
+        private boolean mEyesPopulated = false;
 
 
         @Override
@@ -199,26 +200,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             mTextGlancesPaintAmbient.setTextAlign(Paint.Align.RIGHT);
 
             eyeMosaic = new EyeMosaic();
-            eyeMosaic.addEye(39, 21, 49);
-            eyeMosaic.addEye(39, 73, 49);
-            eyeMosaic.addEye(82, 45, 49);
-            eyeMosaic.addEye(158, 45, 72);
-            eyeMosaic.addEye(110, 145, 0);
-            eyeMosaic.addEye(218, 21, 49);
-            eyeMosaic.addEye(267, 45, 49);
-            eyeMosaic.addEye(218, 73, 49);
-            eyeMosaic.addEye(54, 138, 97);
-            eyeMosaic.addEye(139, 155, 49);
-            eyeMosaic.addEye(106, 195, 72);
-            eyeMosaic.addEye(39, 212, 49);
-            eyeMosaic.addEye(82, 240, 49);
-            eyeMosaic.addEye(39, 265, 49);
-            eyeMosaic.addEye(106, 285, 72);
-            eyeMosaic.addEye(201, 195, 97);
-            eyeMosaic.addEye(282, 195, 49);
-            eyeMosaic.addEye(253, 253, 72);
-            eyeMosaic.addEye(185, 269, 49);
-            eyeMosaic.addEye(228, 298, 49);
 
 //            mTime  = new Time();
             mTimeManager = new TimeManager() {
@@ -404,6 +385,36 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             mTextGlancesRightMargin = TEXT_GLANCES_RIGHT_MARGIN * mWidth;
             mTextGlancesPaintInteractive.setTextSize(mTextGlancesHeight);
             mTextGlancesPaintAmbient.setTextSize(mTextGlancesHeight);
+
+            if (!mEyesPopulated) {
+                eyeMosaic.addEye(39, 21, 49);
+                eyeMosaic.addEye(39, 73, 49);
+                eyeMosaic.addEye(82, 45, 49);
+                eyeMosaic.addEye(158, 45, 72);
+                eyeMosaic.addEye(110, 145, 0);
+                eyeMosaic.addEye(218, 21, 49);
+                eyeMosaic.addEye(267, 45, 49);
+                eyeMosaic.addEye(218, 73, 49);
+                eyeMosaic.addEye(54, 138, 97);
+                eyeMosaic.addEye(139, 155, 49);
+                eyeMosaic.addEye(106, 195, 72);
+                eyeMosaic.addEye(39, 212, 49);
+                eyeMosaic.addEye(82, 240, 49);
+                eyeMosaic.addEye(39, 265, 49);
+                eyeMosaic.addEye(106, 285, 72);
+                eyeMosaic.addEye(201, 195, 97);
+                eyeMosaic.addEye(282, 195, 49);
+                eyeMosaic.addEye(253, 253, 72);
+                eyeMosaic.addEye(185, 269, 49);
+                eyeMosaic.addEye(228, 298, 49);
+
+                mEyesPopulated = true;
+
+                int glanceInc = DEBUG_ACCELERATE_INTERACTION ? DEBUG_ACCELERATE_RATE : 1;
+                glances += glanceInc;
+                eyeMosaic.newGlance(glanceInc, 0);
+
+            }
         }
 
         @Override
@@ -417,7 +428,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-//            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
+            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
 //            mTime.setToNow();
 //            mHourInt = mTime.hour;
@@ -635,7 +646,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             List<Eye> updateList = new ArrayList<>();
 
             boolean areWideOpen;
-            int sideLookIter = 0;
 
             EyeMosaic() {
                 eyes = new Eye[8];
@@ -698,6 +708,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             }
 
             void render(Canvas canvas) {
+                if (DEBUG_LOGS) Log.v(TAG, "Rendering activeEyes: " + activeEyes.size());
                 for (Eye eye : activeEyes) {
                     eye.render(canvas);
                 }
@@ -726,7 +737,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
                         eyeMosaic.increaseBlinkChance(-BLINK_TO_GLANCE_CHANCE_RATIO / GLANCES_NEEDED_PER_NEW_EYE);
                     }
 
-                    // Or should they be added
+                // Or should they be added
                 } else if (glances % GLANCES_NEEDED_PER_NEW_EYE == 0) {
                     if (DEBUG_ACCELERATE_INTERACTION) {
                         eyeMosaic.activateRandomEye(DEBUG_ACCELERATE_RATE);
@@ -746,16 +757,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
                     areWideOpen = true;
                     consecutiveGlances = 1;  // @TERRENCE: do wide open once and reset
                 }
-
-
-                // TEMP TEST
-//                switch (sideLookIter % 4) {
-//                    case 0: for (Eye eye : activeEyes) eye.lookCenterHorizontal(); break;
-//                    case 1: for (Eye eye : activeEyes) eye.lookLeft(); break;
-//                    case 2: for (Eye eye : activeEyes) eye.lookCenterHorizontal(); break;
-//                    case 3: for (Eye eye : activeEyes) eye.lookRight(); break;
-//                }
-//                sideLookIter++;
 
             }
 
