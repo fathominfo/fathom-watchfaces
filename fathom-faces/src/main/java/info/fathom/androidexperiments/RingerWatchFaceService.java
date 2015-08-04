@@ -27,6 +27,7 @@ import android.view.WindowInsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class RingerWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
@@ -64,9 +65,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
     private static final int     RANDOM_FAKE_STEPS = 4000;
-    private static final int     MAX_STEP_THRESHOLD = 21000;
+    private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
-    private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 500;
     private static final boolean VARIABLE_FRICTION = false;
 
 
@@ -103,9 +105,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         //        private boolean mBurnInProtection;
         private boolean mAmbient, mScreenOn;
 
-        private Time mTime;
+        private TimeManager mTimeManager;
         private String mTimeStr;
-        private int mHourInt, mMinuteInt;
         private int mLastAmbientHour;
         private int glances;
 
@@ -121,8 +122,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private int mStepBuffer = 0;
         private int mPrevSteps = 0;
         private int mCurrentSteps = 0;
-        private float mStepCountDisplay;  // , mStepCountDisplayTarget;
-//        private boolean showSplash10KScreen = false;
+        private float mStepCountDisplay;
 
         private Paint mBubbleTextPaint;
 
@@ -198,7 +198,17 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             bubbleManager = new BubbleManager();
             splashScreen = new SplashScreen();
 
-            mTime = new Time();
+            mTimeManager = new TimeManager() {
+                @Override
+                public void onReset() {
+                    Log.v(TAG, "RESET SOMETHING HERE!!");
+                    bubbleManager.reset();
+                }
+            };
+            if (RESET_HOUR >= 0) {
+                mTimeManager.setOvernightResetHour(RESET_HOUR);
+            }
+
             glances = 0;
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -319,6 +329,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
                 bubbleManager.newGlance();
 
+                if (RANDOM_TIME_PER_GLANCE) {
+                    mTimeManager.addRandomInc();
+                }
+
                 registerTimeZoneReceiver();
                 mSensorStep.register();
                 mSensorAccelerometer.register();
@@ -328,12 +342,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             } else {
                 bubbleManager.byeGlance();
 
-                if (timelyReset()) {
-                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
-                    mPrevSteps = 0;
-                    mCurrentSteps = 0;
-                    bubbleManager.updateSteps(mCurrentSteps);
-                }
+//                if (timelyReset()) {
+//                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
+//                    mPrevSteps = 0;
+//                    mCurrentSteps = 0;
+//                    bubbleManager.updateSteps(mCurrentSteps);
+//                }
 
                 unregisterTimeZoneReceiver();
                 mSensorStep.unregister();
@@ -397,13 +411,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         public void onDraw(Canvas canvas, Rect bounds) {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
-            mTime.setToNow();
-            mHourInt = mTime.hour;
-            if (NEW_HOUR_PER_GLANCE) {
-                mHourInt = (mHourInt + glances) % 24;
-            }
-            mMinuteInt = mTime.minute;
-            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
+            mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
+            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":" + String.format("%02d", mTimeManager.minute);
 
             if (mAmbient) {
                 if (DEBUG_LOGS) Log.v(TAG, "Drawing ambient canvas");
@@ -418,11 +427,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 drawFakeShadowedText(canvas, mTestStepFormatter.format(mCurrentSteps) + "#",
                         mWidth - (int) mTextStepsRightMargin, (int) mTextStepsBaselineHeight,
                         TEXT_AMBIENT_SHADOW_RADIUS, mTextStepsShadowPaintInteractive, mTextStepsPaintAmbient);
-
-//                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
-//                        mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
-//                canvas.drawText(mTestStepFormatter.format(mCurrentSteps) + "#", mWidth - mTextStepsRightMargin,
-//                        mTextStepsBaselineHeight, mTextStepsPaintAmbient);
 
             } else {
 
@@ -457,8 +461,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+                mTimeManager.setTimeZone(intent);
             }
         };
 
@@ -512,60 +515,109 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
 
 
-        // Checks if watchface should reset, like overnight
-        private boolean timelyReset() {
-            boolean reset = false;
-            if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
-                reset = true;
+
+
+
+        private class TimeManager {
+
+            private static final boolean DEBUG_FAKE_TIME = RANDOM_TIME_PER_GLANCE;
+            private final long DEBUG_FAKE_TIME_INC = TimeUnit.MINUTES.toMillis(RANDOM_MINUTES_INC);
+            private static final long DAY_IN_MILLIS = 86400000;
+
+            private Time currentTime;
+            public int year, month, monthDay, hour, minute, second;
+
+            private boolean overnightReset;
+            private int overnightResetHour;
+            private Time nextResetTime;
+
+            TimeManager() {
+                overnightReset = false;
+                overnightResetHour = 0;
+
+                currentTime = new Time();
+                currentTime.setToNow();
+
+                setToNow();
             }
-            mLastAmbientHour = mHourInt;
-            return reset;
+
+            public void setToNow() {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void setTimeZone(Intent intent) {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.clear(intent.getStringExtra("time-zone"));
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void addRandomInc() {
+                long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
+                if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
+
+                currentTime.set(currentTime.toMillis(false) + rInc);
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void resetCheck() {
+                if (currentTime.after(nextResetTime)) {
+                    nextResetTime = computeNextResetTime();
+                    if (DEBUG_LOGS) Log.v(TAG, "Reset check: true");
+                    onReset();
+                }
+            }
+
+            public void onReset() { Log.v(TAG, "onReset"); }
+
+            public void setOvernightResetHour(int hour_) {
+                overnightReset = true;
+                overnightResetHour = hour_;
+                nextResetTime = computeNextResetTime();
+            }
+
+            private Time computeNextResetTime() {
+                Time resetTime = new Time();
+                resetTime.set(0, 0, overnightResetHour, monthDay, month, year);  // Set to today's reset time
+
+                // If already past, add a day
+                if (currentTime.after(resetTime)) {
+                    resetTime.set(resetTime.toMillis(false) + DAY_IN_MILLIS);
+                }
+
+                if (DEBUG_LOGS) Log.v(TAG, "Next reset time: " + resetTime.format2445());
+
+                return resetTime;
+            }
+
+            private void updateFields() {
+                year = currentTime.year;
+                month = currentTime.month;
+                monthDay = currentTime.monthDay;
+                hour = currentTime.hour;
+                minute = currentTime.minute;
+                second = currentTime.second;
+            }
+
+            public void toDebugLog() {
+                Log.v(TAG, "--> Curr time: " + currentTime.format2445());
+            }
+
+
         }
 
-//        private class HourCheck {
-//
-//            int hourThreshold, inactivityThreshold;
-//            Time prevCheck;
-//            Time currentCheck;
-//            boolean wasResetToday;
-//
-//            HourCheck(int hourThreshold_, int inactivityThreshold_) {
-//                wasResetToday = false;
-//
-//                hourThreshold = hourThreshold_;
-//                inactivityThreshold = inactivityThreshold_;
-//
-//                prevCheck = new Time();
-//                prevCheck.setToNow();
-//                currentCheck = new Time();
-//                currentCheck.setToNow();
-//            }
-//
-//            public boolean shouldReset() {
-//
-//                prevCheck.set(currentCheck);
-//                currentCheck.setToNow();
-//
-//
-//
-//
-//                return false;
-//            }
-//
-//            private boolean timeReset() {
-//                // If last check was before midnight
-//                if (prevCheck.yearDay < currentCheck.yearDay) {
-//
-//                    if (prevCheck.yearDay < currentCheck.yearDay - 1) return true;  // If a whole day has passed
-//
-//                    if (currentCheck.hour >= )
-//
-//                }
-//
-//            }
-//
-//
-//        }
+
+
 
 
 
@@ -833,37 +885,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         break;
 
 
-//                    // WHAT WAS THIS FOR..?
-//                    case 11:
-//                        bubblesXSmall.remove(bubblesXSmall.bubbles.size());
-//                        bubblesSmall.remove(bubblesSmall.bubbles.size());
-//                        bubblesMedium.remove(bubblesMedium.bubbles.size());
-//                        bubblesBig.remove(bubblesBig.bubbles.size());
-//                        // Should add XBig bubbles here?
-//                        updateStep++;
-//                        break;
-//                    case 12:
-//                        bubblesXSmall.update();
-//                        bubblesSmall.update();
-//                        bubblesMedium.update();
-//                        bubblesBig.update();
-//                        boolean continueUpdating12 =
-//                                bubblesXSmall.needsUpdate || bubblesSmall.needsUpdate ||
-//                                bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
-//                        if (!continueUpdating12) updateStep = 0;  // stop animation transition
-//                        break;
-
-
-                    // DEBUG
-                    case 11:
-                        Log.v(TAG, "CASE 11");
-                        updateStep++;
-                        break;
-                    case 12:
-                        Log.v(TAG, "CASE 12");
-                        updateStep = 0;
-                        break;
-
                     default:
                         break;
                 }
@@ -944,6 +965,15 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 bubblesMedium.setScreenWidth(width_);
                 bubblesSmall.setScreenWidth(width_);
                 bubblesXSmall.setScreenWidth(width_);
+            }
+
+            public void reset() {
+                bubblesXBig.reset();
+                bubblesMBig.reset();
+                bubblesBig.reset();
+                bubblesMedium.reset();
+                bubblesSmall.reset();
+                bubblesXSmall.reset();
             }
 
         }
@@ -1040,6 +1070,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             public void setScreenWidth(float width_) {
                 for (Bubble bub : bubbles) {
                     bub.setScreenWidth(width_);
+                }
+            }
+
+            public void reset() {
+                for (Bubble bub : bubbles) {
+                    bub.kill();
                 }
             }
 
@@ -1320,19 +1356,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void render(Canvas canvas) {
-                if (DEBUG_LOGS) Log.v(TAG, "Rendering splashscreen, alpha: " + alpha);
+//                if (DEBUG_LOGS) Log.v(TAG, "Rendering splashscreen, alpha: " + alpha);
+
                 canvas.drawColor(Color.argb(alpha, r, g, b));
-
-//                mBubbleTextPaint.setTextSize(textSize);
-//                drawTextVerticallyCentered(canvas, mBubbleTextPaint, text, textX, textY);
-
                 canvas.drawText(text, textX, textDigitsY, digitsPaint);
                 canvas.drawText("steps", textX, textStepsY, stepsPaint);
-
-//                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
-//                        mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
-//                canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
-//                        mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
                 if (alpha < MAX_ALPHA) {
                     alpha += FADE_IN_SPEED;
@@ -1345,7 +1373,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         setColor(bubbleManager.GROUP_COLORS[0]);
                     }
                 }
-//                textY -= TEXT_SPEED * (textY - mCenterY);
+
                 textDigitsY -= TEXT_SPEED * (textDigitsY - mTextDigitsBaselineHeight);
                 textStepsY -= TEXT_SPEED * (textStepsY- mTextStepsBaselineHeight);
             }
@@ -1358,7 +1386,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
 
             private void cycleBGColor() {
-                if (DEBUG_LOGS) Log.v(TAG, "Cycling BGColor");
                 int newColor = bubbleManager.GROUP_COLORS[bgColorIterator];
                 setColor(newColor);
                 if (++bgColorIterator >= bubbleManager.GROUP_COUNT) bgColorIterator = 0;
