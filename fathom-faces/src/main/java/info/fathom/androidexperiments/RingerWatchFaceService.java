@@ -66,10 +66,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int     RANDOM_FAKE_STEPS = 500;
+    private static final int     RANDOM_FAKE_STEPS = 2000;
     private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
-    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 300;
     private static final boolean VARIABLE_FRICTION = false;
     private static final boolean DEBUG_STEP_COUNTERS = true;
@@ -121,6 +121,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private Typeface mTextTypeface, mTextTypefaceMed, mTextTypefaceSemi;
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
         private final Rect textBounds = new Rect();
+        private int mTextAlpha = 255;
 
         private int mStepBuffer = 0;
         private boolean firstLoad = true;
@@ -205,13 +206,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mTimeManager = new TimeManager() {
                 @Override
                 public void onReset() {
-                    Log.v(TAG, "RESETTING!!");
+                    if (DEBUG_LOGS) Log.v(TAG, "RESETTING!!");
                     mStepBuffer = (int) mSensorStep.values[0];
                     mPrevSteps = 0;
                     mCurrentSteps = 0;
                     bubbleManager.reset();
-
-//                    bubbleManager.updateSteps(0);
                     bubbleManager.prevSteps = 0;
                     bubbleManager.currentSteps = 0;
                 }
@@ -351,17 +350,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 mSensorStep.register();
                 mSensorAccelerometer.register();
 
-//                updateStepCounts();  // moved to onDraw (interactive)
-
             } else {
                 bubbleManager.byeGlance();
-
-//                if (timelyReset()) {
-//                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
-//                    mPrevSteps = 0;
-//                    mCurrentSteps = 0;
-//                    bubbleManager.updateSteps(mCurrentSteps);
-//                }
 
                 unregisterTimeZoneReceiver();
                 mSensorStep.unregister();
@@ -471,6 +461,13 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     } else {
                         mStepCountDisplay = mCurrentSteps;
                     }
+                }
+
+                if (splashScreen.active) {
+                    mTextAlpha -= splashScreen.FADE_IN_SPEED;
+                    if (mTextAlpha < 0) mTextAlpha = 0;
+                    mTextDigitsPaintInteractive.setColor(Color.argb(mTextAlpha, 255, 255, 255));
+                    mTextStepsPaintInteractive.setColor(Color.argb(mTextAlpha, 255, 255, 255));
                 }
 
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
@@ -1129,7 +1126,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 for (int i = 0; i < count_; i++) {
                     int newVal = ++bubbleCount * stepSize;
                     Bubble b = new Bubble(this, newVal, radius, weight, innerRingFactor,
-                            shouldFeature && i == count_ - 1, glanceDuration_, paint);  // @JAMES: Only the last bubble in the group gets featured
+                            shouldFeature && i == count_ - 1, glanceDuration_, , paint);  // @JAMES: Only the last bubble in the group gets featured
                     b.grow();
                     bubbles.add(b);
                 }
@@ -1217,7 +1214,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             Path path;
 
             Bubble(BubbleCollection parent_, int value_, float radius_, float weight_,
-                   float innerRingFactor_, boolean isFeatured_, int glanceDuration_, Paint paint_) {
+                   float innerRingFactor_, boolean isFeatured_, int glanceDuration_,
+                   boolean animatedFill_, Paint paint_) {
                 value = value_;
                 valueStr = mTestStepFormatter.format(value);
                 parent = parent_;
@@ -1436,6 +1434,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 if (active) {
                     active = false;
                     if (DEBUG_LOGS) Log.v(TAG, "Deactivated splashscreen");
+                    mTextAlpha = 255;
+                    mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
+                    mTextStepsPaintInteractive.setColor(TEXT_STEPS_COLOR_INTERACTIVE);
                 }
             }
 
