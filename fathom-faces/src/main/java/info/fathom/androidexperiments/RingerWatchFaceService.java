@@ -66,7 +66,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int     RANDOM_FAKE_STEPS = 2000;
+    private static final int     RANDOM_FAKE_STEPS = 5000;
     private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
     private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
@@ -210,7 +210,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     mStepBuffer = (int) mSensorStep.values[0];
                     mPrevSteps = 0;
                     mCurrentSteps = 0;
-                    bubbleManager.reset();
+                    bubbleManager.clearBubbles();
                     bubbleManager.prevSteps = 0;
                     bubbleManager.currentSteps = 0;
                 }
@@ -775,7 +775,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //            private final int COLOR_SMALL   = Color.argb(204, 39, 170, 225);
 //            private final int COLOR_XSMALL  = Color.argb(204, 141, 198, 63);
 
-            private final int[] GROUP_COLORS = {
+            public final int[] GROUP_COLORS = {
                     Color.argb(204, 255, 255, 0),  // XBIG
                     Color.argb(204, 237, 41, 122),  // MBIG
                     Color.argb(204, 140, 199, 64),  // BIG
@@ -810,17 +810,17 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             BubbleManager() {
                 bubblesXBig = new BubbleCollection(this, STEP_RATIO_XBIG, RADIUS_XBIG,
-                        WEIGHT_XBIG, GROUP_COLORS[0], INNER_RING_RADIUS_FACTOR_XBIG);
+                        WEIGHT_XBIG, GROUP_COLORS[0], INNER_RING_RADIUS_FACTOR_XBIG, true);
                 bubblesMBig = new BubbleCollection(this, STEP_RATIO_MBIG, RADIUS_MBIG,
-                        WEIGHT_MBIG, GROUP_COLORS[1], INNER_RING_RADIUS_FACTOR_MBIG);
+                        WEIGHT_MBIG, GROUP_COLORS[1], INNER_RING_RADIUS_FACTOR_MBIG, false);
                 bubblesBig = new BubbleCollection(this, STEP_RATIO_BIG, RADIUS_BIG,
-                        WEIGHT_BIG, GROUP_COLORS[2], INNER_RING_RADIUS_FACTOR_BIG);
+                        WEIGHT_BIG, GROUP_COLORS[2], INNER_RING_RADIUS_FACTOR_BIG, false);
                 bubblesMedium = new BubbleCollection(this, STEP_RATIO_MEDIUM, RADIUS_MEDIUM,
-                        WEIGHT_MEDIUM, GROUP_COLORS[3], INNER_RING_RADIUS_FACTOR_MEDIUM);
+                        WEIGHT_MEDIUM, GROUP_COLORS[3], INNER_RING_RADIUS_FACTOR_MEDIUM, false);
                 bubblesSmall = new BubbleCollection(this, STEP_RATIO_SMALL, RADIUS_SMALL,
-                        WEIGHT_SMALL, GROUP_COLORS[4], INNER_RING_RADIUS_FACTOR_SMALL);
+                        WEIGHT_SMALL, GROUP_COLORS[4], INNER_RING_RADIUS_FACTOR_SMALL, false);
                 bubblesXSmall = new BubbleCollection(this, STEP_RATIO_XSMALL, RADIUS_XSMALL,
-                        WEIGHT_XSMALL, GROUP_COLORS[5], INNER_RING_RADIUS_FACTOR_XSMALL);
+                        WEIGHT_XSMALL, GROUP_COLORS[5], INNER_RING_RADIUS_FACTOR_XSMALL, false);
 
                 prevSteps = 0;
                 currentSteps = 0;
@@ -1040,15 +1040,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 bubblesXSmall.setScreenWidth(width_);
             }
 
-            public void reset() {
-//                bubblesXBig.reset();
-//                bubblesMBig.reset();
-//                bubblesBig.reset();
-//                bubblesMedium.reset();
-//                bubblesSmall.reset();
-//                bubblesXSmall.reset();
-//                updateKeyframe = 20;
-
+            public void clearBubbles() {
                 bubblesXBig.bubbles.clear();
                 bubblesMBig.bubbles.clear();
                 bubblesBig.bubbles.clear();
@@ -1062,6 +1054,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
         private class BubbleCollection {
 
+            private static final float COLOR_INTERPOLATION_RATE = 0.15f;
+
             BubbleManager parent;
             List<Bubble> bubbles;
             List<Bubble> killQueue;
@@ -1070,27 +1064,43 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             float weight;
             float innerRingFactor;
             boolean needsUpdate;
+            boolean isEmpty;
+
             int color;
             Paint paint;
+            boolean animatedColor;
+            int currentColor, targetColor;
 
             BubbleCollection(BubbleManager parent_, int stepSize_, float radius_, float weight_,
-                             int color_, float innerRingFactor_) {
+                             int color_, float innerRingFactor_, boolean animatedColor_) {
                 stepSize = stepSize_;
                 parent = parent_;
                 radius = radius_;
                 weight = weight_;
                 innerRingFactor = innerRingFactor_;
-                color = color_;
                 bubbles = new ArrayList<>();
                 killQueue = new ArrayList<>();
+                isEmpty = true;
 
+                color = color_;
                 paint = new Paint();
                 paint.setColor(color);
                 paint.setAntiAlias(true);
                 paint.setStyle(Paint.Style.FILL_AND_STROKE);
+                animatedColor = animatedColor_;
+                currentColor = color;
+                targetColor = color;
             }
 
             public void render(Canvas canvas) {
+                if (animatedColor && !isEmpty) {
+                    int prevColor = currentColor;
+                    currentColor = interpolateColor(currentColor, targetColor, COLOR_INTERPOLATION_RATE);
+                    if (currentColor == prevColor) {
+                        targetColor = bubbleManager.GROUP_COLORS[(int) ((bubbleManager.GROUP_COUNT - 1) * Math.random())];  // avoid using the smallest bubble's color
+                    }
+                    paint.setColor(currentColor);
+                }
                 for (Bubble bub : bubbles) {
                     bub.render(canvas);
                 }
@@ -1126,9 +1136,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 for (int i = 0; i < count_; i++) {
                     int newVal = ++bubbleCount * stepSize;
                     Bubble b = new Bubble(this, newVal, radius, weight, innerRingFactor,
-                            shouldFeature && i == count_ - 1, glanceDuration_, , paint);  // @JAMES: Only the last bubble in the group gets featured
+                            shouldFeature && i == count_ - 1, glanceDuration_, paint);  // @JAMES: Only the last bubble in the group gets featured
                     b.grow();
                     bubbles.add(b);
+                    isEmpty = false;
                 }
 
                 if (showSplashScreen) {
@@ -1140,6 +1151,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 for (int i = 0; i < count_; i++) {
                     bubbles.get(i).kill();
                 }
+                isEmpty = bubbles.size() == 0;
             }
 
             private void resetMotion() {
@@ -1158,6 +1170,25 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 for (Bubble bub : bubbles) {
                     bub.kill();
                 }
+            }
+
+            private int interpolateColor(int sourceColor, int targetColor, float parameter) {
+                int sA = (sourceColor >> 24) & 0xFF;
+                int sR = (sourceColor >> 16) & 0xFF;
+                int sG = (sourceColor >> 8) & 0xFF;
+                int sB = (sourceColor) & 0xFF;
+
+                int tA = (targetColor >> 24) & 0xFF;
+                int tR = (targetColor >> 16) & 0xFF;
+                int tG = (targetColor >> 8) & 0xFF;
+                int tB = (targetColor) & 0xFF;
+
+                int currA = sA + Math.round(parameter * (tA - sA));
+                int currR = sR + Math.round(parameter * (tR - sR));
+                int currG = sG + Math.round(parameter * (tG - sG));
+                int currB = sB + Math.round(parameter * (tB - sB));
+
+                return Color.argb(currA, currR, currG, currB);
             }
 
         }
@@ -1215,7 +1246,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             Bubble(BubbleCollection parent_, int value_, float radius_, float weight_,
                    float innerRingFactor_, boolean isFeatured_, int glanceDuration_,
-                   boolean animatedFill_, Paint paint_) {
+                   Paint paint_) {
                 value = value_;
                 valueStr = mTestStepFormatter.format(value);
                 parent = parent_;
