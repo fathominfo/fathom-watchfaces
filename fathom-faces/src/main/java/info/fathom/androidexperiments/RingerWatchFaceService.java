@@ -61,13 +61,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
-    private static final boolean GENERATE_FAKE_STEPS = true;
+    private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int     RANDOM_FAKE_STEPS = 4000;
     private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 500;
     private static final boolean VARIABLE_FRICTION = false;
+    private static final boolean DEBUG_STEP_COUNTERS = true;
 
 
 
@@ -195,7 +196,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mTimeManager = new TimeManager() {
                 @Override
                 public void onReset() {
-                    Log.v(TAG, "RESET SOMETHING HERE!!");
+                    Log.v(TAG, "RESETTING!!");
                     bubbleManager.reset();
                 }
             };
@@ -319,6 +320,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             if (DEBUG_LOGS) Log.v(TAG, "onScreenChange: " + turnedOn);
 
             if (turnedOn) {
+                mWasStepSensorUpdatedThisGlance = false;
+                mWereStepCountsUpdatedThisGlance = false;
+
                 glances++;
 
                 bubbleManager.newGlance();
@@ -331,7 +335,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 mSensorStep.register();
                 mSensorAccelerometer.register();
 
-                updateStepCounts();
+//                updateStepCounts();
 
             } else {
                 bubbleManager.byeGlance();
@@ -422,7 +426,20 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         mWidth - (int) mTextStepsRightMargin, (int) mTextStepsBaselineHeight,
                         TEXT_AMBIENT_SHADOW_RADIUS, mTextStepsShadowPaintInteractive, mTextStepsPaintAmbient);
 
+                if (DEBUG_STEP_COUNTERS) {
+                    canvas.drawText((int) mSensorStep.values[0] + " S", 0.75f * mWidth,
+                            0.75f * mHeight, mTextStepsPaintAmbient);
+//                    canvas.drawText(bubbleManager.bufferedSteps + " B", 0.75f * mWidth,
+//                            0.85f * mHeight, mTextStepsPaintAmbient);
+                }
+
             } else {
+
+                if (mWasStepSensorUpdatedThisGlance && !mWereStepCountsUpdatedThisGlance) {
+                    if (DEBUG_LOGS) Log.v(TAG, "Triggered updateStepCounts()");
+                    updateStepCounts();
+                    mWereStepCountsUpdatedThisGlance = true;
+                }
 
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
@@ -444,6 +461,13 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
                 canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
+
+                if (DEBUG_STEP_COUNTERS) {
+                    canvas.drawText((int) mSensorStep.values[0] + " S", 0.75f * mWidth,
+                            0.75f * mHeight, mTextStepsPaintInteractive);
+//                    canvas.drawText(bubbleManager.bufferedSteps + " B", 0.75f * mWidth,
+//                            0.85f * mHeight, mTextStepsPaintInteractive);
+                }
 
                 if (splashScreen.active) splashScreen.render(canvas);
 
@@ -1403,6 +1427,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private float[] linear_acceleration = new float[3];
 
     private SensorWrapper mSensorStep;
+    public boolean mWasStepSensorUpdatedThisGlance = false,
+            mWereStepCountsUpdatedThisGlance = false;
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) { }
@@ -1416,9 +1442,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 break;
             case Sensor.TYPE_STEP_COUNTER:
                 if (!GENERATE_FAKE_STEPS) {
-                    if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
+                    if (DEBUG_LOGS) Log.i(TAG, "Sensor.TYPE_STEP_COUNTER event.values[0]: " + Float.toString(event.values[0]));
 //                    mCurrentSteps = Math.round(event.values[0]);
                     mSensorStep.update(event);
+                    mWasStepSensorUpdatedThisGlance = true;
                 }
                 break;
         }
