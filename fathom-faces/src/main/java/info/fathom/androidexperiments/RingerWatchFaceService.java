@@ -195,8 +195,15 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             splashScreen = new SplashScreen();
 
 //            mTime = new Time();
-            mTimeManager = new TimeManager();
+            mTimeManager = new TimeManager() {
+                @Override
+                public void onReset() {
+                    Log.v(TAG, "RESET SOMETHING HERE!!");
+//                    bubbleManager.reset();
+                }
+            };
             mTimeManager.setOvernightResetHour(RESET_HOUR);
+
             glances = 0;
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -336,10 +343,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     mPrevSteps = 0;
                     mCurrentSteps = 0;
                     bubbleManager.updateSteps(mCurrentSteps);
-                }
-
-                if (mTimeManager.resetCheck()) {
-                    Log.v(TAG, "SHOULD RESET WATCH NOW");
                 }
 
                 unregisterTimeZoneReceiver();
@@ -551,10 +554,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private Time currentTime;
             public int year, month, monthDay, hour, minute, second;
 
+            private boolean overnightReset;
             private int overnightResetHour;
             private Time nextResetTime;
 
             TimeManager() {
+                overnightReset = false;
                 overnightResetHour = 0;
 
                 currentTime = new Time();
@@ -569,6 +574,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 }
 
                 updateFields();
+                if (overnightReset) resetCheck();
             }
 
             public void setTimeZone(Intent intent) {
@@ -578,6 +584,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 }
 
                 updateFields();
+                if (overnightReset) resetCheck();
             }
 
             public void addRandomInc() {
@@ -587,21 +594,22 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 currentTime.set(currentTime.toMillis(false) + rInc);
 
                 updateFields();
+                if (overnightReset) resetCheck();
             }
 
-            public boolean resetCheck() {
-                boolean reset = currentTime.after(nextResetTime);
-
-                if (reset) nextResetTime = computeNextResetTime();
-
-                if (DEBUG_LOGS) Log.v(TAG, "Reset check: " + reset);
-
-                return reset;
+            public void resetCheck() {
+                if (currentTime.after(nextResetTime)) {
+                    nextResetTime = computeNextResetTime();
+                    if (DEBUG_LOGS) Log.v(TAG, "Reset check: true");
+                    onReset();
+                }
             }
+
+            public void onReset() { Log.v(TAG, "onReset"); }
 
             public void setOvernightResetHour(int hour_) {
+                overnightReset = true;
                 overnightResetHour = hour_;
-
                 nextResetTime = computeNextResetTime();
             }
 
@@ -637,81 +645,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
 
 
-
-
-//        private class HourCheck {
-//
-//            private static final long DAY_IN_MILLIS = 86400000;
-//
-//            int hourThreshold;
-//            long inactivityThreshold;
-//            Time prevCheck, currentCheck;
-//            long prevCheckMillis, currentCheckMillis;
-//            boolean wasResetToday;
-//
-//            HourCheck(int hourThreshold_, int hoursInactiveThreshold_) {
-//                wasResetToday = false;
-//
-//                hourThreshold = hourThreshold_;
-//                inactivityThreshold = TimeUnit.HOURS.toMillis(hoursInactiveThreshold_);
-//
-//                prevCheck = new Time();
-//                prevCheck.setToNow();
-//                prevCheckMillis = prevCheck.toMillis(false);
-//
-//                currentCheck = new Time();
-//                currentCheck.setToNow();
-//                currentCheckMillis = currentCheck.toMillis(false);
-//            }
-//
-//            public boolean shouldReset() {
-//
-//                prevCheck.set(currentCheck);
-//                prevCheckMillis = prevCheck.toMillis(false);
-//                currentCheck.setToNow();
-//                currentCheckMillis = currentCheck.toMillis(false);
-//
-//                if (DEBUG_LOGS) {
-//                    Log.v(TAG, "--> TIME, prev check: " + prevCheck.format2445());
-//                    Log.v(TAG, "--> TIME, curr check: " + currentCheck.format2445());
-//                }
-//
-//                // If day has changed from previous check
-//                if (prevCheck.yearDay < currentCheck.yearDay) {
-//                    wasResetToday = false;
-//                }
-//
-//                if (wasResetToday) return false;
-//
-//                wasResetToday = timeReset() || inactivityReset();
-//
-//                Log.v(TAG, "--> wasResetToday: " + wasResetToday);
-//
-//                return wasResetToday;
-//            }
-//
-//            private boolean timeReset() {
-//                // If last check was before midnight
-//                if (prevCheck.yearDay < currentCheck.yearDay) {  // @TODO Wouldn't work for newyear's eve!
-//                    if (prevCheck.yearDay < currentCheck.yearDay - 1) return true;  // If a whole day has passed
-//                    if (currentCheck.hour >= hourThreshold) return true;
-//
-//                // If last check was this same day
-//                } else {
-//                    if (prevCheck.hour < hourThreshold && currentCheck.hour >= hourThreshold) return true;
-//                }
-//
-//                // Else
-//                return false;
-//            }
-//
-//
-//            private boolean inactivityReset() {
-//                return (currentCheck.toMillis(false) - prevCheck.toMillis(false)) > inactivityThreshold;
-//            }
-//
-//
-//        }
 
 
 
