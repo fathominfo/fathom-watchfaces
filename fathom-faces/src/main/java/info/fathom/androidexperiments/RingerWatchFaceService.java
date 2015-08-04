@@ -61,15 +61,18 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
     private static final int     RESET_HOUR = 4;                                                    // at which hour will watch face reset [0...23], -1 to deactivate
 
+//    private static final int     INITIAL_FREE_STEPS = 5;
+
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = true;
-    private static final int     RANDOM_FAKE_STEPS = 4000;
+    private static final int     RANDOM_FAKE_STEPS = 2000;
     private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
-    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
-    private static final int     RANDOM_MINUTES_INC = 500;
+    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 300;
     private static final boolean VARIABLE_FRICTION = false;
+    private static final boolean DEBUG_STEP_COUNTERS = true;
 
 
 
@@ -118,8 +121,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private Typeface mTextTypeface, mTextTypefaceMed, mTextTypefaceSemi;
         private DecimalFormat mTestStepFormatter = new DecimalFormat("##,###");
         private final Rect textBounds = new Rect();
+        private int mTextAlpha = 255;
 
         private int mStepBuffer = 0;
+        private boolean firstLoad = true;
         private int mPrevSteps = 0;
         private int mCurrentSteps = 0;
         private float mStepCountDisplay;
@@ -201,8 +206,13 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mTimeManager = new TimeManager() {
                 @Override
                 public void onReset() {
-                    Log.v(TAG, "RESET SOMETHING HERE!!");
+                    if (DEBUG_LOGS) Log.v(TAG, "RESETTING!!");
+                    mStepBuffer = (int) mSensorStep.values[0];
+                    mPrevSteps = 0;
+                    mCurrentSteps = 0;
                     bubbleManager.reset();
+                    bubbleManager.prevSteps = 0;
+                    bubbleManager.currentSteps = 0;
                 }
             };
             if (RESET_HOUR >= 0) {
@@ -325,6 +335,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             if (DEBUG_LOGS) Log.v(TAG, "onScreenChange: " + turnedOn);
 
             if (turnedOn) {
+                mWasStepSensorUpdatedThisGlance = false;
+                mWereStepCountsUpdatedThisGlance = false;
+
                 glances++;
 
                 bubbleManager.newGlance();
@@ -337,17 +350,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 mSensorStep.register();
                 mSensorAccelerometer.register();
 
-                updateStepCounts();
-
             } else {
                 bubbleManager.byeGlance();
-
-//                if (timelyReset()) {
-//                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
-//                    mPrevSteps = 0;
-//                    mCurrentSteps = 0;
-//                    bubbleManager.updateSteps(mCurrentSteps);
-//                }
 
                 unregisterTimeZoneReceiver();
                 mSensorStep.unregister();
@@ -428,7 +432,20 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         mWidth - (int) mTextStepsRightMargin, (int) mTextStepsBaselineHeight,
                         TEXT_AMBIENT_SHADOW_RADIUS, mTextStepsShadowPaintInteractive, mTextStepsPaintAmbient);
 
+                if (DEBUG_STEP_COUNTERS) {
+                    canvas.drawText((int) mSensorStep.values[0] + " S", 0.75f * mWidth,
+                            0.75f * mHeight, mTextStepsPaintAmbient);
+                    canvas.drawText(mStepBuffer + " B", 0.75f * mWidth,
+                            0.85f * mHeight, mTextStepsPaintAmbient);
+                }
+
             } else {
+
+                if (mWasStepSensorUpdatedThisGlance && !mWereStepCountsUpdatedThisGlance) {
+                    if (DEBUG_LOGS) Log.v(TAG, "Triggered updateStepCounts()");
+                    updateStepCounts();
+                    mWereStepCountsUpdatedThisGlance = true;
+                }
 
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
 
@@ -446,10 +463,24 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     }
                 }
 
+                if (splashScreen.active) {
+                    mTextAlpha -= splashScreen.FADE_IN_SPEED;
+                    if (mTextAlpha < 0) mTextAlpha = 0;
+                    mTextDigitsPaintInteractive.setColor(Color.argb(mTextAlpha, 255, 255, 255));
+                    mTextStepsPaintInteractive.setColor(Color.argb(mTextAlpha, 255, 255, 255));
+                }
+
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
                 canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
+
+                if (DEBUG_STEP_COUNTERS) {
+                    canvas.drawText((int) mSensorStep.values[0] + " S", 0.75f * mWidth,
+                            0.75f * mHeight, mTextStepsPaintInteractive);
+                    canvas.drawText(mStepBuffer + " B", 0.75f * mWidth,
+                            0.85f * mHeight, mTextStepsPaintInteractive);
+                }
 
                 if (splashScreen.active) splashScreen.render(canvas);
 
@@ -625,6 +656,16 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
 
         private void updateStepCounts() {
+
+            if (firstLoad) {
+                firstLoad = false;
+                mStepBuffer = (int) mSensorStep.values[0];
+                mPrevSteps = 0;
+                mCurrentSteps = 0;
+                bubbleManager.updateSteps(mCurrentSteps);
+                return;
+            }
+
             if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
             if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
 
@@ -635,27 +676,31 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 if (DEBUG_LOGS) Log.v(TAG, "Generating fake steps: " + fakeSteps);
                 mCurrentSteps += fakeSteps;
             } else {
-                mCurrentSteps = (int) mSensorStep.values[0];  // read from the sensor
+                mCurrentSteps = (int) mSensorStep.values[0] - mStepBuffer;  // read from the sensor
             }
 
             int stepInc = mCurrentSteps - mPrevSteps;
-//            mPrevSteps = mCurrentSteps;
 
             if (DEBUG_LOGS) Log.v(TAG, stepInc + " new steps!");
 
-            if (mCurrentSteps > MAX_STEP_THRESHOLD) {
-                if (DEBUG_LOGS) Log.v(TAG, "Resetting step counts");
-//                mDayBufferedSteps += mCurrentSteps;  // @TODO Store previous day steps somwhere and account for them
-                mPrevSteps = 0;
-                mCurrentSteps = 0;
-                if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
-                if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+//            if (mCurrentSteps > MAX_STEP_THRESHOLD) {
+//                if (DEBUG_LOGS) Log.v(TAG, "Resetting step counts");
+////                mDayBufferedSteps += mCurrentSteps;  // @TODO Store previous day steps somwhere and account for them
+//                mPrevSteps = 0;
+//                mCurrentSteps = 0;
+//                if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
+//                if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
+//            }
+
+            if (stepInc > 0) {
+                bubbleManager.updateSteps(mCurrentSteps);
+
+            // Sometimes the sensor yields a repeated reading
+            } else {
+                mWereStepCountsUpdatedThisGlance = false;
             }
 
-//            showSplash10KScreen = mCurrentSteps > 10000 && mPrevSteps < 10000;
-//            if (DEBUG_LOGS && showSplash10KScreen) Log.v(TAG, "REACHED 10K!");
-
-            bubbleManager.updateSteps(mCurrentSteps);
+//            bubbleManager.updateSteps(mCurrentSteps);
 
         }
 
@@ -755,7 +800,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private Bubble lastBubble;  // last created bubble with the greatest value
 
             private int prevSteps, currentSteps;
-            private int updateStep;  // @TODO add explanation here
+            private int updateKeyframe;  // @TODO add explanation here
 
             private float currentFriction;
 
@@ -780,7 +825,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 prevSteps = 0;
                 currentSteps = 0;
 
-                updateStep = 0;  // do not update
+                updateKeyframe = 0;  // do not update
 
                 currentFriction = FRICTION_START;
 
@@ -805,18 +850,18 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             public void update() {
 
-                switch (updateStep) {
+                switch (updateKeyframe) {
                     // @TODO verify if bubble count is working on the long run
                     case 1:
                         bubblesXSmall.add((currentSteps % STEP_RATIO_SMALL) - bubblesXSmall.bubbles.size(), false, false, 0);
                         int stepInc = currentSteps - prevSteps;
                         currentSteps -= stepInc % STEP_RATIO_SMALL;  // account for the remainder of the division
                         bubblesSmall.add(stepInc / STEP_RATIO_SMALL, false, false, 0);
-                        updateStep++;
+                        updateKeyframe++;
                         break;
                     case 2:
                         boolean continueUpdating1 = bubblesXSmall.update() && bubblesSmall.update();
-                        if (!continueUpdating1) updateStep++;
+                        if (!continueUpdating1) updateKeyframe++;
                         break;
                     case 3:
                         int scaleRatioMS = STEP_RATIO_MEDIUM / STEP_RATIO_SMALL;
@@ -824,14 +869,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int newMediumBubbleCount = smallBubbleCount / scaleRatioMS;
                         bubblesSmall.remove(newMediumBubbleCount * scaleRatioMS);
                         bubblesMedium.add(newMediumBubbleCount, false, false, 0);
-                        updateStep++;
+                        updateKeyframe++;
                         break;
                     case 4:
                         bubblesSmall.update();
                         bubblesMedium.update();
                         boolean continueUpdating3 =
                                 bubblesSmall.needsUpdate || bubblesMedium.needsUpdate;
-                        if (!continueUpdating3) updateStep++;
+                        if (!continueUpdating3) updateKeyframe++;
                         break;
                     case 5:
                         int scaleRatioBM = STEP_RATIO_BIG / STEP_RATIO_MEDIUM;
@@ -839,15 +884,15 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
                         bubblesMedium.remove(newBigBubbleCount * scaleRatioBM);
                         bubblesBig.add(newBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
-                                mPrevSteps < STEP_RATIO_BIG && mCurrentSteps > STEP_RATIO_BIG, 0);
-                        updateStep++;
+                                mPrevSteps < STEP_RATIO_BIG && mCurrentSteps >= STEP_RATIO_BIG, 0);
+                        updateKeyframe++;
                         break;
                     case 6:
                         bubblesMedium.update();
                         bubblesBig.update();
                         boolean continueUpdating5 =
                                 bubblesMedium.needsUpdate || bubblesBig.needsUpdate;
-                        if (!continueUpdating5) updateStep++;
+                        if (!continueUpdating5) updateKeyframe++;
                         break;
                     case 7:
                         int scaleRatioBMB = STEP_RATIO_MBIG / STEP_RATIO_BIG;
@@ -855,15 +900,15 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int newMBigBubbleCount = bigBubbleCount / scaleRatioBMB;
                         bubblesBig.remove(newMBigBubbleCount * scaleRatioBMB);
                         bubblesMBig.add(newMBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
-                                mPrevSteps < STEP_RATIO_MBIG && mCurrentSteps > STEP_RATIO_MBIG, 0);
-                        updateStep++;
+                                mPrevSteps < STEP_RATIO_MBIG && mCurrentSteps >= STEP_RATIO_MBIG, 0);
+                        updateKeyframe++;
                         break;
                     case 8:
                         bubblesBig.update();
                         bubblesMBig.update();
                         boolean continueUpdating6 =
                                 bubblesBig.needsUpdate || bubblesMBig.needsUpdate;
-                        if (!continueUpdating6) updateStep++;  // stop animation transition
+                        if (!continueUpdating6) updateKeyframe++;  // stop animation transition
                         break;
                     case 9:
                         int scaleRatioMBXB = STEP_RATIO_XBIG / STEP_RATIO_MBIG;
@@ -871,19 +916,45 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         int newXBigBubbleCount = mBigBubbleCount / scaleRatioMBXB;
                         bubblesMBig.remove(newXBigBubbleCount * scaleRatioMBXB);
                         bubblesXBig.add(newXBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
-                                (mPrevSteps < STEP_RATIO_XBIG && mCurrentSteps > STEP_RATIO_XBIG) ||  // 10k
-                                (mPrevSteps < 2 * STEP_RATIO_XBIG && mCurrentSteps > 2 * STEP_RATIO_XBIG),  // 20k
+                                (mPrevSteps < STEP_RATIO_XBIG && mCurrentSteps >= STEP_RATIO_XBIG) ||  // 10k
+                                (mPrevSteps < 2 * STEP_RATIO_XBIG && mCurrentSteps >= 2 * STEP_RATIO_XBIG),  // 20k
                                 0);
-                        updateStep++;
+                        updateKeyframe++;
                         break;
                     case 10:
                         bubblesMBig.update();
                         bubblesXBig.update();
                         boolean continueUpdating7 =
                                 bubblesMBig.needsUpdate || bubblesXBig.needsUpdate;
-                        if (!continueUpdating7) updateStep = 0;  // stop animation transition
+                        if (!continueUpdating7) updateKeyframe = 0;  // stop animation transition
                         break;
 
+                    // Nuke everything
+                    case 20:
+                        bubblesXSmall.remove(bubblesXSmall.bubbles.size());
+                        bubblesSmall.remove(bubblesSmall.bubbles.size());
+                        bubblesMedium.remove(bubblesMedium.bubbles.size());
+                        bubblesBig.remove(bubblesBig.bubbles.size());
+                        bubblesMBig.remove(bubblesMBig.bubbles.size());
+                        bubblesXBig.remove(bubblesXBig.bubbles.size());
+                        updateKeyframe++;
+                        break;
+                    case 21:
+                        bubblesXBig.update();
+                        bubblesMBig.update();
+                        bubblesBig.update();
+                        bubblesMedium.update();
+                        bubblesSmall.update();
+                        bubblesXSmall.update();
+                        boolean continueUpdating21 =
+                                bubblesXBig.needsUpdate ||
+                                bubblesMBig.needsUpdate ||
+                                bubblesBig.needsUpdate ||
+                                bubblesMedium.needsUpdate ||
+                                bubblesSmall.needsUpdate ||
+                                bubblesXSmall.needsUpdate;
+                        if (continueUpdating21) updateKeyframe = 1;  // add any buffered remaining bubbles
+                        break;
 
                     default:
                         break;
@@ -900,7 +971,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             public void updateSteps(int currentSteps_) {
                 prevSteps = currentSteps;
                 currentSteps = currentSteps_;
-                updateStep = 1;  // trigger size update chain
+//                if (updateKeyframe == 0 ) {
+                updateKeyframe = 1;  // trigger size update chain
+//                }
             }
 
             public void updatePositions() {
@@ -968,12 +1041,20 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void reset() {
-                bubblesXBig.reset();
-                bubblesMBig.reset();
-                bubblesBig.reset();
-                bubblesMedium.reset();
-                bubblesSmall.reset();
-                bubblesXSmall.reset();
+//                bubblesXBig.reset();
+//                bubblesMBig.reset();
+//                bubblesBig.reset();
+//                bubblesMedium.reset();
+//                bubblesSmall.reset();
+//                bubblesXSmall.reset();
+//                updateKeyframe = 20;
+
+                bubblesXBig.bubbles.clear();
+                bubblesMBig.bubbles.clear();
+                bubblesBig.bubbles.clear();
+                bubblesMedium.bubbles.clear();
+                bubblesSmall.bubbles.clear();
+                bubblesXSmall.bubbles.clear();
             }
 
         }
@@ -1045,7 +1126,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 for (int i = 0; i < count_; i++) {
                     int newVal = ++bubbleCount * stepSize;
                     Bubble b = new Bubble(this, newVal, radius, weight, innerRingFactor,
-                            shouldFeature && i == count_ - 1, glanceDuration_, paint);  // @JAMES: Only the last bubble in the group gets featured
+                            shouldFeature && i == count_ - 1, glanceDuration_, , paint);  // @JAMES: Only the last bubble in the group gets featured
                     b.grow();
                     bubbles.add(b);
                 }
@@ -1133,7 +1214,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             Path path;
 
             Bubble(BubbleCollection parent_, int value_, float radius_, float weight_,
-                   float innerRingFactor_, boolean isFeatured_, int glanceDuration_, Paint paint_) {
+                   float innerRingFactor_, boolean isFeatured_, int glanceDuration_,
+                   boolean animatedFill_, Paint paint_) {
                 value = value_;
                 valueStr = mTestStepFormatter.format(value);
                 parent = parent_;
@@ -1276,7 +1358,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void resetMotion() {
-                velX = velY = accX = accY = 0;
+                velX = velY = accX = accY = velR = accR = 0;
             }
 
             public void setScreenWidth(float width_) {
@@ -1352,6 +1434,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 if (active) {
                     active = false;
                     if (DEBUG_LOGS) Log.v(TAG, "Deactivated splashscreen");
+                    mTextAlpha = 255;
+                    mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
+                    mTextStepsPaintInteractive.setColor(TEXT_STEPS_COLOR_INTERACTIVE);
                 }
             }
 
@@ -1409,6 +1494,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private float[] linear_acceleration = new float[3];
 
     private SensorWrapper mSensorStep;
+    public boolean mWasStepSensorUpdatedThisGlance = false,
+            mWereStepCountsUpdatedThisGlance = false;
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) { }
@@ -1421,11 +1508,12 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 updateGravity(event);
                 break;
             case Sensor.TYPE_STEP_COUNTER:
-                if (!GENERATE_FAKE_STEPS) {
-                    if (DEBUG_LOGS) Log.i(TAG, "New step count: " + Float.toString(event.values[0]));
+//                if (!GENERATE_FAKE_STEPS) {
+                    if (DEBUG_LOGS) Log.i(TAG, "Sensor.TYPE_STEP_COUNTER event.values[0]: " + Float.toString(event.values[0]));
 //                    mCurrentSteps = Math.round(event.values[0]);
                     mSensorStep.update(event);
-                }
+                    mWasStepSensorUpdatedThisGlance = true;
+//                }
                 break;
         }
     }
