@@ -274,7 +274,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-            Log.v(TAG, "onVisibilityChanged: " + visible);
+            if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
             if (visible) {

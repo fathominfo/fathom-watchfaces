@@ -91,7 +91,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             }
         };
 
-//        private int mFrameCount = 0;
+
 
         private boolean mRegisteredTimeZoneReceiver = false;
         private boolean mAmbient, mScreenOn;
@@ -122,8 +122,6 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 
         private int currentR, currentG, currentB;
         private int triangleColorNew = generateTriangleColor();
-
-
 
 
 
