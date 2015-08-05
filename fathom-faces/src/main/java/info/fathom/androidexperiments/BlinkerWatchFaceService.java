@@ -554,13 +554,15 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 //                updateFields();
 
                 // SPECIAL TEST SNAPS
-//                if (hour < 11 && currentTime.hour <= 11) {  // SPECIAL WISH TIME DEBUG TEST
-//                    currentTime.set(0, 11, 11, monthDay, month, year);
-//                    updateFields();
+                if (hour < 11 && currentTime.hour >= 11) {  // SPECIAL WISH TIME DEBUG TEST
+                    currentTime.set(0, 11, 11, monthDay, month, year);
+                    updateFields();
 
-//                } else if (minute > 55 || minute < 5) {
+                } else if (hour < 23 && currentTime.hour >= 23) {  // SPECIAL WISH TIME DEBUG TEST
+                    currentTime.set(0, 11, 23, monthDay, month, year);
+                    updateFields();
 
-                if (minute > currentTime.minute) {  // SPECIAL CUCKOO DEBUG TEST
+                } else if (minute > currentTime.minute) {  // SPECIAL CUCKOO DEBUG TEST
                     updateFields();
                     currentTime.set(second, 0, hour, monthDay, month, year);
                     updateFields();
@@ -643,6 +645,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
             boolean areWideOpen;
             boolean areCuckooing;
+            boolean areStaringAtTarget;
 
             EyeMosaic() {
                 eyes = new Eye[8];
@@ -661,7 +664,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 //                        if (!eye.isWideOpen) eye.blink();  // may affect an already blinking eye but not a wide open one
 
                         // TEMP TEST
-                        if (!eye.isWideOpen && !eye.cuckooing) {
+                        if (!eye.isWideOpen && !eye.cuckooing && !eye.isStaringAtTarget) {
                             double r = Math.random();
                             if (r < 0.17) {
                                 eye.lookLeft();
@@ -752,8 +755,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                         areCuckooing = false;
                     }
 
-                    // Should cuckoo?
-                } else if (mTimeManager.minute == 0) {  // trigger cuckooing on the hour
+                // Should cuckoo?
+                } else if (mTimeManager.minute == 0 && !areStaringAtTarget) {  // trigger cuckooing on the hour
                     areCuckooing = true;
                     for (Eye eye : activeEyes) {
                         eye.lookCenter();
@@ -761,8 +764,11 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                     }
                 }
 
+                boolean makeAWish = (mTimeManager.hour == 11 || mTimeManager.hour == 23) && mTimeManager.minute == 11;
+
                 // Trigger eyes wide open?
-                if (!areCuckooing && consecutiveGlances >= EYES_WIDE_OPEN_GLANCE_TRIGGER) {
+                if (!areCuckooing && !areStaringAtTarget && !makeAWish &&
+                        consecutiveGlances >= EYES_WIDE_OPEN_GLANCE_TRIGGER) {
                     if (DEBUG_LOGS) Log.v(TAG, "Start OPENWIDE! consecutiveGlances: " + consecutiveGlances);
                     for (Eye eye : activeEyes) {
                         eye.lookCenter();
@@ -772,14 +778,29 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                     consecutiveGlances = 0;  // @TERRENCE: do wide open once and reset
                 }
 
-                if (!areCuckooing && !areWideOpen) {
-//                    float tX = (float) Math.random();
-//                    float tY = (float) Math.random();
-                    float tX = 0.706f;
-                    float tY = 0.378f;
-                    lookAtScreenTarget(tX, tY);
-                    if (DEBUG_LOGS) Log.v(TAG, "LOOKING AT " + tX * mWidth + "," + tY * mHeight);
+                // Reset staring
+                if (areStaringAtTarget) {
+                    for (Eye eye : activeEyes) {
+                        eye.isStaringAtTarget = false;
+                        eye.lookCenter();
+                    }
+                    areStaringAtTarget = false;
                 }
+
+                // Should stare?
+                if (makeAWish) {
+                    if (DEBUG_LOGS) Log.v(TAG, "MAKE A WISH!");
+                    lookAtScreenTarget(0.706f, 0.378f);
+                }
+
+//                if (!areCuckooing && !areWideOpen) {
+////                    float tX = (float) Math.random();
+////                    float tY = (float) Math.random();
+//                    float tX = 0.706f;
+//                    float tY = 0.378f;
+//                    lookAtScreenTarget(tX, tY);
+//                    if (DEBUG_LOGS) Log.v(TAG, "LOOKING AT " + tX * mWidth + "," + tY * mHeight);
+//                }
 
             }
 
@@ -863,10 +884,11 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             void lookAtScreenTarget(float normX, float normY) {  // normalized screen coordinates
+                areStaringAtTarget = true;
                 float targetX = normX * mWidth;
                 float targetY = normY * mHeight;
                 for (Eye eye : activeEyes) {
-                    eye.lookAtScreenPoint(targetX, targetY);
+                    eye.stareAtScreenPoint(targetX, targetY);
                 }
             }
 
@@ -920,7 +942,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             Paint eyeLinerPaint;  // @TODO make parent static or something
 
             boolean isActive;
-            boolean blinking, lookingSideways, cuckooing;
+            boolean blinking, lookingSideways, cuckooing, isStaringAtTarget;
             boolean needsUpdate;
             boolean isWideOpen;
             int lookingSidewaysCounter;
@@ -956,6 +978,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 blinking = false;
                 lookingSideways = false;
                 lookingSidewaysCounter = 0;
+                isStaringAtTarget = false;
 
                 eyelidPaint = new Paint();
                 eyelidPaint.setColor(EYE_COLOR);
@@ -1166,7 +1189,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 registerUpdate();
             }
 
-//            boolean lookAtScreenPoint(float screenX, float screenY) {  // Absolute pixel coordinates
+//            boolean stareAtScreenPoint(float screenX, float screenY) {  // Absolute pixel coordinates
 //                if (DEBUG_LOGS) Log.v(TAG, "targeting screen " + screenX + "," + screenY);
 //                // compute intersection of looking ray with eye movement boundaries
 //                // see http://stackoverflow.com/a/18292964/1934487
@@ -1182,48 +1205,49 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 //                intY = slope * (minX - x) + y;
 //                if (intY > minY && intY < maxY) {
 //                    intX = minX;
-//                    lookAt(intX - x, intY - y);
+//                    stareAt(intX - x, intY - y);
 //                    return true;
 //                }
 //                // right
 //                intY = slope * (maxX - x) + y;
 //                if (intY > minY && intY < maxY) {
 //                    intX = maxX;
-//                    lookAt(intX - x, intY - y);
+//                    stareAt(intX - x, intY - y);
 //                    return true;
 //                }
 //                // up
 //                intX = (minY - y) / slope + x;
 //                if (intX > minX && intX < maxX) {
 //                    intY = minY;
-//                    lookAt(intX - x, intY - y);
+//                    stareAt(intX - x, intY - y);
 //                    return true;
 //                }
 //                // down
 //                intX = (maxY - y) / slope + x;
 //                if (intX > minX && intX < maxX) {
 //                    intY = maxY;
-//                    lookAt(intX - x, intY - y);
+//                    stareAt(intX - x, intY - y);
 //                    return true;
 //                }
 //
 //                return false;
 //            }
 
-            boolean lookAtScreenPoint(float screenX, float screenY) {  // Absolute pixel coordinates
+            boolean stareAtScreenPoint(float screenX, float screenY) {  // Absolute pixel coordinates
                 if (DEBUG_LOGS) Log.v(TAG, "targeting screen " + screenX + "," + screenY);
 
                 float angle = (float) Math.atan2(screenY - y, screenX - x);
                 float dx = 0.5f * HORIZONTAL_LOOK_RATIO * width * (float) Math.cos(angle);
                 float dy = 0.5f * VERTICAL_LOOK_RATIO * height * (float) Math.sin(angle);
-                lookAt(dx, dy);
+                stareAt(dx, dy);
 
                 return true;
             }
 
-            void lookAt(float targetPupilX_, float targetPupilY_) {
+            void stareAt(float targetPupilX_, float targetPupilY_) {
                 targetPupilX = targetPupilX_;
                 targetPupilY = targetPupilY_;
+                isStaringAtTarget = true;
                 if (DEBUG_LOGS) Log.v(TAG, "from xy " + x + "," + y + " to targetXY " + targetPupilX + "," + targetPupilY);
                 sideLookTrigger();
                 registerUpdate();
