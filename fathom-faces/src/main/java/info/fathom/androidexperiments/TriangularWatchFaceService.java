@@ -57,7 +57,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     // DEBUG
     private static final boolean DEBUG_LOGS = false;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-    private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 30;
 
 
 
@@ -98,9 +99,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 //        private boolean mLowBitAmbient;
 //        private boolean mBurnInProtection;
 
-        private Time mTime;
+        private TimeManager mTimeManager;
         private String mTimeStr;
-        private int mHourInt, mMinuteInt;
         private int mLastAmbientHour;
         private Time mCurrentGlance;
         private long mPrevGlance;
@@ -109,6 +109,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
         private final Rect textBounds = new Rect();
         private Typeface RALEWAY_REGULAR_TYPEFACE;
+
+        private Paint mGridPaint;
 
         private int mWidth;
         private int mHeight;
@@ -121,8 +123,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int currentR, currentG, currentB;
-        private int triangleColorNew = generateTriangleColor();
-
+//        private int triangleColorNew = generateTriangleColor();
+        private int triangleColorNew;
 
 
         @Override
@@ -151,9 +153,25 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
             mTextDigitsPaintAmbient.setAntiAlias(false);
 
+            mGridPaint = new Paint();
+            mGridPaint.setColor(BACKGROUND_COLOR_AMBIENT);
+            mGridPaint.setStrokeWidth(1f);
+            mGridPaint.setAntiAlias(false);
+            mGridPaint.setStyle(Paint.Style.STROKE);
+
             board = new Board();
 
-            mTime  = new Time();
+//            mTime  = new Time();
+            mTimeManager = new TimeManager() {
+                @Override
+                public void onReset() {
+                    if (DEBUG_LOGS) Log.v(TAG, "RESETTING!!");
+
+                }
+            };
+            if (RESET_HOUR >= 0) {
+                mTimeManager.setOvernightResetHour(RESET_HOUR);
+            }
             mCurrentGlance = new Time();
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
@@ -190,6 +208,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             backgroundColors[22] = Color.HSVToColor(new float[]{ 160.0f, 1.0f, 1.0f});
             backgroundColors[23] = Color.HSVToColor(new float[]{ 145.0f, 1.0f, 1.0f});
 
+            triangleColorNew = generateTriangleColor();
         }
 
         @Override
@@ -228,7 +247,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-            Log.v(TAG, "onVisibilityChanged: " + visible);
+            if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
             if (visible)
@@ -287,6 +306,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 registerTimeZoneReceiver();
                 mSensorAccelerometer.register();
 
+                if (RANDOM_TIME_PER_GLANCE) {
+                    mTimeManager.addRandomInc();
+                }
+
                 glances++;
                 if (shouldReset()) board.reset();
 
@@ -340,29 +363,20 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         public void onDraw(Canvas canvas, Rect bounds) {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas " + mFrameCount++);
 
-            mTime.setToNow();
-            mHourInt = mTime.hour;
-            if (NEW_HOUR_PER_GLANCE) {
-                mHourInt = (mHourInt + glances) % 24;
-            }
-            mMinuteInt = mTime.minute;
-            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
+            mTimeManager.setToNow();
+            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":"
+                    + String.format("%02d", mTimeManager.minute);
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
+
                 board.render(canvas, true);
+                renderGrid(canvas, 1, 1);
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
 
             } else {
-//                canvas.drawColor(backgroundColors[randomColor]);
-//                int tempBackHue = (mHourInt * 15) + 200;
-//                if (tempBackHue > 360) {
-//                    tempBackHue -= 360;
-//                }
-//                int tempBackColor = Color.HSVToColor(new float[]{ (float) tempBackHue, 1.0f, 1.0f });
-//                canvas.drawColor(tempBackColor);
-                canvas.drawColor(backgroundColors[mHourInt]);
+                canvas.drawColor(backgroundColors[mTimeManager.hour]);
 
                 board.render(canvas, false);
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
@@ -370,11 +384,23 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             }
         }
 
+        private void renderGrid(Canvas canvas, int gapWidth, int lineWidth) {
+            int bandCount =(int) Math.ceil((float) mWidth / (lineWidth + gapWidth));
+            int lineIter = 0;
+            for (int i = 0; i < bandCount; i++) {
+                lineIter += gapWidth;
+                for (int j = 0; j < lineWidth; j++) {
+                    lineIter++;
+                    canvas.drawLine(0, lineIter, mWidth, lineIter, mGridPaint);
+                    canvas.drawLine(lineIter, 0, lineIter, mHeight, mGridPaint);
+                }
+            }
+        }
+
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+                mTimeManager.setTimeZone(intent);
             }
         };
 
@@ -437,10 +463,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         // Checks if watch face should reset, like overnight
         boolean timelyReset() {
             boolean reset = false;
-            if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
+            if (mTimeManager.hour == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
                 reset = true;
             }
-            mLastAmbientHour = mHourInt;
+            mLastAmbientHour = mTimeManager.hour;
             return reset;
         }
 
@@ -568,6 +594,105 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 if (bounce) parent.addBounce(bounceX, bounceY);
 
             }
+
+        }
+
+
+        private class TimeManager {
+
+            private static final boolean DEBUG_FAKE_TIME = RANDOM_TIME_PER_GLANCE;
+            private final long DEBUG_FAKE_TIME_INC = TimeUnit.MINUTES.toMillis(RANDOM_MINUTES_INC);
+            private static final long DAY_IN_MILLIS = 86400000;
+
+            private Time currentTime;
+            public int year, month, monthDay, hour, minute, second;
+
+            private boolean overnightReset;
+            private int overnightResetHour;
+            private Time nextResetTime;
+
+            TimeManager() {
+                overnightReset = false;
+                overnightResetHour = 0;
+
+                currentTime = new Time();
+                currentTime.setToNow();
+
+                setToNow();
+            }
+
+            public void setToNow() {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void setTimeZone(Intent intent) {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.clear(intent.getStringExtra("time-zone"));
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void addRandomInc() {
+                long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
+                if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
+
+                currentTime.set(currentTime.toMillis(false) + rInc);
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void resetCheck() {
+                if (currentTime.after(nextResetTime)) {
+                    nextResetTime = computeNextResetTime();
+                    if (DEBUG_LOGS) Log.v(TAG, "Reset check: true");
+                    onReset();
+                }
+            }
+
+            public void onReset() { Log.v(TAG, "onReset"); }
+
+            public void setOvernightResetHour(int hour_) {
+                overnightReset = true;
+                overnightResetHour = hour_;
+                nextResetTime = computeNextResetTime();
+            }
+
+            private Time computeNextResetTime() {
+                Time resetTime = new Time();
+                resetTime.set(0, 0, overnightResetHour, monthDay, month, year);  // Set to today's reset time
+
+                // If already past, add a day
+                if (currentTime.after(resetTime)) {
+                    resetTime.set(resetTime.toMillis(false) + DAY_IN_MILLIS);
+                }
+
+                if (DEBUG_LOGS) Log.v(TAG, "Next reset time: " + resetTime.format2445());
+
+                return resetTime;
+            }
+
+            private void updateFields() {
+                year = currentTime.year;
+                month = currentTime.month;
+                monthDay = currentTime.monthDay;
+                hour = currentTime.hour;
+                minute = currentTime.minute;
+                second = currentTime.second;
+            }
+
+            public void toDebugLog() {
+                Log.v(TAG, "--> Curr time: " + currentTime.format2445());
+            }
+
 
         }
 
@@ -775,7 +900,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 id = triangleCounter++;
                 parent = parent_;
 
-                if (start_.side < middle_.side) {
+                if (start_.side == 0 && middle_.side == 3) {
+                    start = middle_;
+                    middle = start_;
+                } else if (start_.side < middle_.side) {
                     start = start_;
                     middle = middle_;
                 } else if (start_.side == 3 && middle_.side == 0) {
@@ -797,6 +925,12 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                     cornerX = Math.min(start.x, middle.x) + 0.5f * Math.abs(start.x - middle.x);
                     cornerY = Math.min(start.y, middle.y) + 0.5f * Math.abs(start.y - middle.y);
                 }
+
+                if (DEBUG_LOGS) Log.v(TAG, "Created triangle: " +
+                        "start[" + start.x + "," + start.y + "," + start.side + "] " +
+                        (containsCornerBounce ? "corner[" + corner.x + "," + corner.y + "," + corner.side + "] " : "(nocorner) ") +
+                        "middle[" + middle.x + "," + middle.y + "," + middle.side + "] " +
+                        "end[" + end.x + "," + end.y + "," + end.side + "]");
 
                 pathFull = new Path();
                 pathFull.moveTo(start.x, start.y);
@@ -891,7 +1025,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 }
 
                 needsUpdate = animateVertices || animateColor || animateGradient;
-                if (DEBUG_LOGS) Log.v(TAG, "  needsUpdate: " + needsUpdate);
+//                if (DEBUG_LOGS) Log.v(TAG, "  needsUpdate: " + needsUpdate);
                 if (!needsUpdate) parent.triangleStopUpdatingBuffer.add(this);
                 return needsUpdate;
             }
@@ -986,7 +1120,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         int generateTriangleColor() {
             // start range at the minute of the hour mapped to the total hue, minus half the range
             int totalHue = 360;
-            int startHue = (mMinuteInt * 6) - (RANGE_HUE/2);
+            int startHue = (mTimeManager.minute * 6) - (RANGE_HUE / 2);
             int endHue   = startHue + RANGE_HUE;
 
             // find random number between the range

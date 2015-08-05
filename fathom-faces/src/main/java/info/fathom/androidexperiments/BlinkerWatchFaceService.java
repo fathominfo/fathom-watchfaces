@@ -32,10 +32,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
     private static final long  INTERACTIVE_UPDATE_RATE_MS = 33;
 
-    private static final float TAU = (float) (2 * Math.PI);
-    private static final float QUARTER_TAU = TAU / 4;
-    private static final float TO_DEGS = 360.0f / TAU;
-
     private static final int   BACKGROUND_COLOR_INTERACTIVE = Color.BLACK;
     private static final int   BACKGROUND_COLOR_AMBIENT = Color.BLACK;
 
@@ -76,8 +72,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
     private static final long  CONSECUTIVE_GLANCE_THRESHOLD = TimeUnit.SECONDS.toMillis(30);    // max time between glances to be considered consecutive
     private static final int   EYES_WIDE_OPEN_GLANCE_TRIGGER = 3;                               // how many consecutive glances are needed to trigger all eyes wide open
 
-    private static final float GRAVITY_THRESHOLD = 1.0f;
-
     private static final int   RESET_HOUR = 4;                                                  // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
@@ -85,10 +79,9 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
     private static final boolean DEBUG_ACCELERATE_INTERACTION = true;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_ACCELERATE_RATE = 5;  // each glance has xN times the effect
     private static final boolean DEBUG_SHOW_GLANCE_COUNTER = true;
-    private static final boolean DEBUG_EYES_ROTATION = false;  // @TODO if they are going to be off forever, deactivate all sensing
 
-    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
-    private static final int     RANDOM_MINUTES_INC = 300;
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add fake extra time per glance
+    private static final int     RANDOM_MINUTES_INC = 60;
 
 
 
@@ -149,7 +142,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
         private float mRadius;
 
         private int glances = 0;                // how many times did the watch go from ambient to interactive?
-        private int consecutiveGlances = 1;     // amount of last consecutive glances
+        private int consecutiveGlances = 0;     // amount of last consecutive glances
         private Time mCurrentGlance;
         private long mPrevGlance;
 
@@ -202,7 +195,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 @Override
                 public void onReset() {
                     if (DEBUG_LOGS) Log.v(TAG, "RESETTING!!");
-
+                    glances = 0;
+                    eyeMosaic.reset();
                 }
             };
             if (RESET_HOUR >= 0) {
@@ -320,7 +314,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 if (DEBUG_LOGS) Log.v(TAG, "consecutiveGlances: " + consecutiveGlances);
 
                 eyeMosaic.newGlance(glanceInc, glanceDiff);
-
+                eyeMosaic.updateTiredness();
 
             } else {
                 if (timelyReset()) {
@@ -371,7 +365,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 eyeMosaic.addEye(39, 73, 49);
                 eyeMosaic.addEye(82, 45, 49);
                 eyeMosaic.addEye(158, 45, 72);
-                eyeMosaic.addEye(110, 145, 0);
+                eyeMosaic.addEye(106, 90, 72);  // why was this eye changed?
                 eyeMosaic.addEye(218, 21, 49);
                 eyeMosaic.addEye(267, 45, 49);
                 eyeMosaic.addEye(218, 73, 49);
@@ -387,6 +381,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 eyeMosaic.addEye(253, 253, 72);
                 eyeMosaic.addEye(185, 269, 49);
                 eyeMosaic.addEye(228, 298, 49);
+                eyeMosaic.addEye(139, 240, 49);
 
                 mEyesPopulated = true;
 
@@ -408,7 +403,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
+//            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
 //            mTime.setToNow();
 //            mHourInt = mTime.hour;
@@ -556,8 +551,23 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
 
                 currentTime.set(currentTime.toMillis(false) + rInc);
+//                updateFields();
+
+                // SPECIAL TEST SNAPS
+//                if (hour < 11 && currentTime.hour <= 11) {  // SPECIAL WISH TIME DEBUG TEST
+//                    currentTime.set(0, 11, 11, monthDay, month, year);
+//                    updateFields();
+
+//                } else if (minute > 55 || minute < 5) {
+
+                if (minute > currentTime.minute) {  // SPECIAL CUCKOO DEBUG TEST
+                    updateFields();
+                    currentTime.set(second, 0, hour, monthDay, month, year);
+                    updateFields();
+                }
 
                 updateFields();
+
                 if (overnightReset) resetCheck();
             }
 
@@ -614,8 +624,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
         class EyeMosaic {
 
-            float blinkChance;
             private static final int BLINK_CHANCE_FACTOR = 5;
+            private static final float MAX_TIRED_RATIO          = 0.50f;            // how much it closes when max tired
+            private static final int   TIRED_HOUR_START         = 21;
+            private static final int   TIRED_HOUR_END           = 23;               // Note: must be before midnight
+            private static final int   WAKEUP_HOUR_START        = 7;                // Note: must be after midnight
+            private static final int   WAKEUP_HOUR_END          = 9;
+            
+            float blinkChance;
 
             Eye[] eyes;
             int eyeCount;
@@ -626,12 +642,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             List<Eye> updateList = new ArrayList<>();
 
             boolean areWideOpen;
+            boolean areCuckooing;
 
             EyeMosaic() {
                 eyes = new Eye[8];
                 eyeCount = 0;
                 activeEyesCount = 0;
                 blinkChance = 0;
+                areCuckooing = false;
             }
 
             void update() {
@@ -643,10 +661,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 //                        if (!eye.isWideOpen) eye.blink();  // may affect an already blinking eye but not a wide open one
 
                         // TEMP TEST
-                        if (!eye.isWideOpen) {
-//                            if (eye.pupilPositionH != 1) {
-//                                eye.lookCenterHorizontal();
-//                            }
+                        if (!eye.isWideOpen && !eye.cuckooing) {
                             double r = Math.random();
                             if (r < 0.17) {
                                 eye.lookLeft();
@@ -688,7 +703,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             void render(Canvas canvas) {
-                if (DEBUG_LOGS) Log.v(TAG, "Rendering activeEyes: " + activeEyes.size());
+//                if (DEBUG_LOGS) Log.v(TAG, "Rendering activeEyes: " + activeEyes.size());
                 for (Eye eye : activeEyes) {
                     eye.render(canvas);
                 }
@@ -728,15 +743,36 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                     }
                 }
 
+                // Stop cuckooing?
+                if (areCuckooing) {
+                    if (mTimeManager.minute != 0) {
+                        for (Eye eye : activeEyes) {
+                            eye.stopCuckooing();
+                        }
+                        areCuckooing = false;
+                    }
+
+                    // Should cuckoo?
+                } else if (mTimeManager.minute == 0) {  // trigger cuckooing on the hour
+                    areCuckooing = true;
+                    for (Eye eye : activeEyes) {
+                        eye.lookCenter();
+                        eye.startCuckooing();
+                    }
+                }
+
                 // Trigger eyes wide open?
-                if (consecutiveGlances >= EYES_WIDE_OPEN_GLANCE_TRIGGER) {
+                if (!areCuckooing && consecutiveGlances >= EYES_WIDE_OPEN_GLANCE_TRIGGER) {
+                    if (DEBUG_LOGS) Log.v(TAG, "Start OPENWIDE! consecutiveGlances: " + consecutiveGlances);
                     for (Eye eye : activeEyes) {
                         eye.lookCenter();
                         eye.openWide();
                     }
                     areWideOpen = true;
-                    consecutiveGlances = 1;  // @TERRENCE: do wide open once and reset
+                    consecutiveGlances = 0;  // @TERRENCE: do wide open once and reset
                 }
+
+
 
             }
 
@@ -794,34 +830,56 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 updateList.clear();
             }
 
+            void updateTiredness() {
+                float factor = 1;
+
+                // Closing
+                if (mTimeManager.hour >= TIRED_HOUR_START && mTimeManager.hour < TIRED_HOUR_END) {
+                    factor = 1 - (mTimeManager.hour + mTimeManager.minute / 60f - TIRED_HOUR_START)
+                            * (1 - MAX_TIRED_RATIO) / (TIRED_HOUR_END - TIRED_HOUR_START);
+
+                // Closed
+                } else if (mTimeManager.hour >= TIRED_HOUR_END || mTimeManager.hour < WAKEUP_HOUR_START) {
+                    factor = MAX_TIRED_RATIO;
+
+                // Opening
+                } else if (mTimeManager.hour >= WAKEUP_HOUR_START && mTimeManager.hour < WAKEUP_HOUR_END) {
+                    factor = MAX_TIRED_RATIO + (mTimeManager.hour + mTimeManager.minute / 60f - WAKEUP_HOUR_START)
+                            * (1 - MAX_TIRED_RATIO) / (WAKEUP_HOUR_END - WAKEUP_HOUR_START);
+                }
+
+                if (DEBUG_LOGS) Log.v(TAG, " New tiredness factor: " + mTimeManager.hour + ":" + mTimeManager.minute + " -> " + factor);
+
+                for (Eye eye : activeEyes) {
+                    eye.updateTiredness(factor);
+                }
+            }
+
         }
 
 
         class Eye {
+
             // Constants
-            final int   EYE_COLOR    = Color.rgb(252,245,245);
-            final int   EYELID_COLOR = Color.rgb(0, 0, 0);
-            static final int   PUPIL_COLOR = Color.BLACK;
-            static final float BLINK_SPEED = 0.40f;
-            static final int   ANIM_END_THRESHOLD = 1;      // pixel distance to stop animation
-//            static final float HEIGHT_RATIO = 0.68f;      // height/width ratio
-            static final float HEIGHT_RATIO = 0.50f;        // height/width ratio
-            static final float IRIS_RATIO = 0.40f;          // irisDiameter/width ratio
-            static final float PUPIL_RATIO = 0.22f;         // pupilDiameter/width ratio
-            static final float WIDE_OPEN_RATIO = 0.65f;
-            static final float HORIZONTAL_LOOK_RATIO = 0.45f;     // how far the pupil will travel laterally in relation to width/2
-            static final float VERTICAL_LOOK_RATIO = 0.30f;       // idem
-            static final float PUPIL_SPEED_HORIZONTAL = 0.50f;
-            static final float PUPIL_SPEED_RADIUS = 0.15f;
-            static final float PUPIL_DILATION_SIZE = 1.20f;
-            static final float PUPIL_CONTRACTION_SIZE = 0.80f;
+            final int          EYE_COLOR                = Color.rgb(252,245,245);
+            final int          EYELID_COLOR             = Color.rgb(0, 0, 0);
+            static final int   PUPIL_COLOR              = Color.BLACK;
+            static final float BLINK_SPEED              = 0.40f;
+            static final int   ANIM_END_THRESHOLD       = 1;                // pixel distance to stop animation
+            static final float HEIGHT_RATIO             = 0.50f;            // height/width ratio
+            static final float IRIS_RATIO               = 0.40f;            // irisDiameter/width ratio
+            static final float PUPIL_RATIO              = 0.22f;            // pupilDiameter/width ratio
+            static final float WIDE_OPEN_RATIO          = 0.65f;
+            static final float HORIZONTAL_LOOK_RATIO    = 0.45f;            // how far the pupil will travel laterally in relation to width/2
+            static final float VERTICAL_LOOK_RATIO      = 0.30f;            // idem
+            static final float PUPIL_SPEED_HORIZONTAL   = 0.50f;
+            static final float PUPIL_SPEED_RADIUS       = 0.15f;
+            static final float PUPIL_DILATION_SIZE      = 1.20f;
+            static final float PUPIL_CONTRACTION_SIZE   = 0.80f;
+            static final float IRIS_OFFSET_RATIO        = 0.058f;
 
-            static final float IRIS_OFFSET_RATIO = 0.058f;
-
-
-//            static final float DEPTH_ACCEL_FACTOR = 0.05f;
-//            static final float DEPTH_SPRING_FACTOR = 0.025f;
-//            static final float FRICTION_FACTOR = 0.60f;
+            static final int   SIDE_LOOK_DURATION       = 50;               // in frames
+            static final int   SIDE_LOOK_RANDOM_VAR_ADD = 20;               // on top of the base, in frames
 
             EyeMosaic parent;
 
@@ -834,6 +892,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
             float currentAperture, targetAperture;
 
+            float currentTirednessFactor;
+
             int pupilPositionH;   // 0 = left, 1 = center, 2 = right
             float currentPupilX, targetPupilX;  // in relative coordinates
             int pupilPositionV;   // 0 = up, 1 = center, 2 = bottom
@@ -845,8 +905,10 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             Paint eyeLinerPaint;  // @TODO make parent static or something
 
             boolean isActive;
-            boolean blinking, needsUpdate;
+            boolean blinking, lookingSideways, cuckooing;
+            boolean needsUpdate;
             boolean isWideOpen;
+            int lookingSidewaysCounter;
 
             Eye(EyeMosaic parent_, int id_, float x_, float y_, float width_) {
                 parent = parent_;
@@ -867,6 +929,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 currentAperture = 0;
                 targetAperture = height;  // @TODO should this be 0?
 
+                currentTirednessFactor = 1;
+
                 pupilPositionH = 1;
                 currentPupilX = targetPupilX = 0;
                 pupilPositionV = 1;
@@ -875,6 +939,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 isActive = false;
                 needsUpdate = false;
                 blinking = false;
+                lookingSideways = false;
+                lookingSidewaysCounter = 0;
 
                 eyelidPaint = new Paint();
                 eyelidPaint.setColor(EYE_COLOR);
@@ -912,35 +978,29 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
 
-//            void updatePupil() {
-//                accP = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (pupilRadius - currentPupilRadius));
-//                velP += accP;
-//                velP *= FRICTION_FACTOR;
-//                currentPupilRadius += velP;
-//                if (currentPupilRadius > 0.90f * irisRadius) currentPupilRadius = 0.90f * irisRadius;
-//            }
-
             boolean update() {
                 float diffH = targetAperture - currentAperture;
                 currentAperture = Math.abs(diffH) < ANIM_END_THRESHOLD ?
                         targetAperture :
-                        currentAperture + BLINK_SPEED * (diffH);
+                        currentAperture + BLINK_SPEED * currentTirednessFactor * (diffH);
 
                 float diffPX = targetPupilX - currentPupilX;
                 currentPupilX = Math.abs(diffPX) < ANIM_END_THRESHOLD ?
                         targetPupilX :
-                        currentPupilX + PUPIL_SPEED_HORIZONTAL * (diffPX);
+                        currentPupilX + PUPIL_SPEED_HORIZONTAL * currentTirednessFactor * (diffPX);
 
                 float diffPY = targetPupilY - currentPupilY;
                 currentPupilY = Math.abs(diffPY) < ANIM_END_THRESHOLD ?
                         targetPupilY :
-                        currentPupilY + PUPIL_SPEED_HORIZONTAL * (diffPY);
+                        currentPupilY + PUPIL_SPEED_HORIZONTAL * currentTirednessFactor * (diffPY);
 
                 float diffPR = targetPupilRadius - currentPupilRadius;
                 currentPupilRadius = Math.abs(diffPR) < ANIM_END_THRESHOLD ?
                         targetPupilRadius :
-                        currentPupilRadius + PUPIL_SPEED_RADIUS * (diffPR);
+                        currentPupilRadius + PUPIL_SPEED_RADIUS * currentTirednessFactor * (diffPR);
                 rewindEyelid();
+
+                lookingSidewaysCounter--;
 
                 // If completed an animation
                 if (currentAperture == targetAperture &&
@@ -957,6 +1017,23 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                             blinking = false;
                         }
                     }
+
+                    if (lookingSideways && !cuckooing) {
+                        if (lookingSidewaysCounter > 0) {
+                            registerUpdate();
+
+                        } else {
+//                            if (DEBUG_LOGS) Log.v(TAG, "Deactivating lookingSideways");
+                            lookCenter();
+                            lookingSideways = false;
+                        }
+                    }
+
+                    if (cuckooing) {
+                        if (pupilPositionH == 0) lookRight();
+                        else if (pupilPositionH == 2) lookLeft();
+                    }
+
                 }
 
                 return needsUpdate;
@@ -980,6 +1057,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 isActive = false;
                 needsUpdate = false;
                 blinking = false;
+                lookingSideways = false;
                 isWideOpen = false;
                 currentAperture = 0;
                 targetAperture = height;  // @TODO should this be 0?
@@ -997,7 +1075,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             void open() {
-                targetAperture = height;
+                targetAperture = height * currentTirednessFactor;
                 targetPupilRadius = pupilRadius;
                 registerUpdate();
             }
@@ -1014,20 +1092,29 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             void openWide() {
-                targetAperture = WIDE_OPEN_RATIO * width;
+                targetAperture = WIDE_OPEN_RATIO * width * currentTirednessFactor;
                 targetPupilRadius = PUPIL_CONTRACTION_SIZE * pupilRadius;
                 isWideOpen = true;
                 registerUpdate();
             }
 
             void lookCenter() {
+//                if (DEBUG_LOGS) Log.v(TAG, "lookCenter() " + id);
                 lookCenterHorizontal();
                 lookCenterVertical();
+            }
+
+            void sideLookTrigger() {
+                if (!cuckooing) {
+                    lookingSideways = true;
+                    lookingSidewaysCounter = SIDE_LOOK_DURATION + (int) (SIDE_LOOK_RANDOM_VAR_ADD * Math.random());
+                }
             }
 
             void lookLeft() {
                 targetPupilX = -HORIZONTAL_LOOK_RATIO * width / 2;
                 pupilPositionH = 0;
+                sideLookTrigger();
                 registerUpdate();
             }
 
@@ -1040,12 +1127,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             void lookRight() {
                 targetPupilX = HORIZONTAL_LOOK_RATIO * width / 2;
                 pupilPositionH = 2;
+                sideLookTrigger();
                 registerUpdate();
             }
 
             void lookUp() {
                 targetPupilY = - VERTICAL_LOOK_RATIO * height / 2;
                 pupilPositionV = 0;
+                sideLookTrigger();
                 registerUpdate();
             }
 
@@ -1058,7 +1147,21 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             void lookDown() {
                 targetPupilY = VERTICAL_LOOK_RATIO * height / 2;
                 pupilPositionV = 0;
+                sideLookTrigger();
                 registerUpdate();
+            }
+
+            void startCuckooing() {
+//                if (DEBUG_LOGS) Log.v(TAG, "startCuckooing() " + id);
+                cuckooing = true;
+                if (Math.random() < 0.5) lookLeft();
+                else lookRight();
+            }
+
+            void stopCuckooing() {
+//                if (DEBUG_LOGS) Log.v(TAG, "stopCuckooing() " + id);
+                cuckooing = false;
+                lookCenter();
             }
 
             int randomColor() {
@@ -1074,6 +1177,10 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
             void unregisterUpdate() {
                 needsUpdate = false;
+            }
+
+            void updateTiredness(float value_) {
+                currentTirednessFactor = value_;
             }
         }
     }
