@@ -10,10 +10,6 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -30,7 +26,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 
-public class BlinkerWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
+public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
     private static final String TAG = "BlinkerWatchFaceService";
 
@@ -85,11 +81,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
     private static final int   RESET_HOUR = 4;                                                  // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
-    private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
+    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_ACCELERATE_INTERACTION = true;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_ACCELERATE_RATE = 5;  // each glance has xN times the effect
-    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
+    private static final boolean DEBUG_SHOW_GLANCE_COUNTER = true;
     private static final boolean DEBUG_EYES_ROTATION = false;  // @TODO if they are going to be off forever, deactivate all sensing
+
+    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 300;
 
 
 
@@ -129,7 +128,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         //        private boolean mBurnInProtection;
         private boolean mAmbient, mScreenOn;
 
-        private Time mTime;
+//        private Time mTime;
+        private TimeManager mTimeManager;
         private String mTimeStr;
         private int mHourInt, mMinuteInt;
         private int mLastAmbientHour;
@@ -154,6 +154,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         private long mPrevGlance;
 
         private EyeMosaic eyeMosaic;
+        private boolean mEyesPopulated = false;
 
 
         @Override
@@ -195,36 +196,22 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             mTextGlancesPaintAmbient.setTextAlign(Paint.Align.RIGHT);
 
             eyeMosaic = new EyeMosaic();
-            eyeMosaic.addEye(39, 21, 49);
-            eyeMosaic.addEye(39, 73, 49);
-            eyeMosaic.addEye(82, 45, 49);
-            eyeMosaic.addEye(158, 45, 72);
-            eyeMosaic.addEye(110, 145, 0);
-            eyeMosaic.addEye(218, 21, 49);
-            eyeMosaic.addEye(267, 45, 49);
-            eyeMosaic.addEye(218, 73, 49);
-            eyeMosaic.addEye(54, 138, 97);
-            eyeMosaic.addEye(139, 151, 49);
-            eyeMosaic.addEye(106, 195, 72);
-            eyeMosaic.addEye(39, 212, 49);
-            eyeMosaic.addEye(82, 240, 49);
-            eyeMosaic.addEye(39, 265, 49);
-            eyeMosaic.addEye(106, 285, 72);
-            eyeMosaic.addEye(201, 195, 97);
-            eyeMosaic.addEye(282, 195, 49);
-            eyeMosaic.addEye(253, 253, 72);
-            eyeMosaic.addEye(185, 269, 49);
-            eyeMosaic.addEye(228, 298, 49);
 
-            mTime  = new Time();
+//            mTime  = new Time();
+            mTimeManager = new TimeManager() {
+                @Override
+                public void onReset() {
+                    if (DEBUG_LOGS) Log.v(TAG, "RESETTING!!");
+
+                }
+            };
+            if (RESET_HOUR >= 0) {
+                mTimeManager.setOvernightResetHour(RESET_HOUR);
+            }
+
             mCurrentGlance = new Time();
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
-
-            mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-            mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
-                    BlinkerWatchFaceService.this, mSensorManager);
-            mSensorAccelerometer.register();
 
             registerScreenReceiver();
         }
@@ -235,8 +222,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             unregisterTimeZoneReceiver();
             unregisterScreenReceiver();
-            mSensorAccelerometer.unregister();
-            mSensorManager.unregisterListener(BlinkerWatchFaceService.this);
             super.onDestroy();
         }
 
@@ -267,13 +252,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         public void onVisibilityChanged(boolean visible) {
             Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
-
-            if (visible) {
-                mSensorAccelerometer.register();
-
-            } else {
-                mSensorAccelerometer.unregister();
-            }
 
             /*
             * Whether the timer should be running depends on whether we're visible
@@ -325,7 +303,10 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
 
             if (turnedOn) {
                 registerTimeZoneReceiver();
-                mSensorAccelerometer.register();
+
+                if (RANDOM_TIME_PER_GLANCE) {
+                    mTimeManager.addRandomInc();
+                }
 
 //                glances++;
                 int glanceInc = DEBUG_ACCELERATE_INTERACTION ? DEBUG_ACCELERATE_RATE : 1;
@@ -340,6 +321,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
 
                 eyeMosaic.newGlance(glanceInc, glanceDiff);
 
+
             } else {
                 if (timelyReset()) {
                     if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
@@ -348,7 +330,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
                 }
 
                 unregisterTimeZoneReceiver();
-                mSensorAccelerometer.unregister();
 
                 mCurrentGlance.setToNow();
                 mPrevGlance = mCurrentGlance.toMillis(false);
@@ -384,6 +365,36 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             mTextGlancesRightMargin = TEXT_GLANCES_RIGHT_MARGIN * mWidth;
             mTextGlancesPaintInteractive.setTextSize(mTextGlancesHeight);
             mTextGlancesPaintAmbient.setTextSize(mTextGlancesHeight);
+
+            if (!mEyesPopulated) {
+                eyeMosaic.addEye(39, 21, 49);
+                eyeMosaic.addEye(39, 73, 49);
+                eyeMosaic.addEye(82, 45, 49);
+                eyeMosaic.addEye(158, 45, 72);
+                eyeMosaic.addEye(110, 145, 0);
+                eyeMosaic.addEye(218, 21, 49);
+                eyeMosaic.addEye(267, 45, 49);
+                eyeMosaic.addEye(218, 73, 49);
+                eyeMosaic.addEye(54, 138, 97);
+                eyeMosaic.addEye(139, 155, 49);
+                eyeMosaic.addEye(106, 195, 72);
+                eyeMosaic.addEye(39, 212, 49);
+                eyeMosaic.addEye(82, 240, 49);
+                eyeMosaic.addEye(39, 265, 49);
+                eyeMosaic.addEye(106, 285, 72);
+                eyeMosaic.addEye(201, 195, 97);
+                eyeMosaic.addEye(282, 195, 49);
+                eyeMosaic.addEye(253, 253, 72);
+                eyeMosaic.addEye(185, 269, 49);
+                eyeMosaic.addEye(228, 298, 49);
+
+                mEyesPopulated = true;
+
+                int glanceInc = DEBUG_ACCELERATE_INTERACTION ? DEBUG_ACCELERATE_RATE : 1;
+                glances += glanceInc;
+                eyeMosaic.newGlance(glanceInc, 0);
+
+            }
         }
 
         @Override
@@ -397,12 +408,15 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
-//            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
+            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
-            mTime.setToNow();
-            mHourInt = mTime.hour;
-            mMinuteInt = mTime.minute;
-            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
+//            mTime.setToNow();
+//            mHourInt = mTime.hour;
+//            mMinuteInt = mTime.minute;
+//            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
+
+            mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
+            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":" + String.format("%02d", mTimeManager.minute);
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
@@ -433,8 +447,9 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+//                mTime.clear(intent.getStringExtra("time-zone"));
+//                mTime.setToNow();
+                mTimeManager.setTimeZone(intent);
             }
         };
 
@@ -494,6 +509,105 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         }
 
 
+        private class TimeManager {
+
+            private static final boolean DEBUG_FAKE_TIME = RANDOM_TIME_PER_GLANCE;
+            private final long DEBUG_FAKE_TIME_INC = TimeUnit.MINUTES.toMillis(RANDOM_MINUTES_INC);
+            private static final long DAY_IN_MILLIS = 86400000;
+
+            private Time currentTime;
+            public int year, month, monthDay, hour, minute, second;
+
+            private boolean overnightReset;
+            private int overnightResetHour;
+            private Time nextResetTime;
+
+            TimeManager() {
+                overnightReset = false;
+                overnightResetHour = 0;
+
+                currentTime = new Time();
+                currentTime.setToNow();
+
+                setToNow();
+            }
+
+            public void setToNow() {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void setTimeZone(Intent intent) {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.clear(intent.getStringExtra("time-zone"));
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void addRandomInc() {
+                long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
+                if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
+
+                currentTime.set(currentTime.toMillis(false) + rInc);
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void resetCheck() {
+                if (currentTime.after(nextResetTime)) {
+                    nextResetTime = computeNextResetTime();
+                    if (DEBUG_LOGS) Log.v(TAG, "Reset check: true");
+                    onReset();
+                }
+            }
+
+            public void onReset() { Log.v(TAG, "onReset"); }
+
+            public void setOvernightResetHour(int hour_) {
+                overnightReset = true;
+                overnightResetHour = hour_;
+                nextResetTime = computeNextResetTime();
+            }
+
+            private Time computeNextResetTime() {
+                Time resetTime = new Time();
+                resetTime.set(0, 0, overnightResetHour, monthDay, month, year);  // Set to today's reset time
+
+                // If already past, add a day
+                if (currentTime.after(resetTime)) {
+                    resetTime.set(resetTime.toMillis(false) + DAY_IN_MILLIS);
+                }
+
+                if (DEBUG_LOGS) Log.v(TAG, "Next reset time: " + resetTime.format2445());
+
+                return resetTime;
+            }
+
+            private void updateFields() {
+                year = currentTime.year;
+                month = currentTime.month;
+                monthDay = currentTime.monthDay;
+                hour = currentTime.hour;
+                minute = currentTime.minute;
+                second = currentTime.second;
+            }
+
+            public void toDebugLog() {
+                Log.v(TAG, "--> Curr time: " + currentTime.format2445());
+            }
+
+        }
+
+
+
 
 
 
@@ -512,7 +626,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             List<Eye> updateList = new ArrayList<>();
 
             boolean areWideOpen;
-            int sideLookIter = 0;
 
             EyeMosaic() {
                 eyes = new Eye[8];
@@ -575,6 +688,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             }
 
             void render(Canvas canvas) {
+                if (DEBUG_LOGS) Log.v(TAG, "Rendering activeEyes: " + activeEyes.size());
                 for (Eye eye : activeEyes) {
                     eye.render(canvas);
                 }
@@ -603,7 +717,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
                         eyeMosaic.increaseBlinkChance(-BLINK_TO_GLANCE_CHANCE_RATIO / GLANCES_NEEDED_PER_NEW_EYE);
                     }
 
-                    // Or should they be added
+                // Or should they be added
                 } else if (glances % GLANCES_NEEDED_PER_NEW_EYE == 0) {
                     if (DEBUG_ACCELERATE_INTERACTION) {
                         eyeMosaic.activateRandomEye(DEBUG_ACCELERATE_RATE);
@@ -623,16 +737,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
                     areWideOpen = true;
                     consecutiveGlances = 1;  // @TERRENCE: do wide open once and reset
                 }
-
-
-                // TEMP TEST
-//                switch (sideLookIter % 4) {
-//                    case 0: for (Eye eye : activeEyes) eye.lookCenterHorizontal(); break;
-//                    case 1: for (Eye eye : activeEyes) eye.lookLeft(); break;
-//                    case 2: for (Eye eye : activeEyes) eye.lookCenterHorizontal(); break;
-//                    case 3: for (Eye eye : activeEyes) eye.lookRight(); break;
-//                }
-//                sideLookIter++;
 
             }
 
@@ -677,17 +781,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
                 if (blinkChance < 0) blinkChance = 0;
             }
 
-//            void openAll() {
-//                for (int i = 0; i < eyeCount; i++) {
-//                    eyes[i].open();
-//                }
-//            }
-//
-//            void closeAll() {
-//                for (int i = 0; i < eyeCount; i++) {
-//                    eyes[i].close();
-//                }
-//            }
 
             void reset() {
                 for (Eye eye : activeEyes) {
@@ -759,8 +852,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
                 parent = parent_;
 
                 id = id_;
-                x = x_;
-                y = y_;
+                x = x_ * mWidth / 320;
+                y = y_ * mHeight / 320;
                 width = width_;
                 height = HEIGHT_RATIO * width;
                 irisRadius = 0.5f * IRIS_RATIO * width;
@@ -808,7 +901,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
             void render(Canvas canvas) {
                 canvas.save();
                 canvas.translate(x, y);
-                canvas.rotate(screenRotation);
                 canvas.save();
                 canvas.clipPath(eyelid);
                 canvas.drawCircle(0, 0, 0.5f * width, eyelidPaint);
@@ -986,117 +1078,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService implements S
         }
     }
 
-
-
-
-
-
-
-    // Sensors
-    private SensorManager mSensorManager;
-    private SensorWrapper mSensorAccelerometer;
-    private float[] gravity = new float[3];
-    private float[] linear_acceleration = new float[3];
-    private float screenRotation = 0;
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) { }
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        switch (event.sensor.getType()) {
-            case Sensor.TYPE_ACCELEROMETER:
-                mSensorAccelerometer.update(event);
-                updateGravity(event);
-                break;
-        }
-    }
-
-    private void updateGravity(SensorEvent event) {
-        final float alpha = 0.80f;
-
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-
-        //linear_acceleration[0] = event.values[0] - gravity[0];
-        //linear_acceleration[1] = event.values[1] - gravity[1];
-        linear_acceleration[2] = event.values[2] - gravity[2];
-
-        if (DEBUG_EYES_ROTATION && Math.abs(gravity[0]) > GRAVITY_THRESHOLD && Math.abs(gravity[1]) > GRAVITY_THRESHOLD) {
-            screenRotation = alpha * screenRotation + (1 - alpha) * (float) (-(Math.atan2(gravity[1], gravity[0]) - QUARTER_TAU) * TO_DEGS);
-        }
-    }
-
-
-
-    private class SensorWrapper {
-
-        SensorEventListener listener;
-        SensorManager manager;
-        String name;
-        int type;
-        Sensor sensor;
-        boolean isActive, isRegistered;
-        int valueCount;
-        float[] values;
-
-        SensorWrapper(String name_, int sensorType_, int valueCount_, SensorEventListener listener_, SensorManager manager_) {
-            listener = listener_;
-            manager = manager_;
-            name = name_;
-            type = sensorType_;
-            valueCount = valueCount_;
-            values = new float[valueCount];
-
-            // Initialize the sensor
-            sensor = manager.getDefaultSensor(type);
-
-            // http://developer.android.com/guide/topics/sensors/sensors_overview.html#sensors-identify
-            if (sensor == null) {
-                if (DEBUG_LOGS) Log.v(TAG, "Sensor " + name + " not available in this device");
-                isActive = false;
-                isRegistered = false;
-            } else {
-                isActive = true;
-                isRegistered = true;
-            }
-        }
-
-        boolean register() {
-            if (!isActive) return false;
-            if (isRegistered) return true;
-            isRegistered = manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
-            if (DEBUG_LOGS) Log.i(TAG, "Registered " + name + ": " + isRegistered);
-            return isRegistered;
-        }
-
-        boolean unregister() {
-            if (!isActive) return false;
-            if (!isRegistered) return false;
-            manager.unregisterListener(listener);
-            isRegistered = false;
-            if (DEBUG_LOGS) Log.i(TAG, "Unregistered " + name);
-            return false;
-        }
-
-        String stringify() {
-            if (!isActive) return name + " sensor not available in this device";
-            String vals = name + ": [";
-            for (int i = 0; i < valueCount; i++) {
-                vals += String.format("%.2f", values[i]);
-                if (i + 1 < valueCount) vals += ", ";
-            }
-            vals += "]";
-            return vals;
-        }
-
-        void update(SensorEvent event) {
-            for (int i = 0; i < valueCount; i++) {
-                values[i] = event.values[i];
-            }
-        }
-    }
 
 
 
