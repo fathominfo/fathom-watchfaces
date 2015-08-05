@@ -76,7 +76,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
-    private static final boolean DEBUG_ACCELERATE_INTERACTION = true;  // adds more eyes and blink factor per glance
+    private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_ACCELERATE_RATE = 5;  // each glance has xN times the effect
     private static final boolean DEBUG_SHOW_GLANCE_COUNTER = true;
 
@@ -313,15 +313,15 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                         consecutiveGlances + 1 : 1;
                 if (DEBUG_LOGS) Log.v(TAG, "consecutiveGlances: " + consecutiveGlances);
 
-                eyeMosaic.newGlance(glanceInc, glanceDiff);
                 eyeMosaic.updateTiredness();
+                eyeMosaic.newGlance(glanceInc, glanceDiff);
 
             } else {
-                if (timelyReset()) {
-                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
-                    glances = 0;
-                    eyeMosaic.reset();
-                }
+//                if (timelyReset()) {
+//                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
+//                    glances = 0;
+//                    eyeMosaic.reset();
+//                }
 
                 unregisterTimeZoneReceiver();
 
@@ -415,6 +415,10 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
+
+                canvas.save();
+                eyeMosaic.renderAmbient(canvas);
+                canvas.restore();
 
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
@@ -643,9 +647,15 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             List<Eye> inactiveEyes = new ArrayList<>();
             List<Eye> updateList = new ArrayList<>();
 
+            Eye lastEye;  // last eye that was activated
+
             boolean areWideOpen;
             boolean areCuckooing;
             boolean areStaringAtTarget;
+
+            float tirednessFactor;
+
+            Paint eyesAmbientPaint;
 
             EyeMosaic() {
                 eyes = new Eye[8];
@@ -653,6 +663,15 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 activeEyesCount = 0;
                 blinkChance = 0;
                 areCuckooing = false;
+                lastEye = null;
+
+                eyesAmbientPaint = new Paint();
+                eyesAmbientPaint.setColor(TEXT_DIGITS_COLOR_AMBIENT);
+                eyesAmbientPaint.setAntiAlias(false);
+                eyesAmbientPaint.setStrokeWidth(1f);
+                eyesAmbientPaint.setStyle(Paint.Style.STROKE);
+
+                tirednessFactor = 1;
             }
 
             void update() {
@@ -710,6 +729,10 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 for (Eye eye : activeEyes) {
                     eye.render(canvas);
                 }
+            }
+
+            void renderAmbient(Canvas canvas) {
+                if (lastEye != null) lastEye.renderAmbient(canvas);
             }
 
             void newGlance(int glanceInc, long glanceDiff) {
@@ -824,6 +847,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                     activeEyes.add(eye);
                     inactiveEyes.remove(eye);
                     activeEyesCount++;
+                    lastEye = eye;
                 }
 
             }
@@ -836,6 +860,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                     inactiveEyes.add(eye);
                     activeEyes.remove(eye);
                     activeEyesCount--;
+                    lastEye = activeEyes.get(activeEyes.size() - 1);
                 }
             }
 
@@ -856,30 +881,31 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 //                inactiveEyes.clear();   // @TODO WAS THIS RIGHT???
                 activeEyes.clear();
                 updateList.clear();
+                lastEye = null;
             }
 
             void updateTiredness() {
-                float factor = 1;
+                tirednessFactor = 1;
 
                 // Closing
                 if (mTimeManager.hour >= TIRED_HOUR_START && mTimeManager.hour < TIRED_HOUR_END) {
-                    factor = 1 - (mTimeManager.hour + mTimeManager.minute / 60f - TIRED_HOUR_START)
+                    tirednessFactor = 1 - (mTimeManager.hour + mTimeManager.minute / 60f - TIRED_HOUR_START)
                             * (1 - MAX_TIRED_RATIO) / (TIRED_HOUR_END - TIRED_HOUR_START);
 
                 // Closed
                 } else if (mTimeManager.hour >= TIRED_HOUR_END || mTimeManager.hour < WAKEUP_HOUR_START) {
-                    factor = MAX_TIRED_RATIO;
+                    tirednessFactor = MAX_TIRED_RATIO;
 
                 // Opening
                 } else if (mTimeManager.hour >= WAKEUP_HOUR_START && mTimeManager.hour < WAKEUP_HOUR_END) {
-                    factor = MAX_TIRED_RATIO + (mTimeManager.hour + mTimeManager.minute / 60f - WAKEUP_HOUR_START)
+                    tirednessFactor = MAX_TIRED_RATIO + (mTimeManager.hour + mTimeManager.minute / 60f - WAKEUP_HOUR_START)
                             * (1 - MAX_TIRED_RATIO) / (WAKEUP_HOUR_END - WAKEUP_HOUR_START);
                 }
 
-                if (DEBUG_LOGS) Log.v(TAG, " New tiredness factor: " + mTimeManager.hour + ":" + mTimeManager.minute + " -> " + factor);
+                if (DEBUG_LOGS) Log.v(TAG, " New tiredness factor: " + mTimeManager.hour + ":" + mTimeManager.minute + " -> " + tirednessFactor);
 
                 for (Eye eye : activeEyes) {
-                    eye.updateTiredness(factor);
+                    eye.updateTiredness(tirednessFactor);
                 }
             }
 
@@ -966,7 +992,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 currentAperture = 0;
                 targetAperture = height;  // @TODO should this be 0?
 
-                currentTirednessFactor = 1;
+                currentTirednessFactor = parent.tirednessFactor;
 
                 pupilPositionH = 1;
                 currentPupilX = targetPupilX = 0;
@@ -1012,6 +1038,19 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 canvas.drawCircle(currentPupilX, currentPupilY - irisOffset, currentPupilRadius, pupilPaint);
                 canvas.restore();
                 canvas.drawPath(eyelid, eyeLinerPaint);
+                canvas.restore();
+            }
+
+            void renderAmbient(Canvas canvas) {
+                canvas.save();
+                canvas.translate(x, y);
+                canvas.save();
+                canvas.clipPath(eyelid);
+                canvas.drawCircle(0, 0, 0.5f * width, parent.eyesAmbientPaint);
+                canvas.drawCircle(currentPupilX, currentPupilY - irisOffset, irisRadius, parent.eyesAmbientPaint);
+                canvas.drawCircle(currentPupilX, currentPupilY - irisOffset, currentPupilRadius, parent.eyesAmbientPaint);
+                canvas.restore();
+                canvas.drawPath(eyelid, parent.eyesAmbientPaint);
                 canvas.restore();
             }
 
@@ -1086,6 +1125,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             void activate() {
+                currentTirednessFactor = parent.tirednessFactor;
                 isActive = true;
                 open();
             }
@@ -1102,6 +1142,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 pupilPositionH = 1;
                 currentPupilX = 0;
                 targetPupilX = 0;
+                currentTirednessFactor = 1;
             }
 
             // hard reset with no transition
@@ -1188,50 +1229,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 sideLookTrigger();
                 registerUpdate();
             }
-
-//            boolean stareAtScreenPoint(float screenX, float screenY) {  // Absolute pixel coordinates
-//                if (DEBUG_LOGS) Log.v(TAG, "targeting screen " + screenX + "," + screenY);
-//                // compute intersection of looking ray with eye movement boundaries
-//                // see http://stackoverflow.com/a/18292964/1934487
-//                float minX = x - HORIZONTAL_LOOK_RATIO * width / 2,
-//                        maxX = x + HORIZONTAL_LOOK_RATIO * width / 2,
-//                        minY = y - VERTICAL_LOOK_RATIO * height / 2,
-//                        maxY = y + VERTICAL_LOOK_RATIO * height / 2;
-//                float slope = (screenY - y) / (screenX - x);
-//
-//                float intX = 0, intY = 0;
-//
-//                // check left
-//                intY = slope * (minX - x) + y;
-//                if (intY > minY && intY < maxY) {
-//                    intX = minX;
-//                    stareAt(intX - x, intY - y);
-//                    return true;
-//                }
-//                // right
-//                intY = slope * (maxX - x) + y;
-//                if (intY > minY && intY < maxY) {
-//                    intX = maxX;
-//                    stareAt(intX - x, intY - y);
-//                    return true;
-//                }
-//                // up
-//                intX = (minY - y) / slope + x;
-//                if (intX > minX && intX < maxX) {
-//                    intY = minY;
-//                    stareAt(intX - x, intY - y);
-//                    return true;
-//                }
-//                // down
-//                intX = (maxY - y) / slope + x;
-//                if (intX > minX && intX < maxX) {
-//                    intY = maxY;
-//                    stareAt(intX - x, intY - y);
-//                    return true;
-//                }
-//
-//                return false;
-//            }
 
             boolean stareAtScreenPoint(float screenX, float screenY) {  // Absolute pixel coordinates
                 if (DEBUG_LOGS) Log.v(TAG, "targeting screen " + screenX + "," + screenY);
