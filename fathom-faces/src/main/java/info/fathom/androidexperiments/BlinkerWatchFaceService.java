@@ -630,7 +630,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             private static final int   TIRED_HOUR_END           = 23;               // Note: must be before midnight
             private static final int   WAKEUP_HOUR_START        = 7;                // Note: must be after midnight
             private static final int   WAKEUP_HOUR_END          = 9;
-            
+
             float blinkChance;
 
             Eye[] eyes;
@@ -772,7 +772,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                     consecutiveGlances = 0;  // @TERRENCE: do wide open once and reset
                 }
 
-
+                if (!areCuckooing && !areWideOpen) {
+//                    float tX = (float) Math.random();
+//                    float tY = (float) Math.random();
+                    float tX = 0.706f;
+                    float tY = 0.378f;
+                    lookAtScreenTarget(tX, tY);
+                    if (DEBUG_LOGS) Log.v(TAG, "LOOKING AT " + tX * mWidth + "," + tY * mHeight);
+                }
 
             }
 
@@ -855,6 +862,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 }
             }
 
+            void lookAtScreenTarget(float normX, float normY) {  // normalized screen coordinates
+                float targetX = normX * mWidth;
+                float targetY = normY * mHeight;
+                for (Eye eye : activeEyes) {
+                    eye.lookAtScreenPoint(targetX, targetY);
+                }
+            }
+
         }
 
 
@@ -862,7 +877,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
             // Constants
             final int          EYE_COLOR                = Color.rgb(252,245,245);
-            final int          EYELID_COLOR             = Color.rgb(0, 0, 0);
+            static final int   EYELID_COLOR             = Color.BLACK;
             static final int   PUPIL_COLOR              = Color.BLACK;
             static final float BLINK_SPEED              = 0.40f;
             static final int   ANIM_END_THRESHOLD       = 1;                // pixel distance to stop animation
@@ -1147,6 +1162,69 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             void lookDown() {
                 targetPupilY = VERTICAL_LOOK_RATIO * height / 2;
                 pupilPositionV = 0;
+                sideLookTrigger();
+                registerUpdate();
+            }
+
+//            boolean lookAtScreenPoint(float screenX, float screenY) {  // Absolute pixel coordinates
+//                if (DEBUG_LOGS) Log.v(TAG, "targeting screen " + screenX + "," + screenY);
+//                // compute intersection of looking ray with eye movement boundaries
+//                // see http://stackoverflow.com/a/18292964/1934487
+//                float minX = x - HORIZONTAL_LOOK_RATIO * width / 2,
+//                        maxX = x + HORIZONTAL_LOOK_RATIO * width / 2,
+//                        minY = y - VERTICAL_LOOK_RATIO * height / 2,
+//                        maxY = y + VERTICAL_LOOK_RATIO * height / 2;
+//                float slope = (screenY - y) / (screenX - x);
+//
+//                float intX = 0, intY = 0;
+//
+//                // check left
+//                intY = slope * (minX - x) + y;
+//                if (intY > minY && intY < maxY) {
+//                    intX = minX;
+//                    lookAt(intX - x, intY - y);
+//                    return true;
+//                }
+//                // right
+//                intY = slope * (maxX - x) + y;
+//                if (intY > minY && intY < maxY) {
+//                    intX = maxX;
+//                    lookAt(intX - x, intY - y);
+//                    return true;
+//                }
+//                // up
+//                intX = (minY - y) / slope + x;
+//                if (intX > minX && intX < maxX) {
+//                    intY = minY;
+//                    lookAt(intX - x, intY - y);
+//                    return true;
+//                }
+//                // down
+//                intX = (maxY - y) / slope + x;
+//                if (intX > minX && intX < maxX) {
+//                    intY = maxY;
+//                    lookAt(intX - x, intY - y);
+//                    return true;
+//                }
+//
+//                return false;
+//            }
+
+            boolean lookAtScreenPoint(float screenX, float screenY) {  // Absolute pixel coordinates
+                if (DEBUG_LOGS) Log.v(TAG, "targeting screen " + screenX + "," + screenY);
+
+                float angle = (float) Math.atan2(screenY - y, screenX - x);
+                float dx = 0.5f * HORIZONTAL_LOOK_RATIO * width * (float) Math.cos(angle);
+                float dy = 0.5f * VERTICAL_LOOK_RATIO * height * (float) Math.sin(angle);
+                lookAt(dx, dy);
+
+                return true;
+            }
+
+            void lookAt(float targetPupilX_, float targetPupilY_) {
+                targetPupilX = targetPupilX_;
+                targetPupilY = targetPupilY_;
+                if (DEBUG_LOGS) Log.v(TAG, "from xy " + x + "," + y + " to targetXY " + targetPupilX + "," + targetPupilY);
                 sideLookTrigger();
                 registerUpdate();
             }
