@@ -58,6 +58,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     private static final boolean DEBUG_LOGS = false;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
     private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 30;
 
 
 
@@ -98,7 +100,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 //        private boolean mLowBitAmbient;
 //        private boolean mBurnInProtection;
 
-        private Time mTime;
+//        private Time mTime;
+        private TimeManager mTimeManager;
         private String mTimeStr;
         private int mHourInt, mMinuteInt;
         private int mLastAmbientHour;
@@ -153,7 +156,17 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 
             board = new Board();
 
-            mTime  = new Time();
+//            mTime  = new Time();
+            mTimeManager = new TimeManager() {
+                @Override
+                public void onReset() {
+                    if (DEBUG_LOGS) Log.v(TAG, "RESETTING!!");
+
+                }
+            };
+            if (RESET_HOUR >= 0) {
+                mTimeManager.setOvernightResetHour(RESET_HOUR);
+            }
             mCurrentGlance = new Time();
             mCurrentGlance.setToNow();
             mPrevGlance = mCurrentGlance.toMillis(false);
@@ -287,6 +300,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 registerTimeZoneReceiver();
                 mSensorAccelerometer.register();
 
+                if (RANDOM_TIME_PER_GLANCE) {
+                    mTimeManager.addRandomInc();
+                }
+
                 glances++;
                 if (shouldReset()) board.reset();
 
@@ -340,13 +357,17 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         public void onDraw(Canvas canvas, Rect bounds) {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas " + mFrameCount++);
 
-            mTime.setToNow();
-            mHourInt = mTime.hour;
-            if (NEW_HOUR_PER_GLANCE) {
-                mHourInt = (mHourInt + glances) % 24;
-            }
-            mMinuteInt = mTime.minute;
-            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
+//            mTime.setToNow();
+//            mHourInt = mTime.hour;
+//            if (NEW_HOUR_PER_GLANCE) {
+//                mHourInt = (mHourInt + glances) % 24;
+//            }
+//            mMinuteInt = mTime.minute;
+//            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
+
+            mTimeManager.setToNow();
+            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":"
+                    + String.format("%02d", mTimeManager.minute);
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
@@ -373,8 +394,9 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                mTime.clear(intent.getStringExtra("time-zone"));
-                mTime.setToNow();
+//                mTime.clear(intent.getStringExtra("time-zone"));
+//                mTime.setToNow();
+                mTimeManager.setTimeZone(intent);
             }
         };
 
@@ -568,6 +590,105 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 if (bounce) parent.addBounce(bounceX, bounceY);
 
             }
+
+        }
+
+
+        private class TimeManager {
+
+            private static final boolean DEBUG_FAKE_TIME = RANDOM_TIME_PER_GLANCE;
+            private final long DEBUG_FAKE_TIME_INC = TimeUnit.MINUTES.toMillis(RANDOM_MINUTES_INC);
+            private static final long DAY_IN_MILLIS = 86400000;
+
+            private Time currentTime;
+            public int year, month, monthDay, hour, minute, second;
+
+            private boolean overnightReset;
+            private int overnightResetHour;
+            private Time nextResetTime;
+
+            TimeManager() {
+                overnightReset = false;
+                overnightResetHour = 0;
+
+                currentTime = new Time();
+                currentTime.setToNow();
+
+                setToNow();
+            }
+
+            public void setToNow() {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void setTimeZone(Intent intent) {
+                if (!DEBUG_FAKE_TIME) {
+                    currentTime.clear(intent.getStringExtra("time-zone"));
+                    currentTime.setToNow();
+                }
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void addRandomInc() {
+                long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
+                if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
+
+                currentTime.set(currentTime.toMillis(false) + rInc);
+
+                updateFields();
+                if (overnightReset) resetCheck();
+            }
+
+            public void resetCheck() {
+                if (currentTime.after(nextResetTime)) {
+                    nextResetTime = computeNextResetTime();
+                    if (DEBUG_LOGS) Log.v(TAG, "Reset check: true");
+                    onReset();
+                }
+            }
+
+            public void onReset() { Log.v(TAG, "onReset"); }
+
+            public void setOvernightResetHour(int hour_) {
+                overnightReset = true;
+                overnightResetHour = hour_;
+                nextResetTime = computeNextResetTime();
+            }
+
+            private Time computeNextResetTime() {
+                Time resetTime = new Time();
+                resetTime.set(0, 0, overnightResetHour, monthDay, month, year);  // Set to today's reset time
+
+                // If already past, add a day
+                if (currentTime.after(resetTime)) {
+                    resetTime.set(resetTime.toMillis(false) + DAY_IN_MILLIS);
+                }
+
+                if (DEBUG_LOGS) Log.v(TAG, "Next reset time: " + resetTime.format2445());
+
+                return resetTime;
+            }
+
+            private void updateFields() {
+                year = currentTime.year;
+                month = currentTime.month;
+                monthDay = currentTime.monthDay;
+                hour = currentTime.hour;
+                minute = currentTime.minute;
+                second = currentTime.second;
+            }
+
+            public void toDebugLog() {
+                Log.v(TAG, "--> Curr time: " + currentTime.format2445());
+            }
+
 
         }
 
