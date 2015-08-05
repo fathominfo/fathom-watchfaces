@@ -546,18 +546,18 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             public void addRandomInc() {
+                long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
+                if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
 
-                if (hour >= 9 && hour < 11) {  // SPECIAL WISH TIME DEBUG TEST
+                currentTime.set(currentTime.toMillis(false) + rInc);
+
+                // SPECIAL TEST SNAPS
+                if (hour >= 10 && hour < 11) {  // SPECIAL WISH TIME DEBUG TEST
                     currentTime.set(0, 11, 11, monthDay, month, year);
 
                 } else if (minute > 55 || minute < 5) {  // SPECIAL CUCKOO DEBUG TEST
                     currentTime.set(second, 0, hour, monthDay, month, year);
-                    
-                } else {
-                    long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
-                    if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
 
-                    currentTime.set(currentTime.toMillis(false) + rInc);
                 }
 
                 updateFields();
