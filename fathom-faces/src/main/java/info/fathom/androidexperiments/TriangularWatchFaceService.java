@@ -100,10 +100,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 //        private boolean mLowBitAmbient;
 //        private boolean mBurnInProtection;
 
-//        private Time mTime;
         private TimeManager mTimeManager;
         private String mTimeStr;
-        private int mHourInt, mMinuteInt;
         private int mLastAmbientHour;
         private Time mCurrentGlance;
         private long mPrevGlance;
@@ -357,14 +355,6 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         public void onDraw(Canvas canvas, Rect bounds) {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas " + mFrameCount++);
 
-//            mTime.setToNow();
-//            mHourInt = mTime.hour;
-//            if (NEW_HOUR_PER_GLANCE) {
-//                mHourInt = (mHourInt + glances) % 24;
-//            }
-//            mMinuteInt = mTime.minute;
-//            mTimeStr = (mHourInt % 12 == 0 ? 12 : mHourInt % 12) + ":" + String.format("%02d", mMinuteInt);
-
             mTimeManager.setToNow();
             mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":"
                     + String.format("%02d", mTimeManager.minute);
@@ -376,14 +366,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
 
             } else {
-//                canvas.drawColor(backgroundColors[randomColor]);
-//                int tempBackHue = (mHourInt * 15) + 200;
-//                if (tempBackHue > 360) {
-//                    tempBackHue -= 360;
-//                }
-//                int tempBackColor = Color.HSVToColor(new float[]{ (float) tempBackHue, 1.0f, 1.0f });
-//                canvas.drawColor(tempBackColor);
-                canvas.drawColor(backgroundColors[mHourInt]);
+                canvas.drawColor(backgroundColors[mTimeManager.hour]);
 
                 board.render(canvas, false);
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
@@ -394,8 +377,6 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-//                mTime.clear(intent.getStringExtra("time-zone"));
-//                mTime.setToNow();
                 mTimeManager.setTimeZone(intent);
             }
         };
@@ -459,10 +440,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         // Checks if watch face should reset, like overnight
         boolean timelyReset() {
             boolean reset = false;
-            if (mHourInt == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
+            if (mTimeManager.hour == RESET_HOUR && mLastAmbientHour == RESET_HOUR - 1) {
                 reset = true;
             }
-            mLastAmbientHour = mHourInt;
+            mLastAmbientHour = mTimeManager.hour;
             return reset;
         }
 
@@ -1107,7 +1088,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         int generateTriangleColor() {
             // start range at the minute of the hour mapped to the total hue, minus half the range
             int totalHue = 360;
-            int startHue = (mMinuteInt * 6) - (RANGE_HUE/2);
+            int startHue = (mTimeManager.minute * 6) - (RANGE_HUE / 2);
             int endHue   = startHue + RANGE_HUE;
 
             // find random number between the range
