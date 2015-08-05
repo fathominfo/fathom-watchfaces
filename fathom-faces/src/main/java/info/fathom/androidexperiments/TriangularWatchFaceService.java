@@ -55,9 +55,9 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     private static final long    INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_LOGS = false;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 30;
 
 
@@ -900,18 +900,6 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 id = triangleCounter++;
                 parent = parent_;
 
-//                if (start_.side < middle_.side) {
-//                    start = start_;
-//                    middle = middle_;
-//                } else if (start_.side == 3 && middle_.side == 0) {
-//                    start = start_;
-//                    middle = middle_;
-//                } else {
-//                    start = middle_;
-//                    middle = start_;
-//                }
-//                end = end_;
-
                 if (start_.side == 0 && middle_.side == 3) {
                     start = middle_;
                     middle = start_;
@@ -926,7 +914,6 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                     middle = start_;
                 }
                 end = end_;
-
 
                 if (middle.side - start.side != 2) {
                     containsCornerBounce = true;
