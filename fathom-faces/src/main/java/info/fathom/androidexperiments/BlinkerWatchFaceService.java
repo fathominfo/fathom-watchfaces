@@ -546,10 +546,15 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             public void addRandomInc() {
-                long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
-                if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
+                // SPECIAL WISH TIME TEST
+                if (hour >= 9 && hour < 11) {
+                    currentTime.set(0, 11, 11, monthDay, month, year);
+                } else {
+                    long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
+                    if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
 
-                currentTime.set(currentTime.toMillis(false) + rInc);
+                    currentTime.set(currentTime.toMillis(false) + rInc);
+                }
 
                 updateFields();
                 if (overnightReset) resetCheck();
@@ -627,12 +632,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             List<Eye> updateList = new ArrayList<>();
 
             boolean areWideOpen;
+            boolean areCuckooing;
 
             EyeMosaic() {
                 eyes = new Eye[8];
                 eyeCount = 0;
                 activeEyesCount = 0;
                 blinkChance = 0;
+                areCuckooing = false;
             }
 
             void update() {
@@ -737,6 +744,24 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                     }
                     areWideOpen = true;
                     consecutiveGlances = 1;  // @TERRENCE: do wide open once and reset
+                }
+
+                // Stop cuckooing?
+                if (areCuckooing) {
+                    if (mTimeManager.hour != 11 && mTimeManager.minute != 11) {
+                        for (Eye eye : activeEyes) {
+                            eye.stopCuckooing();
+                        }
+                        areCuckooing = false;
+                    }
+
+                    // Should cuckoo?
+//                } else if (mTimeManager.hour == 11 && mTimeManager.minute == 11) {
+                } else if (glances % 3 == 0) {
+                    areCuckooing = true;
+                    for (Eye eye : activeEyes) {
+                        eye.startCuckooing();
+                    }
                 }
 
             }
@@ -870,7 +895,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             Paint eyeLinerPaint;  // @TODO make parent static or something
 
             boolean isActive;
-            boolean blinking, lookingSideways, needsUpdate;
+            boolean blinking, lookingSideways, cuckooing;
+            boolean needsUpdate;
             boolean isWideOpen;
             int lookingSidewaysCounter;
 
@@ -992,6 +1018,10 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                         }
                     }
 
+                    if (cuckooing) {
+                        if (pupilPositionH == 0) lookRight();
+                        else if (pupilPositionH == 2) lookLeft();
+                    }
 
                 }
 
@@ -1063,8 +1093,10 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             void sideLookTrigger() {
-                lookingSideways = true;
-                lookingSidewaysCounter = SIDE_LOOK_DURATION + (int) (SIDE_LOOK_RANDOM_VAR_ADD * Math.random());
+                if (!cuckooing) {
+                    lookingSideways = true;
+                    lookingSidewaysCounter = SIDE_LOOK_DURATION + (int) (SIDE_LOOK_RANDOM_VAR_ADD * Math.random());
+                }
             }
 
             void lookLeft() {
@@ -1105,6 +1137,17 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 pupilPositionV = 0;
                 sideLookTrigger();
                 registerUpdate();
+            }
+
+            void startCuckooing() {
+                cuckooing = true;
+                if (Math.random() < 0.5) lookLeft();
+                else lookRight();
+            }
+
+            void stopCuckooing() {
+                cuckooing = false;
+                lookCenter();
             }
 
             int randomColor() {
