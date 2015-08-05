@@ -843,6 +843,9 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             static final float PUPIL_CONTRACTION_SIZE   = 0.80f;
             static final float IRIS_OFFSET_RATIO        = 0.058f;
 
+            static final int   SIDE_LOOK_DURATION       = 50;               // in frames
+            static final int   SIDE_LOOK_RANDOM_VAR_ADD = 20;               // on top of the base, in frames
+
             EyeMosaic parent;
 
             int id;
@@ -867,8 +870,9 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             Paint eyeLinerPaint;  // @TODO make parent static or something
 
             boolean isActive;
-            boolean blinking, needsUpdate;
+            boolean blinking, lookingSideways, needsUpdate;
             boolean isWideOpen;
+            int lookingSidewaysCounter;
 
             Eye(EyeMosaic parent_, int id_, float x_, float y_, float width_) {
                 parent = parent_;
@@ -899,6 +903,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 isActive = false;
                 needsUpdate = false;
                 blinking = false;
+                lookingSideways = false;
+                lookingSidewaysCounter = 0;
 
                 eyelidPaint = new Paint();
                 eyelidPaint.setColor(EYE_COLOR);
@@ -958,6 +964,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                         currentPupilRadius + PUPIL_SPEED_RADIUS * currentTirednessFactor * (diffPR);
                 rewindEyelid();
 
+                lookingSidewaysCounter--;
+
                 // If completed an animation
                 if (currentAperture == targetAperture &&
                         currentPupilX == targetPupilX &&
@@ -973,6 +981,18 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                             blinking = false;
                         }
                     }
+
+                    if (lookingSideways) {
+                        if (lookingSidewaysCounter > 0) {
+                            registerUpdate();
+
+                        } else {
+                            lookCenter();
+                            lookingSideways = false;
+                        }
+                    }
+
+
                 }
 
                 return needsUpdate;
@@ -996,6 +1016,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 isActive = false;
                 needsUpdate = false;
                 blinking = false;
+                lookingSideways = false;
                 isWideOpen = false;
                 currentAperture = 0;
                 targetAperture = height;  // @TODO should this be 0?
@@ -1041,9 +1062,15 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 lookCenterVertical();
             }
 
+            void sideLookTrigger() {
+                lookingSideways = true;
+                lookingSidewaysCounter = SIDE_LOOK_DURATION + (int) (SIDE_LOOK_RANDOM_VAR_ADD * Math.random());
+            }
+
             void lookLeft() {
                 targetPupilX = -HORIZONTAL_LOOK_RATIO * width / 2;
                 pupilPositionH = 0;
+                sideLookTrigger();
                 registerUpdate();
             }
 
@@ -1056,12 +1083,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             void lookRight() {
                 targetPupilX = HORIZONTAL_LOOK_RATIO * width / 2;
                 pupilPositionH = 2;
+                sideLookTrigger();
                 registerUpdate();
             }
 
             void lookUp() {
                 targetPupilY = - VERTICAL_LOOK_RATIO * height / 2;
                 pupilPositionV = 0;
+                sideLookTrigger();
                 registerUpdate();
             }
 
@@ -1074,6 +1103,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             void lookDown() {
                 targetPupilY = VERTICAL_LOOK_RATIO * height / 2;
                 pupilPositionV = 0;
+                sideLookTrigger();
                 registerUpdate();
             }
 
