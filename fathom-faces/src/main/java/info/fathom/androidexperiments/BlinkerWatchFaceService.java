@@ -195,6 +195,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 @Override
                 public void onReset() {
                     if (DEBUG_LOGS) Log.v(TAG, "RESETTING!!");
+                    glances = 0;
                     eyeMosaic.reset();
                 }
             };
@@ -627,8 +628,6 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
             boolean areWideOpen;
 
-            float tirednessFactor;
-
             EyeMosaic() {
                 eyes = new Eye[8];
                 eyeCount = 0;
@@ -941,22 +940,22 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 float diffH = targetAperture - currentAperture;
                 currentAperture = Math.abs(diffH) < ANIM_END_THRESHOLD ?
                         targetAperture :
-                        currentAperture + BLINK_SPEED * (diffH);
+                        currentAperture + BLINK_SPEED * currentTirednessFactor * (diffH);
 
                 float diffPX = targetPupilX - currentPupilX;
                 currentPupilX = Math.abs(diffPX) < ANIM_END_THRESHOLD ?
                         targetPupilX :
-                        currentPupilX + PUPIL_SPEED_HORIZONTAL * (diffPX);
+                        currentPupilX + PUPIL_SPEED_HORIZONTAL * currentTirednessFactor * (diffPX);
 
                 float diffPY = targetPupilY - currentPupilY;
                 currentPupilY = Math.abs(diffPY) < ANIM_END_THRESHOLD ?
                         targetPupilY :
-                        currentPupilY + PUPIL_SPEED_HORIZONTAL * (diffPY);
+                        currentPupilY + PUPIL_SPEED_HORIZONTAL * currentTirednessFactor * (diffPY);
 
                 float diffPR = targetPupilRadius - currentPupilRadius;
                 currentPupilRadius = Math.abs(diffPR) < ANIM_END_THRESHOLD ?
                         targetPupilRadius :
-                        currentPupilRadius + PUPIL_SPEED_RADIUS * (diffPR);
+                        currentPupilRadius + PUPIL_SPEED_RADIUS * currentTirednessFactor * (diffPR);
                 rewindEyelid();
 
                 // If completed an animation
