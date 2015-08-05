@@ -241,7 +241,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-            Log.v(TAG, "onVisibilityChanged: " + visible);
+            if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
             /*
@@ -1237,6 +1237,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
         }
     }
-    
+
+
 
 }
