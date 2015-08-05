@@ -546,9 +546,13 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
 
             public void addRandomInc() {
-                // SPECIAL WISH TIME TEST
-                if (hour >= 9 && hour < 11) {
+
+                if (hour >= 9 && hour < 11) {  // SPECIAL WISH TIME DEBUG TEST
                     currentTime.set(0, 11, 11, monthDay, month, year);
+
+                } else if (minute > 55 || minute < 5) {  // SPECIAL CUCKOO DEBUG TEST
+                    currentTime.set(second, 0, hour, monthDay, month, year);
+                    
                 } else {
                     long rInc = (long) (DEBUG_FAKE_TIME_INC * Math.random());
                     if (DEBUG_LOGS) Log.v(TAG, "Adding randomInc: " + rInc);
@@ -748,16 +752,15 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
                 // Stop cuckooing?
                 if (areCuckooing) {
-                    if (mTimeManager.hour != 11 && mTimeManager.minute != 11) {
+                    if (mTimeManager.minute != 0) {
                         for (Eye eye : activeEyes) {
                             eye.stopCuckooing();
                         }
                         areCuckooing = false;
                     }
 
-                    // Should cuckoo?
-//                } else if (mTimeManager.hour == 11 && mTimeManager.minute == 11) {
-                } else if (glances % 3 == 0) {
+                // Should cuckoo?
+                } else if (mTimeManager.minute == 0) {  // trigger cuckooing on the hour
                     areCuckooing = true;
                     for (Eye eye : activeEyes) {
                         eye.startCuckooing();
