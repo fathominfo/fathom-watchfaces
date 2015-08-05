@@ -479,10 +479,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         class Cursor {
             private static final int COLOR = Color.WHITE;
 
-//            private static final float FRICTION = 0.995f;
-//            private static final float ACCEL_FACTOR = 0.45f;
-            private static final float FRICTION = 0.80f;
+            private static final float FRICTION = 0.995f;
             private static final float ACCEL_FACTOR = 0.45f;
+//            private static final float FRICTION = 0.80f;
+//            private static final float ACCEL_FACTOR = 0.45f;
 
             Board parent;
             float x, y;
