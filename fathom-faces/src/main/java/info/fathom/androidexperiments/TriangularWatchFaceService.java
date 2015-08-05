@@ -55,9 +55,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     private static final long    INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
+    private static final boolean DEBUG_LOGS = true;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-    private static final boolean NEW_HOUR_PER_GLANCE = false;  // this will add an hour to the time at each glance
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 30;
 
@@ -111,6 +110,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private final Rect textBounds = new Rect();
         private Typeface RALEWAY_REGULAR_TYPEFACE;
 
+        private Paint mGridPaint;
+
         private int mWidth;
         private int mHeight;
         private float mCenterX;
@@ -122,8 +123,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int currentR, currentG, currentB;
-        private int triangleColorNew = generateTriangleColor();
-
+//        private int triangleColorNew = generateTriangleColor();
+        private int triangleColorNew;
 
 
         @Override
@@ -151,6 +152,12 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             mTextDigitsPaintAmbient.setTypeface(RALEWAY_REGULAR_TYPEFACE);
             mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
             mTextDigitsPaintAmbient.setAntiAlias(false);
+
+            mGridPaint = new Paint();
+            mGridPaint.setColor(BACKGROUND_COLOR_AMBIENT);
+            mGridPaint.setStrokeWidth(1f);
+            mGridPaint.setAntiAlias(false);
+            mGridPaint.setStyle(Paint.Style.STROKE);
 
             board = new Board();
 
@@ -201,6 +208,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             backgroundColors[22] = Color.HSVToColor(new float[]{ 160.0f, 1.0f, 1.0f});
             backgroundColors[23] = Color.HSVToColor(new float[]{ 145.0f, 1.0f, 1.0f});
 
+            triangleColorNew = generateTriangleColor();
         }
 
         @Override
@@ -239,7 +247,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 
         @Override
         public void onVisibilityChanged(boolean visible) {
-            Log.v(TAG, "onVisibilityChanged: " + visible);
+            if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
             if (visible)
@@ -361,7 +369,9 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
+
                 board.render(canvas, true);
+                renderGrid(canvas, 1, 1);
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
 
@@ -371,6 +381,19 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 board.render(canvas, false);
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
+            }
+        }
+
+        private void renderGrid(Canvas canvas, int gapWidth, int lineWidth) {
+            int bandCount =(int) Math.ceil((float) mWidth / (lineWidth + gapWidth));
+            int lineIter = 0;
+            for (int i = 0; i < bandCount; i++) {
+                lineIter += gapWidth;
+                for (int j = 0; j < lineWidth; j++) {
+                    lineIter++;
+                    canvas.drawLine(0, lineIter, mWidth, lineIter, mGridPaint);
+                    canvas.drawLine(lineIter, 0, lineIter, mHeight, mGridPaint);
+                }
             }
         }
 
@@ -456,10 +479,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         class Cursor {
             private static final int COLOR = Color.WHITE;
 
-            private static final float FRICTION = 0.995f;
-            private static final float ACCEL_FACTOR = 0.45f;
-//            private static final float FRICTION = 0.80f;
+//            private static final float FRICTION = 0.995f;
 //            private static final float ACCEL_FACTOR = 0.45f;
+            private static final float FRICTION = 0.80f;
+            private static final float ACCEL_FACTOR = 0.45f;
 
             Board parent;
             float x, y;
@@ -877,7 +900,22 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 id = triangleCounter++;
                 parent = parent_;
 
-                if (start_.side < middle_.side) {
+//                if (start_.side < middle_.side) {
+//                    start = start_;
+//                    middle = middle_;
+//                } else if (start_.side == 3 && middle_.side == 0) {
+//                    start = start_;
+//                    middle = middle_;
+//                } else {
+//                    start = middle_;
+//                    middle = start_;
+//                }
+//                end = end_;
+
+                if (start_.side == 0 && middle_.side == 3) {
+                    start = middle_;
+                    middle = start_;
+                } else if (start_.side < middle_.side) {
                     start = start_;
                     middle = middle_;
                 } else if (start_.side == 3 && middle_.side == 0) {
@@ -889,6 +927,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 }
                 end = end_;
 
+
                 if (middle.side - start.side != 2) {
                     containsCornerBounce = true;
                     corner = generateCornerBounce();
@@ -899,6 +938,12 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                     cornerX = Math.min(start.x, middle.x) + 0.5f * Math.abs(start.x - middle.x);
                     cornerY = Math.min(start.y, middle.y) + 0.5f * Math.abs(start.y - middle.y);
                 }
+
+                if (DEBUG_LOGS) Log.v(TAG, "Created triangle: " +
+                        "start[" + start.x + "," + start.y + "," + start.side + "] " +
+                        (containsCornerBounce ? "corner[" + corner.x + "," + corner.y + "," + corner.side + "] " : "(nocorner) ") +
+                        "middle[" + middle.x + "," + middle.y + "," + middle.side + "] " +
+                        "end[" + end.x + "," + end.y + "," + end.side + "]");
 
                 pathFull = new Path();
                 pathFull.moveTo(start.x, start.y);
@@ -993,7 +1038,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 }
 
                 needsUpdate = animateVertices || animateColor || animateGradient;
-                if (DEBUG_LOGS) Log.v(TAG, "  needsUpdate: " + needsUpdate);
+//                if (DEBUG_LOGS) Log.v(TAG, "  needsUpdate: " + needsUpdate);
                 if (!needsUpdate) parent.triangleStopUpdatingBuffer.add(this);
                 return needsUpdate;
             }
