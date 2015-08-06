@@ -74,10 +74,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final boolean VARIABLE_FRICTION = false;
     private static final boolean DEBUG_STEP_COUNTERS = false;
 
-    private static final boolean DEBUG_FAKE_START_TIME = false;
-    private static final int     DEBUG_FAKE_START_HOUR = 14;
+    private static final boolean DEBUG_FAKE_START_TIME = true;
+    private static final int     DEBUG_FAKE_START_HOUR = 8;
     private static final int     DEBUG_FAKE_START_MINUTE = 0;
 
+    // For documentation purposes
     private static final boolean DEBUG_FAKE_SCRIPTED_RINGS = true;
     private static final int     DEBUG_FAKE_SCRIPTED_RINGS_INACTIVE_GLANCES = 2;  // how many glances pass before new rings are added
     private static final int[]   DEBUG_FAKE_SCRIPTED_RINGS_STAGES = {
@@ -717,6 +718,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 if (mDebugScriptGlance == 0) {
                     if (mDebugScriptStage == 0) {
                         mCurrentSteps += DEBUG_FAKE_SCRIPTED_RINGS_STAGES[0];
+
                     } else if (mDebugScriptStage >= DEBUG_FAKE_SCRIPTED_RINGS_STAGES.length) {
                         // RESET
                         mStepBuffer = (int) mSensorStep.values[0];
@@ -726,6 +728,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         bubbleManager.prevSteps = 0;
                         bubbleManager.currentSteps = 0;
                         mDebugScriptStage = -1;
+
                     } else {
                         mCurrentSteps += DEBUG_FAKE_SCRIPTED_RINGS_STAGES[mDebugScriptStage] - DEBUG_FAKE_SCRIPTED_RINGS_STAGES[mDebugScriptStage - 1];
                     }

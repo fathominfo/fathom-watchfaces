@@ -371,7 +371,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
                 board.render(canvas, true);
-                renderGrid(canvas, 1, 1);
+//                renderGrid(canvas, 1, 1);
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
 
@@ -479,8 +479,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         class Cursor {
             private static final int COLOR = Color.WHITE;
 
-            private static final float FRICTION = 0.995f;
-            private static final float ACCEL_FACTOR = 0.45f;
+            private static final float FRICTION = 0.997f;
+            private static final float ACCEL_FACTOR = 0.50f;
 //            private static final float FRICTION = 0.80f;
 //            private static final float ACCEL_FACTOR = 0.45f;
 
