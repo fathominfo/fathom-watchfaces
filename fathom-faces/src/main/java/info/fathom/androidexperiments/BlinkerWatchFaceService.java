@@ -83,7 +83,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add fake extra time per glance
     private static final int     RANDOM_MINUTES_INC = 60;
 
-    private static final boolean DEBUG_FAKE_START_TIME = false;
+    private static final boolean DEBUG_FAKE_START_TIME = true;
     private static final int     DEBUG_FAKE_START_HOUR = 7;
     private static final int     DEBUG_FAKE_START_MINUTE = 0;
 
