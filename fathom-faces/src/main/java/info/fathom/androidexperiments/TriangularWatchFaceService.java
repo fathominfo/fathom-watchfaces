@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-
 public class TriangularWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
     private static final String  TAG = "TriangularWFService";
@@ -55,19 +54,12 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     private static final long    INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
+    private static final boolean DEBUG_LOGS = true;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
 
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
-    private static final int     RANDOM_MINUTES_INC = 45;
-
-    private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
-    private static final boolean NEW_MINUTE_PER_GLANCE = true;
-
-
-
-
-
+    private static final int     RANDOM_MINUTES_INC = 60;
+    private static final boolean DEBUG_FAKE_ROUND = true;
 
 
     @Override
@@ -128,7 +120,6 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int currentR, currentG, currentB;
-//        private int triangleColorNew = generateTriangleColor();
         private int triangleColorNew;
 
 
@@ -360,7 +351,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             if (DEBUG_LOGS) Log.d(TAG, "onApplyWindowInsets");
             super.onApplyWindowInsets(insets);
 
-            mIsRound = insets.isRound();
+            mIsRound = DEBUG_FAKE_ROUND || insets.isRound();
             if (DEBUG_LOGS) Log.v(TAG, "mIsRound? " + mIsRound);
         }
 
@@ -377,7 +368,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
                 board.render(canvas, true);
-                renderGrid(canvas, 1, 1);
+//                renderGrid(canvas, 1, 1);
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
 

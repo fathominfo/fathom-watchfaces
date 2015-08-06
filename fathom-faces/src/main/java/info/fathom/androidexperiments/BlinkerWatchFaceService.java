@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-
 public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
     private static final String TAG = "BlinkerWatchFaceService";
@@ -63,16 +62,16 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
     };
     private static final int   EYE_COLOR_COUNT = EYE_COLORS.length;
 
-    private static final int   GLANCES_NEEDED_PER_NEW_EYE = 1;
-    private static final float BLINK_TO_GLANCE_CHANCE_RATIO = 0.50f;                            // percent possibility of a blink event happening as compared to amount of glances
+//    private static final int   GLANCES_NEEDED_PER_NEW_EYE = 1;
+    private static final float BLINK_TO_GLANCE_CHANCE_RATIO = 0.50f;                                // percent possibility of a blink event happening as compared to amount of glances
 
     private static final long  EYE_POPOUT_BASE_THRESHOLD = TimeUnit.MINUTES.toMillis(5);       // baseline threshold over which eyes will start popping out
     private static final long  EYE_POPOUT_PERIOD = TimeUnit.MINUTES.toMillis(3);                // beyond baseline, an eye will pop out every N millis
 
-    private static final long  CONSECUTIVE_GLANCE_THRESHOLD = TimeUnit.SECONDS.toMillis(30);    // max time between glances to be considered consecutive
-    private static final int   EYES_WIDE_OPEN_GLANCE_TRIGGER = 3;                               // how many consecutive glances are needed to trigger all eyes wide open
+    private static final long  CONSECUTIVE_GLANCE_THRESHOLD = TimeUnit.SECONDS.toMillis(30);        // max time between glances to be considered consecutive
+    private static final int   EYES_WIDE_OPEN_GLANCE_TRIGGER = 3;                                   // how many consecutive glances are needed to trigger all eyes wide open
 
-    private static final int   RESET_HOUR = 4;                                                  // at which hour will watch face reset [0...23], -1 to deactivate
+    private static final int   RESET_HOUR = 4;                                                      // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
@@ -81,8 +80,26 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
     private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
 
-    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add fake extra time per glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add fake extra time per glance
     private static final int     RANDOM_MINUTES_INC = 60;
+
+    private static final boolean DEBUG_FAKE_START_TIME = true;
+    private static final int     DEBUG_FAKE_START_HOUR = 7;
+    private static final int     DEBUG_FAKE_START_MINUTE = 10;
+
+    // For documentation purposes
+    private static final boolean DEBUG_FAKE_SCRIPTED_EYES = true;
+    private static final int     DEBUG_FAKE_SCRIPTED_EYES_INACTIVE_GLANCES = 0;  // how many glances pass before new rings are added
+    private static final int[]   DEBUG_FAKE_SCRIPTED_EYES_STAGES = {
+            1,
+            3,
+            5,
+            7,
+            9,
+            13,
+            17,
+            21
+    };
 
 
 
@@ -133,6 +150,9 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
         private float mTextGlancesHeight, mTextGlancesBaselineHeight, mTextGlancesRightMargin;
         private Typeface mTextTypeface;
 
+        private int mDebugScriptGlance = 0;
+        private int mDebugScriptStage = 0;
+
         private int mWidth;
         private int mHeight;
         private float mCenterX;
@@ -151,7 +171,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onCreate(SurfaceHolder holder) {
-            Log.v(TAG, "onCreate");
+            if (DEBUG_LOGS) Log.v(TAG, "onCreate");
             super.onCreate(holder);
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(BlinkerWatchFaceService.this)
@@ -302,6 +322,33 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 }
 
                 int glanceInc = DEBUG_ACCELERATE_INTERACTION ? DEBUG_ACCELERATE_RATE : 1;
+
+                if (DEBUG_FAKE_SCRIPTED_EYES) {
+                    if (DEBUG_LOGS) Log.v(TAG, "DEBUG_FAKE_SCRIPTED_EYES: " + DEBUG_FAKE_SCRIPTED_EYES
+                            + " mDebugScriptGlance: " + mDebugScriptGlance
+                            + " mDebugScriptStage: " + mDebugScriptStage);
+
+                    if (mDebugScriptGlance == 0) {
+                        if (mDebugScriptStage == 0) {
+                            glanceInc = DEBUG_FAKE_SCRIPTED_EYES_STAGES[0];
+
+                        } else if (mDebugScriptStage >= DEBUG_FAKE_SCRIPTED_EYES_STAGES.length) {
+                            // do nothing, stay with whatever glanceInc there was
+
+                        } else {
+                            glanceInc = DEBUG_FAKE_SCRIPTED_EYES_STAGES[mDebugScriptStage] - DEBUG_FAKE_SCRIPTED_EYES_STAGES[mDebugScriptStage - 1];
+
+                        }
+
+                        mDebugScriptStage++;
+                        mDebugScriptGlance = DEBUG_FAKE_SCRIPTED_EYES_INACTIVE_GLANCES;
+
+                    } else {
+                        mDebugScriptGlance--;
+                    }
+
+                }
+
                 glances += glanceInc;
 
                 mCurrentGlance.setToNow();
@@ -378,6 +425,11 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 mEyesPopulated = true;
 
                 int glanceInc = DEBUG_ACCELERATE_INTERACTION ? DEBUG_ACCELERATE_RATE : 1;
+                if (DEBUG_FAKE_SCRIPTED_EYES) {
+                    glanceInc = DEBUG_FAKE_SCRIPTED_EYES_STAGES[0];
+                    mDebugScriptStage++;
+                    mDebugScriptGlance = DEBUG_FAKE_SCRIPTED_EYES_INACTIVE_GLANCES;
+                }
                 glances += glanceInc;
                 eyeMosaic.newGlance(glanceInc, 0);
 
@@ -490,6 +542,12 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             private final long DEBUG_FAKE_TIME_INC = TimeUnit.MINUTES.toMillis(RANDOM_MINUTES_INC);
             private static final long DAY_IN_MILLIS = 86400000;
 
+            private static final boolean FAKE_START_TIME = DEBUG_FAKE_START_TIME;
+            private static final int     FAKE_START_HOUR = DEBUG_FAKE_START_HOUR;
+            private static final int     FAKE_START_MINUTE = DEBUG_FAKE_START_MINUTE;
+
+
+
             private Time currentTime;
             public int year, month, monthDay, hour, minute, second;
 
@@ -504,7 +562,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 currentTime = new Time();
                 currentTime.setToNow();
 
-                setToNow();
+                if (FAKE_START_TIME) {
+                    currentTime.setToNow();
+                    currentTime.set(currentTime.second, FAKE_START_MINUTE, FAKE_START_HOUR,
+                            currentTime.monthDay, currentTime.month, currentTime.year);
+                    updateFields();
+                } else {
+                    setToNow();
+                }
             }
 
             public void setToNow() {
@@ -721,20 +786,20 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
                     if (DEBUG_ACCELERATE_INTERACTION) {
                         eyeMosaic.deactivateRandomEye(popoutCount * DEBUG_ACCELERATE_RATE);
-                        eyeMosaic.increaseBlinkChance(-BLINK_TO_GLANCE_CHANCE_RATIO * DEBUG_ACCELERATE_RATE / GLANCES_NEEDED_PER_NEW_EYE);
+                        eyeMosaic.increaseBlinkChance(-BLINK_TO_GLANCE_CHANCE_RATIO * DEBUG_ACCELERATE_RATE);
                     } else {
                         eyeMosaic.deactivateRandomEye(popoutCount);
-                        eyeMosaic.increaseBlinkChance(-BLINK_TO_GLANCE_CHANCE_RATIO / GLANCES_NEEDED_PER_NEW_EYE);
+                        eyeMosaic.increaseBlinkChance(-BLINK_TO_GLANCE_CHANCE_RATIO);
                     }
 
                 // Or should they be added
-                } else if (glances % GLANCES_NEEDED_PER_NEW_EYE == 0) {
+                } else {
                     if (DEBUG_ACCELERATE_INTERACTION) {
                         eyeMosaic.activateRandomEye(DEBUG_ACCELERATE_RATE);
-                        eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * DEBUG_ACCELERATE_RATE / GLANCES_NEEDED_PER_NEW_EYE);
+                        eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * DEBUG_ACCELERATE_RATE);
                     } else {
-                        eyeMosaic.activateRandomEye(1);
-                        eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO / GLANCES_NEEDED_PER_NEW_EYE);
+                        eyeMosaic.activateRandomEye(glanceInc);
+                        eyeMosaic.increaseBlinkChance(BLINK_TO_GLANCE_CHANCE_RATIO * glanceInc);
                     }
                 }
 
@@ -820,7 +885,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                     inactiveEyes.add(eye);
                     activeEyes.remove(eye);
                     activeEyesCount--;
-                    lastEye = activeEyes.get(activeEyes.size() - 1);
+                    lastEye = activeEyes.size() > 0 ? activeEyes.get(activeEyes.size() - 1) : null;
                 }
             }
 
@@ -914,9 +979,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             float irisRadius, irisOffset;
             float pupilRadius;
             float currentPupilRadius, targetPupilRadius;
-
             float currentAperture, targetAperture;
-
             float currentTirednessFactor;
 
             int pupilPositionH;   // 0 = left, 1 = center, 2 = right
@@ -1088,6 +1151,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             void activate() {
                 currentTirednessFactor = parent.tirednessFactor;
                 isActive = true;
+                newIrisColor();
                 open();
             }
 
@@ -1221,8 +1285,13 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 lookCenter();
             }
 
+            void newIrisColor() {
+                irisColor = randomColor();
+                irisPaint.setColor(irisColor);
+            }
+
             int randomColor() {
-                return EYE_COLORS[ (int) (EYE_COLOR_COUNT * Math.random()) ];
+                return EYE_COLORS[(int) (EYE_COLOR_COUNT * Math.random())];
             }
 
             void registerUpdate() {
