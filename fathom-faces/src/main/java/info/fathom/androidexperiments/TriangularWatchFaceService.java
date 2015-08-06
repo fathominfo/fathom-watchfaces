@@ -55,10 +55,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     private static final long    INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
+    private static final boolean DEBUG_LOGS = true;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
-    private static final int     RANDOM_MINUTES_INC = 30;
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 60;
 
 
 

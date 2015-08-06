@@ -64,19 +64,31 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //    private static final int     INITIAL_FREE_STEPS = 5;
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
+    private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int     RANDOM_FAKE_STEPS = 5000;
     private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
-    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
-    private static final int     RANDOM_MINUTES_INC = 300;
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 60;
     private static final boolean VARIABLE_FRICTION = false;
     private static final boolean DEBUG_STEP_COUNTERS = false;
 
     private static final boolean DEBUG_FAKE_START_TIME = false;
     private static final int     DEBUG_FAKE_START_HOUR = 14;
     private static final int     DEBUG_FAKE_START_MINUTE = 0;
+
+    private static final boolean DEBUG_FAKE_SCRIPTED_RINGS = true;
+    private static final int     DEBUG_FAKE_SCRIPTED_RINGS_INACTIVE_GLANCES = 2;  // how many glances pass before new rings are added
+    private static final int[]   DEBUG_FAKE_SCRIPTED_RINGS_STAGES = {
+            57,
+            168,
+            1243,
+            3543,
+            5123,
+            8986,
+            10124
+    };
 
 
 
@@ -133,6 +145,9 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         private int mPrevSteps = 0;
         private int mCurrentSteps = 0;
         private float mStepCountDisplay;
+
+        private int mDebugScriptGlance = 0;
+        private int mDebugScriptStage = 0;
 
         private Paint mBubbleTextPaint;
 
@@ -693,6 +708,34 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 int fakeSteps = (int) (RANDOM_FAKE_STEPS * Math.random());
                 if (DEBUG_LOGS) Log.v(TAG, "Generating fake steps: " + fakeSteps);
                 mCurrentSteps += fakeSteps;
+
+            } else if (DEBUG_FAKE_SCRIPTED_RINGS) {
+                if (DEBUG_LOGS) Log.v(TAG, "DEBUG_FAKE_SCRIPTED_RINGS: " + DEBUG_FAKE_SCRIPTED_RINGS
+                        + " mDebugScriptGlance: " + mDebugScriptGlance
+                        + " mDebugScriptStage: " + mDebugScriptStage);
+
+                if (mDebugScriptGlance == 0) {
+                    if (mDebugScriptStage == 0) {
+                        mCurrentSteps += DEBUG_FAKE_SCRIPTED_RINGS_STAGES[0];
+                    } else if (mDebugScriptStage >= DEBUG_FAKE_SCRIPTED_RINGS_STAGES.length) {
+                        // RESET
+                        mStepBuffer = (int) mSensorStep.values[0];
+                        mPrevSteps = 0;
+                        mCurrentSteps = 0;
+                        bubbleManager.clearBubbles();
+                        bubbleManager.prevSteps = 0;
+                        bubbleManager.currentSteps = 0;
+                        mDebugScriptStage = -1;
+                    } else {
+                        mCurrentSteps += DEBUG_FAKE_SCRIPTED_RINGS_STAGES[mDebugScriptStage] - DEBUG_FAKE_SCRIPTED_RINGS_STAGES[mDebugScriptStage - 1];
+                    }
+
+                    mDebugScriptStage++;
+                    mDebugScriptGlance = DEBUG_FAKE_SCRIPTED_RINGS_INACTIVE_GLANCES;
+                } else {
+                    mDebugScriptGlance--;
+                }
+
             } else {
                 mCurrentSteps = (int) mSensorStep.values[0] - mStepBuffer;  // read from the sensor
             }
@@ -700,15 +743,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             int stepInc = mCurrentSteps - mPrevSteps;
 
             if (DEBUG_LOGS) Log.v(TAG, stepInc + " new steps!");
-
-//            if (mCurrentSteps > MAX_STEP_THRESHOLD) {
-//                if (DEBUG_LOGS) Log.v(TAG, "Resetting step counts");
-////                mDayBufferedSteps += mCurrentSteps;  // @TODO Store previous day steps somwhere and account for them
-//                mPrevSteps = 0;
-//                mCurrentSteps = 0;
-//                if (DEBUG_LOGS) Log.v(TAG, "mPrevSteps: " + mPrevSteps);
-//                if (DEBUG_LOGS) Log.v(TAG, "mCurrentSteps: " + mCurrentSteps);
-//            }
 
             if (stepInc > 0) {
                 bubbleManager.updateSteps(mCurrentSteps);

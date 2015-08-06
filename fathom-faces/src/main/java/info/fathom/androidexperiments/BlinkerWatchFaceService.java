@@ -76,12 +76,16 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
-    private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
+    private static final boolean DEBUG_ACCELERATE_INTERACTION = true;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_ACCELERATE_RATE = 5;  // each glance has xN times the effect
     private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
 
-    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add fake extra time per glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add fake extra time per glance
     private static final int     RANDOM_MINUTES_INC = 60;
+
+    private static final boolean DEBUG_FAKE_START_TIME = false;
+    private static final int     DEBUG_FAKE_START_HOUR = 7;
+    private static final int     DEBUG_FAKE_START_MINUTE = 0;
 
 
 
@@ -488,6 +492,12 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             private final long DEBUG_FAKE_TIME_INC = TimeUnit.MINUTES.toMillis(RANDOM_MINUTES_INC);
             private static final long DAY_IN_MILLIS = 86400000;
 
+            private static final boolean FAKE_START_TIME = DEBUG_FAKE_START_TIME;
+            private static final int     FAKE_START_HOUR = DEBUG_FAKE_START_HOUR;
+            private static final int     FAKE_START_MINUTE = DEBUG_FAKE_START_MINUTE;
+
+
+
             private Time currentTime;
             public int year, month, monthDay, hour, minute, second;
 
@@ -502,7 +512,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 currentTime = new Time();
                 currentTime.setToNow();
 
-                setToNow();
+                if (FAKE_START_TIME) {
+                    currentTime.setToNow();
+                    currentTime.set(currentTime.second, FAKE_START_MINUTE, FAKE_START_HOUR,
+                            currentTime.monthDay, currentTime.month, currentTime.year);
+                    updateFields();
+                } else {
+                    setToNow();
+                }
             }
 
             public void setToNow() {
