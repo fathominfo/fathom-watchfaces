@@ -1,4 +1,4 @@
-package info.fathom.androidexperiments;
+package info.fathom.watchfaces.isaac;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class TriangularWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
+public class IsaacWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
     private static final String  TAG = "TriangularWFService";
 
@@ -38,7 +38,6 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 
     private static final int     BACKGROUND_COLOR_AMBIENT = Color.BLACK;
     private final static int     BACKGROUND_COLORS_COUNT = 24;
-    private final int[]          backgroundColors = new int[BACKGROUND_COLORS_COUNT];
     private final static int     COLOR_TRIANGLE_ALPHA = 100;
     private final static int     CURSOR_TIP_ALPHA = 200;
     private final static int     RANGE_HUE = 165;
@@ -54,12 +53,11 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     private static final long    INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_LOGS = false;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-
-    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 60;
-    private static final boolean DEBUG_FAKE_ROUND = true;
+    private static final boolean DEBUG_FAKE_ROUND = false;
 
 
     @Override
@@ -107,6 +105,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private final Rect textBounds = new Rect();
         private Typeface RALEWAY_REGULAR_TYPEFACE;
 
+        private int[] backgroundColors;
+
         private Paint mGridPaint;
 
         private int mWidth;
@@ -128,7 +128,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             if (DEBUG_LOGS) Log.v(TAG, "onCreate(): " + holder.toString());
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(TriangularWatchFaceService.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(IsaacWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
@@ -174,11 +174,12 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
-                    TriangularWatchFaceService.this, mSensorManager);
+                    IsaacWatchFaceService.this, mSensorManager);
             mSensorAccelerometer.register();
 
             registerScreenReceiver();
 
+            backgroundColors = new int[BACKGROUND_COLORS_COUNT];
             backgroundColors[0] =  Color.HSVToColor(new float[]{ 130.0f, 1.0f, 1.0f});
             backgroundColors[1] =  Color.HSVToColor(new float[]{ 115.0f, 1.0f, 1.0f});
             backgroundColors[2] =  Color.HSVToColor(new float[]{ 100.0f, 1.0f, 1.0f});
@@ -214,7 +215,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             unregisterTimeZoneReceiver();
             unregisterScreenReceiver();
             mSensorAccelerometer.unregister();
-            mSensorManager.unregisterListener(TriangularWatchFaceService.this);
+            mSensorManager.unregisterListener(IsaacWatchFaceService.this);
             super.onDestroy();
         }
 
@@ -278,14 +279,14 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
 
         private void registerScreenReceiver() {
             if (DEBUG_LOGS) Log.v(TAG, "ScreenReceiver registered");
-            TriangularWatchFaceService.this.registerReceiver(mScreenReceiver,
+            IsaacWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_ON));
-            TriangularWatchFaceService.this.registerReceiver(mScreenReceiver,
+            IsaacWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_OFF));
         }
 
         private void unregisterScreenReceiver() {
-            TriangularWatchFaceService.this.unregisterReceiver(mScreenReceiver);
+            IsaacWatchFaceService.this.unregisterReceiver(mScreenReceiver);
         }
 
         /**
@@ -407,7 +408,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             }
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            TriangularWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
+            IsaacWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
         private void unregisterTimeZoneReceiver() {
@@ -415,7 +416,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
-            TriangularWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+            IsaacWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
         private void updateTimer() {
