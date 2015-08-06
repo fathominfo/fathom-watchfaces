@@ -64,17 +64,11 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //    private static final int     INITIAL_FREE_STEPS = 5;
 
     // DEBUG
-<<<<<<< HEAD
-
     private static final boolean DEBUG_LOGS = true;
 
     private static final boolean GENERATE_FAKE_STEPS = true;
     private static final int     RANDOM_FAKE_STEPS = 3000;
-=======
-    private static final boolean DEBUG_LOGS = false;
-    private static final boolean GENERATE_FAKE_STEPS = false;
-    private static final int     RANDOM_FAKE_STEPS = 5000;
->>>>>>> master
+
     private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
     private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance

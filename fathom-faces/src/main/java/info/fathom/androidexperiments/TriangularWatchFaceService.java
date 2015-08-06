@@ -486,7 +486,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             private static final int COLOR = Color.WHITE;
 
             private static final float FRICTION = 0.997f;
-            private static final float ACCEL_FACTOR = 0.40f;
+            private static final float ACCEL_FACTOR = 0.50f;
 //            private static final float FRICTION = 0.80f;
 //            private static final float ACCEL_FACTOR = 0.45f;
 
