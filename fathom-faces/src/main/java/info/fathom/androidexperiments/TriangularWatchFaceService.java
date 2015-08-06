@@ -59,6 +59,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 60;
+    private static final boolean DEBUG_FAKE_ROUND = true;
 
 
 
@@ -355,7 +356,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             if (DEBUG_LOGS) Log.d(TAG, "onApplyWindowInsets");
             super.onApplyWindowInsets(insets);
 
-            mIsRound = insets.isRound();
+            mIsRound = DEBUG_FAKE_ROUND || insets.isRound();
             if (DEBUG_LOGS) Log.v(TAG, "mIsRound? " + mIsRound);
         }
 
