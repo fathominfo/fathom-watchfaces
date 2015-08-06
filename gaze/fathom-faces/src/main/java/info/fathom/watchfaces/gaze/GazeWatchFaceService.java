@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-public class BlinkerWatchFaceService extends CanvasWatchFaceService {
+public class GazeWatchFaceService extends CanvasWatchFaceService {
 
-    private static final String TAG = "BlinkerWatchFaceService";
+    private static final String TAG = "GazeWatchFaceService";
 
     private static final long  INTERACTIVE_UPDATE_RATE_MS = 33;
 
@@ -174,7 +174,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             if (DEBUG_LOGS) Log.v(TAG, "onCreate");
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(BlinkerWatchFaceService.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(GazeWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
@@ -294,14 +294,14 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
         private void registerScreenReceiver() {
             if (DEBUG_LOGS) Log.v(TAG, "ScreenReceiver registered");
-            BlinkerWatchFaceService.this.registerReceiver(mScreenReceiver,
+            GazeWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_ON));
-            BlinkerWatchFaceService.this.registerReceiver(mScreenReceiver,
+            GazeWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_OFF));
         }
 
         private void unregisterScreenReceiver() {
-            BlinkerWatchFaceService.this.unregisterReceiver(mScreenReceiver);
+            GazeWatchFaceService.this.unregisterReceiver(mScreenReceiver);
         }
 
         /**
@@ -497,7 +497,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             }
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            BlinkerWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
+            GazeWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
         private void unregisterTimeZoneReceiver() {
@@ -505,7 +505,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
-            BlinkerWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+            GazeWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
         private void updateTimer() {
