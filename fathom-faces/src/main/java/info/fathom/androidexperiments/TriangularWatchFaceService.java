@@ -57,8 +57,13 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     // DEBUG
     private static final boolean DEBUG_LOGS = false;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
-    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
-    private static final int     RANDOM_MINUTES_INC = 30;
+
+    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final int     RANDOM_MINUTES_INC = 45;
+
+    private static final boolean NEW_HOUR_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean NEW_MINUTE_PER_GLANCE = true;
+
 
 
 
@@ -367,6 +372,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":"
                     + String.format("%02d", mTimeManager.minute);
 
+
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
 
@@ -479,8 +485,8 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         class Cursor {
             private static final int COLOR = Color.WHITE;
 
-            private static final float FRICTION = 0.995f;
-            private static final float ACCEL_FACTOR = 0.45f;
+            private static final float FRICTION = 0.997f;
+            private static final float ACCEL_FACTOR = 0.40f;
 //            private static final float FRICTION = 0.80f;
 //            private static final float ACCEL_FACTOR = 0.45f;
 
