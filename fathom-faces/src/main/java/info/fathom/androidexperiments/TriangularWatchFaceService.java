@@ -120,7 +120,6 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
         private int glances = 0;  // how many times did the watch go from ambient to interactive?
 
         private int currentR, currentG, currentB;
-//        private int triangleColorNew = generateTriangleColor();
         private int triangleColorNew;
 
 

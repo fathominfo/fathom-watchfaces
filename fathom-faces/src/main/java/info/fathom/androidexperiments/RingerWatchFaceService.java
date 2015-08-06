@@ -47,12 +47,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final int     TEXT_DIGITS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int     TEXT_DIGITS_COLOR_AMBIENT = Color.WHITE;
     private static final float   TEXT_DIGITS_HEIGHT = 0.20f;                                        // as a factor of screen height
+    private static final float   TEXT_DIGITS_LETTER_SPACING = 0.00f;                                // in 'em' units
     private static final float   TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;                               // as a factor of screen height
     private static final float   TEXT_DIGITS_RIGHT_MARGIN = 0.08f;                                  // as a factor of screen width
 
     private static final int     TEXT_STEPS_COLOR_INTERACTIVE = Color.WHITE;
     private static final int     TEXT_STEPS_COLOR_AMBIENT = Color.WHITE;
     private static final float   TEXT_STEPS_HEIGHT = 0.10f;                                         // as a factor of screen height
+    private static final float   TEXT_STEPS_LETTER_SPACING = 0.00f;                                 // in 'em' units
     private static final float   TEXT_STEPS_BASELINE_HEIGHT = TEXT_DIGITS_BASELINE_HEIGHT + 0.15f;  // as a factor of screen height
     private static final float   TEXT_STEPS_RIGHT_MARGIN = 0.07f;                                   // as a factor of screen width
     private static final float   TEXT_STEPS_ROLL_EASE_SPEED = 0.45f;                                // 0...1
@@ -71,7 +73,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 60;
-    private static final boolean VARIABLE_FRICTION = false;
+//    private static final boolean VARIABLE_FRICTION = false;
     private static final boolean DEBUG_STEP_COUNTERS = false;
 
     private static final boolean DEBUG_FAKE_START_TIME = true;
@@ -185,24 +187,28 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             mTextDigitsPaintInteractive.setTypeface(mTextTypeface);
             mTextDigitsPaintInteractive.setAntiAlias(true);
             mTextDigitsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+            mTextDigitsPaintInteractive.setLetterSpacing(TEXT_DIGITS_LETTER_SPACING);
 
             mTextDigitsPaintAmbient = new Paint();
             mTextDigitsPaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
             mTextDigitsPaintAmbient.setTypeface(mTextTypeface);
             mTextDigitsPaintAmbient.setAntiAlias(false);
             mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+            mTextDigitsPaintAmbient.setLetterSpacing(TEXT_DIGITS_LETTER_SPACING);
 
             mTextStepsPaintInteractive = new Paint();
             mTextStepsPaintInteractive.setColor(TEXT_STEPS_COLOR_INTERACTIVE);
             mTextStepsPaintInteractive.setTypeface(mTextTypeface);
             mTextStepsPaintInteractive.setAntiAlias(true);
             mTextStepsPaintInteractive.setTextAlign(Paint.Align.RIGHT);
+            mTextStepsPaintInteractive.setLetterSpacing(TEXT_STEPS_LETTER_SPACING);
 
             mTextStepsPaintAmbient = new Paint();
             mTextStepsPaintAmbient.setColor(TEXT_STEPS_COLOR_AMBIENT);
             mTextStepsPaintAmbient.setTypeface(mTextTypeface);
             mTextStepsPaintAmbient.setAntiAlias(false);
             mTextStepsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
+            mTextStepsPaintAmbient.setLetterSpacing(TEXT_STEPS_LETTER_SPACING);
 
             mTextDigitsShadowPaintInteractive = new Paint();
             mTextDigitsShadowPaintInteractive.setColor(BACKGROUND_COLOR_AMBIENT);
@@ -824,13 +830,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private final static float WEIGHT_SMALL     = 3;
             private final static float WEIGHT_XSMALL    = 3;
 
-//            private final int COLOR_XBIG    = Color.argb(204, 238, 42, 123);
-//            private final int COLOR_MBIG    = Color.argb(204, 141, 198, 63);
-//            private final int COLOR_BIG     = Color.argb(204, 255, 167, 39);
-//            private final int COLOR_MEDIUM  = Color.argb(204, 146, 39, 143);
-//            private final int COLOR_SMALL   = Color.argb(204, 39, 170, 225);
-//            private final int COLOR_XSMALL  = Color.argb(204, 141, 198, 63);
-
             public final int[] GROUP_COLORS = {
                     Color.argb(204, 255, 255, 0),  // XBIG
                     Color.argb(204, 237, 41, 122),  // MBIG
@@ -858,7 +857,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private int prevSteps, currentSteps;
             private int updateKeyframe;  // @TODO add explanation here
 
-            private float currentFriction;
+//            private float currentFriction;
 
             private Paint bubblePaintAmbient;
 
@@ -883,7 +882,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
                 updateKeyframe = 0;  // do not update
 
-                currentFriction = FRICTION_START;
+//                currentFriction = FRICTION_START;
 
                 bubblePaintAmbient = new Paint();
                 bubblePaintAmbient.setColor(TEXT_DIGITS_COLOR_AMBIENT);
@@ -1016,10 +1015,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         break;
                 }
 
-                if (VARIABLE_FRICTION) {
-                    currentFriction += FRICTION_ANIMATION_RATE * (FRICTION_TARGET - currentFriction);
-                    if (DEBUG_LOGS) Log.v(TAG, "currentFriction: " + currentFriction);
-                }
+//                if (VARIABLE_FRICTION) {
+//                    currentFriction += FRICTION_ANIMATION_RATE * (FRICTION_TARGET - currentFriction);
+//                    if (DEBUG_LOGS) Log.v(TAG, "currentFriction: " + currentFriction);
+//                }
 
                 updatePositions();
             }
@@ -1051,7 +1050,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
 
             public void newGlance() {
-                currentFriction = FRICTION_START;
+//                currentFriction = FRICTION_START;
             }
 
             public void byeGlance() {
@@ -1265,7 +1264,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 //
 //            private static final float RANDOM_WEIGHT_FACTOR     = 0.20f;
 
-//            private static final float FRICTION                 = 0.95f; // 0 - 1, 0 is total friction  --> Replaced by global bubbleManager.currentFriction
+            private static final float FRICTION_IN_PLANE        = 0.99f; // 0 - 1, 0 is total friction
+            private static final float FRICTION_DEPTH           = 0.95f; // 0 - 1, 0 is total friction
             private static final float PLANE_ACCEL_FACTOR       = 0.25f; // when level, how much shake?
             private static final float GRAVITY_FACTOR           = 0.80f; // how much does gravity weight in global forces
             private static final float ANCHOR_SPRING_FACTOR     = 0.02f; // how much spring from lock position
@@ -1379,10 +1379,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
                 velX += accX;
                 velY += accY;
-//                velX *= FRICTION;
-//                velY *= FRICTION;
-                velX *= bubbleManager.currentFriction;
-                velY *= bubbleManager.currentFriction;
+                velX *= FRICTION_IN_PLANE;
+                velY *= FRICTION_IN_PLANE;
+//                velX *= bubbleManager.currentFriction;
+//                velY *= bubbleManager.currentFriction;
                 x += velX;
                 y += velY;
 
@@ -1391,7 +1391,8 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                     accR = (DEPTH_ACCEL_FACTOR * linear_acceleration[2] + DEPTH_SPRING_FACTOR * (radius - currentRadius)) / 3;  // Z movement is equally weighted
                     velR += accR;
 //                    velR *= FRICTION;
-                    velR *= bubbleManager.currentFriction;
+//                    velR *= bubbleManager.currentFriction;
+                    velR *= FRICTION_DEPTH;
                     currentRadius += velR;
                 }
 
