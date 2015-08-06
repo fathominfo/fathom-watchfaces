@@ -64,20 +64,20 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private static final int     RESET_HOUR = 4;                                                    // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_LOGS = false;
     private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int     RANDOM_FAKE_STEPS = 3000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
-    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 60;
     private static final boolean DEBUG_STEP_COUNTERS = false;
 
-    private static final boolean DEBUG_FAKE_START_TIME = true;
+    private static final boolean DEBUG_FAKE_START_TIME = false;
     private static final int     DEBUG_FAKE_START_HOUR = 8;
     private static final int     DEBUG_FAKE_START_MINUTE = 0;
 
     // For documentation purposes
-    private static final boolean DEBUG_FAKE_SCRIPTED_RINGS = true;
+    private static final boolean DEBUG_FAKE_SCRIPTED_RINGS = false;
     private static final int     DEBUG_FAKE_SCRIPTED_RINGS_INACTIVE_GLANCES = 2;  // how many glances pass before new rings are added
     private static final int[]   DEBUG_FAKE_SCRIPTED_RINGS_STAGES = {
             57,
