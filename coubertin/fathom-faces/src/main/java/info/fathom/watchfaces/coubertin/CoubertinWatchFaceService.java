@@ -1,4 +1,4 @@
-package info.fathom.androidexperiments;
+package info.fathom.watchfaces.coubertin;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -29,9 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class RingerWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
+public class CoubertinWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
-    private static final String TAG = "RingerWatchFaceService";
+    private static final String TAG = "CoubertinWatchFaceService";
 
     private static final float TAU = (float) (2 * Math.PI);
 
@@ -165,7 +165,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(RingerWatchFaceService.this)
+            setWatchFaceStyle(new WatchFaceStyle.Builder(CoubertinWatchFaceService.this)
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
@@ -247,10 +247,10 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
             mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
             mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
-                    RingerWatchFaceService.this, mSensorManager);
+                    CoubertinWatchFaceService.this, mSensorManager);
             mSensorAccelerometer.register();
             mSensorStep = new SensorWrapper("Steps", Sensor.TYPE_STEP_COUNTER, 1,
-                    RingerWatchFaceService.this, mSensorManager);
+                    CoubertinWatchFaceService.this, mSensorManager);
             mSensorStep.register();
 
             registerScreenReceiver();
@@ -338,14 +338,14 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
         private void registerScreenReceiver() {
             if (DEBUG_LOGS) Log.v(TAG, "ScreenReceiver registered");
-            RingerWatchFaceService.this.registerReceiver(mScreenReceiver,
+            CoubertinWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_ON));
-            RingerWatchFaceService.this.registerReceiver(mScreenReceiver,
+            CoubertinWatchFaceService.this.registerReceiver(mScreenReceiver,
                     new IntentFilter(Intent.ACTION_SCREEN_OFF));
         }
 
         private void unregisterScreenReceiver() {
-            RingerWatchFaceService.this.unregisterReceiver(mScreenReceiver);
+            CoubertinWatchFaceService.this.unregisterReceiver(mScreenReceiver);
         }
 
         /**
@@ -526,7 +526,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             }
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
-            RingerWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
+            CoubertinWatchFaceService.this.registerReceiver(mTimeZoneReceiver, filter);
         }
 
         private void unregisterTimeZoneReceiver() {
@@ -534,7 +534,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 return;
             }
             mRegisteredTimeZoneReceiver = false;
-            RingerWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
+            CoubertinWatchFaceService.this.unregisterReceiver(mTimeZoneReceiver);
         }
 
 
