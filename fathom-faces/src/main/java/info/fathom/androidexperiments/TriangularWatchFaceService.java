@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-
 public class TriangularWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
     private static final String  TAG = "TriangularWFService";
@@ -57,13 +56,10 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final int     RESET_CRACK_THRESHOLD = 0;  // every nth glance, cracks will be reset (0 does no resetting)
+
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 60;
     private static final boolean DEBUG_FAKE_ROUND = true;
-
-
-
-
 
 
     @Override
@@ -367,6 +363,7 @@ public class TriangularWatchFaceService extends CanvasWatchFaceService implement
             mTimeManager.setToNow();
             mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":"
                     + String.format("%02d", mTimeManager.minute);
+
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background

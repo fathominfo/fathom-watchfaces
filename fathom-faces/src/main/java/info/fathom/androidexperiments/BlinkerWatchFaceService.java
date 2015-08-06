@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
-
 public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
     private static final String TAG = "BlinkerWatchFaceService";
@@ -53,7 +52,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             Color.rgb(255, 102, 51),
             Color.rgb(0, 153, 255),
             Color.rgb(125, 114, 163),
-            Color.rgb(88, 148, 35),
+            Color.rgb(114, 41, 255),
             Color.rgb(238, 42, 123),
             Color.rgb(0, 167, 157),
             Color.rgb(117, 76, 41),
@@ -66,8 +65,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 //    private static final int   GLANCES_NEEDED_PER_NEW_EYE = 1;
     private static final float BLINK_TO_GLANCE_CHANCE_RATIO = 0.50f;                                // percent possibility of a blink event happening as compared to amount of glances
 
-    private static final long  EYE_POPOUT_BASE_THRESHOLD = TimeUnit.MINUTES.toMillis(8);            // baseline threshold over which eyes will start popping out
-    private static final long  EYE_POPOUT_PERIOD = TimeUnit.MINUTES.toMillis(3);                    // beyond baseline, an eye will pop out every N millis
+    private static final long  EYE_POPOUT_BASE_THRESHOLD = TimeUnit.MINUTES.toMillis(5);       // baseline threshold over which eyes will start popping out
+    private static final long  EYE_POPOUT_PERIOD = TimeUnit.MINUTES.toMillis(3);                // beyond baseline, an eye will pop out every N millis
 
     private static final long  CONSECUTIVE_GLANCE_THRESHOLD = TimeUnit.SECONDS.toMillis(30);        // max time between glances to be considered consecutive
     private static final int   EYES_WIDE_OPEN_GLANCE_TRIGGER = 3;                                   // how many consecutive glances are needed to trigger all eyes wide open
@@ -77,7 +76,8 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
-    private static final int     DEBUG_ACCELERATE_RATE = 5;  // each glance has xN times the effect
+    private static final int     DEBUG_ACCELERATE_RATE = 2;  // each glance has xN times the effect
+
     private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
 
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add fake extra time per glance
@@ -100,6 +100,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
             17,
             21
     };
+
 
 
 
@@ -948,6 +949,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
         class Eye {
 
             // Constants
+
             final int          EYE_COLOR                = Color.rgb(252,245,245);
             static final int   EYELID_COLOR             = Color.BLACK;
             static final int   PUPIL_COLOR              = Color.BLACK;
@@ -967,6 +969,7 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
 
             static final int   SIDE_LOOK_DURATION       = 50;               // in frames
             static final int   SIDE_LOOK_RANDOM_VAR_ADD = 20;               // on top of the base, in frames
+
 
             EyeMosaic parent;
 
