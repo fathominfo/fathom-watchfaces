@@ -1,4 +1,4 @@
-package info.fathom.androidexperiments;
+package info.fathom.watchfaces.gaze;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -74,21 +74,21 @@ public class BlinkerWatchFaceService extends CanvasWatchFaceService {
     private static final int   RESET_HOUR = 4;                                                      // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = true;
+    private static final boolean DEBUG_LOGS = false;
     private static final boolean DEBUG_ACCELERATE_INTERACTION = false;  // adds more eyes and blink factor per glance
     private static final int     DEBUG_ACCELERATE_RATE = 2;  // each glance has xN times the effect
 
     private static final boolean DEBUG_SHOW_GLANCE_COUNTER = false;
 
-    private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add fake extra time per glance
+    private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add fake extra time per glance
     private static final int     RANDOM_MINUTES_INC = 60;
 
-    private static final boolean DEBUG_FAKE_START_TIME = true;
+    private static final boolean DEBUG_FAKE_START_TIME = false;
     private static final int     DEBUG_FAKE_START_HOUR = 7;
     private static final int     DEBUG_FAKE_START_MINUTE = 10;
 
     // For documentation purposes
-    private static final boolean DEBUG_FAKE_SCRIPTED_EYES = true;
+    private static final boolean DEBUG_FAKE_SCRIPTED_EYES = false;
     private static final int     DEBUG_FAKE_SCRIPTED_EYES_INACTIVE_GLANCES = 0;  // how many glances pass before new rings are added
     private static final int[]   DEBUG_FAKE_SCRIPTED_EYES_STAGES = {
             1,
