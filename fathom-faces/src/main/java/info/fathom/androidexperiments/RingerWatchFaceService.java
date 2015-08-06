@@ -63,17 +63,13 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
     private static final int     RESET_HOUR = 4;                                                    // at which hour will watch face reset [0...23], -1 to deactivate
 
-//    private static final int     INITIAL_FREE_STEPS = 5;
-
     // DEBUG
     private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int     RANDOM_FAKE_STEPS = 3000;
-    private static final int     MAX_STEP_THRESHOLD = 1000000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
     private static final boolean RANDOM_TIME_PER_GLANCE = true;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 60;
-//    private static final boolean VARIABLE_FRICTION = false;
     private static final boolean DEBUG_STEP_COUNTERS = false;
 
     private static final boolean DEBUG_FAKE_START_TIME = true;
@@ -762,7 +758,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                 mWereStepCountsUpdatedThisGlance = false;
             }
 
-//            bubbleManager.updateSteps(mCurrentSteps);
 
         }
 
@@ -795,11 +790,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
 
         private class BubbleManager {
 
-            private final static float ANIMATION_RATE           = 0.25f;
-
-            private final static float FRICTION_START           = 0.99f;
-            private final static float FRICTION_TARGET          = 0.55f;
-            private final static float FRICTION_ANIMATION_RATE  = 0.02f;
+            private final static float ANIMATION_RATE   = 0.25f;
 
             private final static int STEP_RATIO_XBIG    = 10000;
             private final static int STEP_RATIO_MBIG    = 5000;
@@ -807,13 +798,6 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             private final static int STEP_RATIO_MEDIUM  = 100;
             private final static int STEP_RATIO_SMALL   = 10;
             private final static int STEP_RATIO_XSMALL  = 1;
-
-//            private final static int RADIUS_XBIG    = 100;
-//            private final static int RADIUS_MBIG    = 70;
-//            private final static int RADIUS_BIG     = 45;
-//            private final static int RADIUS_MEDIUM  = 25;
-//            private final static int RADIUS_SMALL   = 15;
-//            private final static int RADIUS_XSMALL  = 7;
 
             // Radii as a factor of screen width
             private final static float RADIUS_XBIG    = 0.37500f;
@@ -1015,10 +999,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
                         break;
                 }
 
-//                if (VARIABLE_FRICTION) {
-//                    currentFriction += FRICTION_ANIMATION_RATE * (FRICTION_TARGET - currentFriction);
-//                    if (DEBUG_LOGS) Log.v(TAG, "currentFriction: " + currentFriction);
-//                }
+
 
                 updatePositions();
             }
@@ -1026,9 +1007,7 @@ public class RingerWatchFaceService extends CanvasWatchFaceService implements Se
             public void updateSteps(int currentSteps_) {
                 prevSteps = currentSteps;
                 currentSteps = currentSteps_;
-//                if (updateKeyframe == 0 ) {
                 updateKeyframe = 1;  // trigger size update chain
-//                }
             }
 
             public void updatePositions() {
