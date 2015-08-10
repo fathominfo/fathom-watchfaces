@@ -15,7 +15,7 @@ Paying homage to Pierre de Coubertin, the father of the modern Olympic Games, th
 The watch design pays tribute to Isaac Newton’s laws of motion and his experiments using a prism to refract white light to create a spectrum of color. *Bouncing Isaac* is a simple watch face that showcases the wonder of light and physics.
 
 
-[Gaze Effect](https://play.google.com/store/apps/details?id=info.fathom.watchfaces.gaze&hl=en) displays mysterious eyes that gaze back at you when you look at your watch The more you look at your watch, the more your watch looks at you. If you don’t check your watch for a while, the eyes start disappearing. In the later hours of the day, the eyes grow tired, and they move and blink less. Keep an eye out for special times throughout the day when they get especially eerie.
+[Gaze Effect](https://play.google.com/store/apps/details?id=info.fathom.watchfaces.gaze&hl=en) displays mysterious eyes that gaze back at you when you look at your watch. The more you look at your watch, the more your watch looks at you. If you don’t check your watch for a while, the eyes start disappearing. In the later hours of the day, the eyes grow tired, and they move and blink less. Keep an eye out for special times throughout the day when they get especially eerie.
 
 The design alludes to Jacques Lacan’s psychological term “Gaze,” or the realization that you are an object being looked at just as an inanimate object can be looked at. The *Gaze Effect* watch face is a quirky reference to self-awareness, and our relationship to personal devices and time.
 
