@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CoubertinWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
 
-    private static final String TAG = "CoubertinWatchFaceService";
+    private static final String TAG = "CoubertinWatchFS";
 
     private static final float TAU = (float) (2 * Math.PI);
 
@@ -71,6 +71,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private static final boolean RANDOM_TIME_PER_GLANCE = false;  // this will add an hour to the time at each glance
     private static final int     RANDOM_MINUTES_INC = 60;
     private static final boolean DEBUG_STEP_COUNTERS = false;
+
+    private static final boolean DEBUG_MISSING_STEP_COUNTER = true;
 
     private static final boolean DEBUG_FAKE_START_TIME = false;
     private static final int     DEBUG_FAKE_START_HOUR = 8;
@@ -129,6 +131,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         private String mTimeStr;
         private int mLastAmbientHour;
         private int glances;
+
+        private boolean mIsStepCounterRegistered;
 
         private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
         private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
@@ -251,7 +255,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             mSensorAccelerometer.register();
             mSensorStep = new SensorWrapper("Steps", Sensor.TYPE_STEP_COUNTER, 1,
                     CoubertinWatchFaceService.this, mSensorManager);
-            mSensorStep.register();
+//            mSensorStep.register();
+            mIsStepCounterRegistered = DEBUG_MISSING_STEP_COUNTER ? false : mSensorStep.register();
 
             registerScreenReceiver();
         }
@@ -302,7 +307,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             super.onVisibilityChanged(visible);
 
             if (visible) {
-                mSensorStep.register();
+//                mSensorStep.register();
+                mIsStepCounterRegistered = DEBUG_MISSING_STEP_COUNTER ? false : mSensorStep.register();
                 mSensorAccelerometer.register();
 
             } else {
@@ -371,7 +377,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 }
 
                 registerTimeZoneReceiver();
-                mSensorStep.register();
+//                mSensorStep.register();
+                mIsStepCounterRegistered = DEBUG_MISSING_STEP_COUNTER ? false : mSensorStep.register();
                 mSensorAccelerometer.register();
 
             } else {
@@ -496,8 +503,13 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
                 canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
-                canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
-                        mTextStepsBaselineHeight, mTextStepsPaintInteractive);
+                if (mIsStepCounterRegistered) {
+                    canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
+                            mTextStepsBaselineHeight, mTextStepsPaintInteractive);
+                } else {
+                    canvas.drawText("Step sensor unavailable", mWidth - mTextStepsRightMargin,
+                            mTextStepsBaselineHeight, mTextStepsPaintInteractive);
+                }
 
                 if (DEBUG_STEP_COUNTERS) {
                     canvas.drawText((int) mSensorStep.values[0] + " S", 0.75f * mWidth,
