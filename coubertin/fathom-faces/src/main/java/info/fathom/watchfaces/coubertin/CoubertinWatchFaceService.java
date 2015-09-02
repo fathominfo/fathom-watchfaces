@@ -189,7 +189,6 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         private int mHeight;
         private float mCenterX, mCenterY;
         private boolean mIsRound;
-        private float mRadius;
 
         private BubbleManager bubbleManager;
         private SplashScreen splashScreen;
@@ -439,9 +438,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
             mWidth = width;
             mHeight = height;
-            mCenterX = 0.50f * mWidth;
-            mCenterY = 0.50f * mHeight;
-            mRadius = 0.50f * mWidth;
+            mCenterX = mWidth / 2f;
+            mCenterY = mHeight / 2f;
 
             splashScreen.reset();
 
