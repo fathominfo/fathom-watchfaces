@@ -26,6 +26,7 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
+import java.lang.ref.WeakReference;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +74,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private static final int     RANDOM_MINUTES_INC = 60;
     private static final boolean DEBUG_STEP_COUNTERS = false;
 
-    private static final boolean DEBUG_MISSING_STEP_COUNTER = true;
+    private static final boolean DEBUG_FAKE_NO_STEP_SENSOR = true;
 
     private static final boolean DEBUG_FAKE_START_TIME = false;
     private static final int     DEBUG_FAKE_START_HOUR = 8;
@@ -93,7 +94,33 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     };
 
 
+    // prevent memory leaks caused by the handler hanging around
+    private static class WeakMainHandler extends Handler {
+        private WeakReference<CoubertinWatchFaceService.Engine> ref;
 
+        public WeakMainHandler(CoubertinWatchFaceService.Engine engine) {
+            this.ref = new WeakReference<CoubertinWatchFaceService.Engine>(engine);
+        }
+
+        @Override
+        public void handleMessage(Message message) {
+            //Log.v(TAG, "Handler tick");
+            CoubertinWatchFaceService.Engine engine = ref.get();
+            switch (message.what) {
+                case MSG_UPDATE_TIMER:
+                    engine.invalidate();
+                    if (engine.shouldTimerBeRunning()) {
+                        long timeMs = System.currentTimeMillis();
+                        long delayMs = INTERACTIVE_UPDATE_RATE_MS
+                                - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
+                        sendEmptyMessageDelayed(MSG_UPDATE_TIMER, delayMs);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private static final int MSG_UPDATE_TIMER = 0;
 
 
     @Override
@@ -103,9 +130,9 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
     private class Engine extends CanvasWatchFaceService.Engine {
 
-        private static final int MSG_UPDATE_TIMER = 0;
-
         /* Handler to update the screen depending on the message */
+        final WeakMainHandler mMainHandler = new WeakMainHandler(this);
+        /*
         final Handler mMainHandler = new Handler() {
             @Override
             public void handleMessage(Message message) {
@@ -123,6 +150,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 }
             }
         };
+        */
 
         private boolean twentyFourHourTime;
 
@@ -131,11 +159,10 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         private boolean mAmbient, mScreenOn;
 
         private TimeManager mTimeManager;
-        private String mTimeStr;
         private int mLastAmbientHour;
         private int glances;
 
-        private boolean mIsStepCounterRegistered;
+        private boolean mStepCounterRegistered;
 
         private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
         private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
@@ -260,7 +287,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             mSensorStep = new SensorWrapper("Steps", Sensor.TYPE_STEP_COUNTER, 1,
                     CoubertinWatchFaceService.this, mSensorManager);
             //mSensorStep.register();
-            mIsStepCounterRegistered = DEBUG_MISSING_STEP_COUNTER ? false : mSensorStep.register();
+            mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStep.register();
 
             registerScreenReceiver();
         }
@@ -312,7 +339,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
             if (visible) {
                 // mSensorStep.register();
-                mIsStepCounterRegistered = DEBUG_MISSING_STEP_COUNTER ? false : mSensorStep.register();
+                mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStep.register();
                 mSensorAccelerometer.register();
 
             } else {
@@ -382,7 +409,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
                 registerTimeZoneReceiver();
                 // mSensorStep.register();
-                mIsStepCounterRegistered = DEBUG_MISSING_STEP_COUNTER ? false : mSensorStep.register();
+                mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStep.register();
                 mSensorAccelerometer.register();
 
             } else {
@@ -459,7 +486,10 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                     hour = 12;
                 }
             }
-            mTimeStr = String.format("%d:%02d", hour, mTimeManager.minute);
+            String timeStr = String.format("%d:%02d", hour, mTimeManager.minute);
+
+            String stepStr = !mStepCounterRegistered ? "No Step Sensor" :
+                mTestStepFormatter.format(mStepCountDisplay) + "#";
 
             if (mAmbient) {
                 if (DEBUG_LOGS) Log.v(TAG, "Drawing ambient canvas");
@@ -468,10 +498,10 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
                 bubbleManager.renderAmbient(canvas);
 
-                drawFakeShadowedText(canvas, mTimeStr,
+                drawFakeShadowedText(canvas, timeStr,
                         mWidth - (int) mTextDigitsRightMargin, (int) mTextDigitsBaselineHeight,
                         TEXT_AMBIENT_SHADOW_RADIUS, mTextDigitsShadowPaintInteractive, mTextDigitsPaintAmbient);
-                drawFakeShadowedText(canvas, mTestStepFormatter.format(mCurrentSteps) + "#",
+                drawFakeShadowedText(canvas, stepStr,
                         mWidth - (int) mTextStepsRightMargin, (int) mTextStepsBaselineHeight,
                         TEXT_AMBIENT_SHADOW_RADIUS, mTextStepsShadowPaintInteractive, mTextStepsPaintAmbient);
 
@@ -513,18 +543,11 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                     mTextStepsPaintInteractive.setColor(Color.argb(mTextAlpha, 255, 255, 255));
                 }
 
-                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                canvas.drawText(timeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
-                // canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
-                //         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
-                if (mIsStepCounterRegistered) {
-                    canvas.drawText(mTestStepFormatter.format(mStepCountDisplay) + "#", mWidth - mTextStepsRightMargin,
-                            mTextStepsBaselineHeight, mTextStepsPaintInteractive);
-                } else {
-                    canvas.drawText("Step sensor unavailable", mWidth - mTextStepsRightMargin,
-                            mTextStepsBaselineHeight, mTextStepsPaintInteractive);
-                }
+                canvas.drawText(stepStr, mWidth - mTextStepsRightMargin,
+                        mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
                 if (DEBUG_STEP_COUNTERS) {
                     canvas.drawText((int) mSensorStep.values[0] + " S", 0.75f * mWidth,
