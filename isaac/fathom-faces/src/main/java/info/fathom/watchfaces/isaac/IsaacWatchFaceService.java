@@ -87,7 +87,7 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
             }
         };
 
-
+        private boolean twentyFourHourTime;
 
         private boolean mRegisteredTimeZoneReceiver = false;
         private boolean mAmbient, mScreenOn;
@@ -95,7 +95,6 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 //        private boolean mBurnInProtection;
 
         private TimeManager mTimeManager;
-        private String mTimeStr;
         private int mLastAmbientHour;
         private Time mCurrentGlance;
         private long mPrevGlance;
@@ -361,8 +360,17 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas " + mFrameCount++);
 
             mTimeManager.setToNow();
-            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":"
-                    + String.format("%02d", mTimeManager.minute);
+//            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":"
+//                    + String.format("%02d", mTimeManager.minute);
+            // Support for 24-hour time
+            int hour = mTimeManager.hour;
+            if (!twentyFourHourTime) {
+                hour = hour % 12;
+                if (hour == 0) {
+                    hour = 12;
+                }
+            }
+            String timeStr = String.format("%d:%02d", hour, mTimeManager.minute);
 
 
             if (mAmbient) {
@@ -370,14 +378,14 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 
                 board.render(canvas, true);
 //                renderGrid(canvas, 1, 1);
-                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                canvas.drawText(timeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
 
             } else {
                 canvas.drawColor(backgroundColors[mTimeManager.hour]);
 
                 board.render(canvas, false);
-                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                canvas.drawText(timeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
             }
         }
