@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+
 public class CoubertinWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
     private static final String TAG = "CoubertinWatchFS";
 
@@ -66,7 +67,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private static final int     RESET_HOUR = 4;                                                    // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
+    private static final boolean DEBUG_LOGS = true; //false;
     private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int     RANDOM_FAKE_STEPS = 3000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
@@ -92,6 +93,10 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             8986,
             10124
     };
+
+    // gonna live out here for the other sensor
+    private int mCurrentSteps = 0;
+    static private boolean mHokeySteps = true;
 
 
     // prevent memory leaks caused by the handler hanging around
@@ -177,7 +182,6 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         private int mStepBuffer = 0;
         private boolean firstLoad = true;
         private int mPrevSteps = 0;
-        private int mCurrentSteps = 0;
         private float mStepCountDisplay;
 
         private int mDebugScriptGlance = 0;
@@ -265,7 +269,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 @Override
                 public void onReset() {
                     if (DEBUG_LOGS) Log.v(TAG, "RESETTING!!");
-                    mStepBuffer = (int) mSensorStep.values[0];
+                    mStepBuffer = (int) mSensorStepCount.values[0];
                     mPrevSteps = 0;
                     mCurrentSteps = 0;
                     bubbleManager.clearBubbles();
@@ -283,10 +287,15 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             mSensorAccelerometer = new SensorWrapper("Accelerometer", Sensor.TYPE_ACCELEROMETER, 3,
                     CoubertinWatchFaceService.this, mSensorManager);
             mSensorAccelerometer.register();
-            mSensorStep = new SensorWrapper("Steps", Sensor.TYPE_STEP_COUNTER, 1,
+            mSensorStepCount = new SensorWrapper("Step Count", Sensor.TYPE_STEP_COUNTER, 1,
                     CoubertinWatchFaceService.this, mSensorManager);
-            //mSensorStep.register();
-            mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStep.register();
+            //mSensorStepCount.register();
+            mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStepCount.register();
+            if (mHokeySteps) {
+                mSensorStepDetector = new SensorWrapper("Step Detector", Sensor.TYPE_STEP_DETECTOR, 1,
+                        CoubertinWatchFaceService.this, mSensorManager);
+                mSensorStepDetector.register();
+            }
 
             registerScreenReceiver();
         }
@@ -297,7 +306,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             mMainHandler.removeMessages(MSG_UPDATE_TIMER);
             unregisterTimeZoneReceiver();
             unregisterScreenReceiver();
-            mSensorStep.unregister();
+            if (mHokeySteps) mSensorStepDetector.unregister();
+            mSensorStepCount.unregister();
             mSensorAccelerometer.unregister();
             super.onDestroy();
         }
@@ -337,12 +347,13 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             super.onVisibilityChanged(visible);
 
             if (visible) {
-                // mSensorStep.register();
-                mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStep.register();
+                mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStepCount.register();
+                if (mHokeySteps) mSensorStepDetector.register();
                 mSensorAccelerometer.register();
 
             } else {
-                mSensorStep.unregister();
+                mSensorStepCount.unregister();
+                if (mHokeySteps) mSensorStepDetector.unregister();
                 mSensorAccelerometer.unregister();
             }
 
@@ -407,15 +418,17 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 }
 
                 registerTimeZoneReceiver();
-                // mSensorStep.register();
-                mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStep.register();
+                // mSensorStepCount.register();
+                mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStepCount.register();
+                if (mHokeySteps) mSensorStepDetector.register();
                 mSensorAccelerometer.register();
 
             } else {
                 bubbleManager.byeGlance();
 
                 unregisterTimeZoneReceiver();
-                mSensorStep.unregister();
+                mSensorStepCount.unregister();
+                if (mHokeySteps) mSensorStepDetector.unregister();
                 mSensorAccelerometer.unregister();
 
                 bubbleManager.resetMotion();
@@ -504,7 +517,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                         TEXT_AMBIENT_SHADOW_RADIUS, mTextStepsShadowPaintInteractive, mTextStepsPaintAmbient);
 
                 if (DEBUG_STEP_COUNTERS) {
-                    canvas.drawText((int) mSensorStep.values[0] + " S", 0.75f * mWidth,
+                    canvas.drawText((int) mSensorStepCount.values[0] + " S", 0.75f * mWidth,
                             0.75f * mHeight, mTextStepsPaintAmbient);
                     canvas.drawText(mStepBuffer + " B", 0.75f * mWidth,
                             0.85f * mHeight, mTextStepsPaintAmbient);
@@ -548,7 +561,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                         mTextStepsBaselineHeight, mTextStepsPaintInteractive);
 
                 if (DEBUG_STEP_COUNTERS) {
-                    canvas.drawText((int) mSensorStep.values[0] + " S", 0.75f * mWidth,
+                    canvas.drawText((int) mSensorStepCount.values[0] + " S", 0.75f * mWidth,
                             0.75f * mHeight, mTextStepsPaintInteractive);
                     canvas.drawText(mStepBuffer + " B", 0.75f * mWidth,
                             0.85f * mHeight, mTextStepsPaintInteractive);
@@ -744,7 +757,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
             if (firstLoad) {
                 firstLoad = false;
-                mStepBuffer = (int) mSensorStep.values[0];
+                mStepBuffer = (int) mSensorStepCount.values[0];
                 mPrevSteps = 0;
                 mCurrentSteps = 0;
                 bubbleManager.updateSteps(mCurrentSteps);
@@ -772,7 +785,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
                     } else if (mDebugScriptStage >= DEBUG_FAKE_SCRIPTED_RINGS_STAGES.length) {
                         // RESET
-                        mStepBuffer = (int) mSensorStep.values[0];
+                        mStepBuffer = (int) mSensorStepCount.values[0];
                         mPrevSteps = 0;
                         mCurrentSteps = 0;
                         bubbleManager.clearBubbles();
@@ -791,7 +804,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 }
 
             } else {
-                mCurrentSteps = (int) mSensorStep.values[0] - mStepBuffer;  // read from the sensor
+                mCurrentSteps = (int) mSensorStepCount.values[0] - mStepBuffer;  // read from the sensor
             }
 
             int stepInc = mCurrentSteps - mPrevSteps;
@@ -1608,9 +1621,11 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private float[] gravity = new float[3];
     private float[] linear_acceleration = new float[3];
 
-    private SensorWrapper mSensorStep;
-    public boolean mWasStepSensorUpdatedThisGlance = false,
-            mWereStepCountsUpdatedThisGlance = false;
+    private SensorWrapper mSensorStepCount;
+    private boolean mWasStepSensorUpdatedThisGlance = false;
+    private boolean mWereStepCountsUpdatedThisGlance = false;
+
+    private SensorWrapper mSensorStepDetector;
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) { }
@@ -1622,11 +1637,22 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 mSensorAccelerometer.update(event);
                 updateGravity(event);
                 break;
+            case Sensor.TYPE_STEP_DETECTOR:
+                if (mHokeySteps) {
+                    mCurrentSteps++;
+                    if (DEBUG_LOGS) {
+                        Log.i(TAG, "Sensor.TYPE_STEP_DETECTOR fired, mCurrentSteps now " + mCurrentSteps + " values=" + event.values[0]);
+                    }
+                    mWasStepSensorUpdatedThisGlance = true;
+                }
+                break;
             case Sensor.TYPE_STEP_COUNTER:
 //                if (!GENERATE_FAKE_STEPS) {
-                    if (DEBUG_LOGS) Log.i(TAG, "Sensor.TYPE_STEP_COUNTER event.values[0]: " + Float.toString(event.values[0]));
+                    if (DEBUG_LOGS) {
+                        Log.i(TAG, "Sensor.TYPE_STEP_COUNTER event.values[0]: " + event.values[0]);
+                    }
 //                    mCurrentSteps = Math.round(event.values[0]);
-                    mSensorStep.update(event);
+                    mSensorStepCount.update(event);
                     mWasStepSensorUpdatedThisGlance = true;
 //                }
                 break;
