@@ -135,13 +135,14 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
             }
         };
 
+        private boolean twentyFourHourTime;
 
         //        private boolean mLowBitAmbient;
         //        private boolean mBurnInProtection;
         private boolean mAmbient, mScreenOn;
 
         private TimeManager mTimeManager;
-        private String mTimeStr;
+        //private String mTimeStr;
         private int mLastAmbientHour;
         private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
 
@@ -450,7 +451,15 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
             mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
-            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":" + String.format("%02d", mTimeManager.minute);
+            // Support for 24-hour time
+            int hour = mTimeManager.hour;
+            if (!twentyFourHourTime) {
+                hour = hour % 12;
+                if (hour == 0) {
+                    hour = 12;
+                }
+            }
+            String timeStr = String.format("%d:%02d", hour, mTimeManager.minute);
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
@@ -459,10 +468,12 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
                 eyeMosaic.renderAmbient(canvas);
                 canvas.restore();
 
-                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                canvas.drawText(timeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
-                if (DEBUG_SHOW_GLANCE_COUNTER) canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
-                        mTextGlancesBaselineHeight, mTextGlancesPaintAmbient);
+                if (DEBUG_SHOW_GLANCE_COUNTER) {
+                    canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
+                            mTextGlancesBaselineHeight, mTextGlancesPaintAmbient);
+                }
 
             } else {
                 canvas.drawColor(BACKGROUND_COLOR_INTERACTIVE);
@@ -472,10 +483,12 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
                 eyeMosaic.render(canvas);
                 canvas.restore();
 
-                canvas.drawText(mTimeStr, mWidth - mTextDigitsRightMargin,
+                canvas.drawText(timeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
-                if (DEBUG_SHOW_GLANCE_COUNTER) canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
-                        mTextGlancesBaselineHeight, mTextGlancesPaintInteractive);
+                if (DEBUG_SHOW_GLANCE_COUNTER) {
+                    canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
+                            mTextGlancesBaselineHeight, mTextGlancesPaintInteractive);
+                }
 
             }
 
