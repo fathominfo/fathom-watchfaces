@@ -32,10 +32,14 @@ proguard/
 # Log Files
 *.log
 
+# Android Studio
+*.iml
+.idea
+
 # IDE (also did this: http://stackoverflow.com/a/18162552/1934487)
-.idea/*
-.idea/gradle.xml
-.idea/libraries/play_services_fitness_7_5_0.xml
-fathom-faces/fathom-faces.iml
-.idea/workspace.xml
-.idea/encodings.xml
+#.idea/*
+#.idea/gradle.xml
+#.idea/libraries/play_services_fitness_7_5_0.xml
+#fathom-faces/fathom-faces.iml
+#.idea/workspace.xml
+#.idea/encodings.xml
