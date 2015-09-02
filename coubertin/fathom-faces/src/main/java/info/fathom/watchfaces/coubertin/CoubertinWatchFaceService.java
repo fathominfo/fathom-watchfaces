@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.AssetManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -19,6 +20,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -30,7 +32,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CoubertinWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
-
     private static final String TAG = "CoubertinWatchFS";
 
     private static final float TAU = (float) (2 * Math.PI);
@@ -123,6 +124,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             }
         };
 
+        private boolean twentyFourHourTime;
+
         //        private boolean mLowBitAmbient;
         //        private boolean mBurnInProtection;
         private boolean mAmbient, mScreenOn;
@@ -175,12 +178,13 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                     .setShowSystemUiTime(false)
                     .build());
 
-            mTextTypeface = Typeface.createFromAsset(getApplicationContext().getAssets(),
-                    RALEWAY_TYPEFACE_PATH);
-            mTextTypefaceMed = Typeface.createFromAsset(getApplicationContext().getAssets(),
-                    RALEWAY_MED_TYPEFACE_PATH);
-            mTextTypefaceSemi = Typeface.createFromAsset(getApplicationContext().getAssets(),
-                    RALEWAY_SEMI_TYPEFACE_PATH);
+            Context context = getApplicationContext();
+            twentyFourHourTime = DateFormat.is24HourFormat(context);
+
+            AssetManager assets = context.getAssets();
+            mTextTypeface = Typeface.createFromAsset(assets, RALEWAY_TYPEFACE_PATH);
+            mTextTypefaceMed = Typeface.createFromAsset(assets, RALEWAY_MED_TYPEFACE_PATH);
+            mTextTypefaceSemi = Typeface.createFromAsset(assets, RALEWAY_SEMI_TYPEFACE_PATH);
 
             mTextDigitsPaintInteractive = new Paint();
             mTextDigitsPaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
@@ -447,7 +451,15 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
             mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
-            mTimeStr = (mTimeManager.hour % 12 == 0 ? 12 : mTimeManager.hour % 12) + ":" + String.format("%02d", mTimeManager.minute);
+            // Support for 24-hour time
+            int hour = mTimeManager.hour;
+            if (!twentyFourHourTime) {
+                hour = hour % 12;
+                if (hour == 0) {
+                    hour = 12;
+                }
+            }
+            mTimeStr = String.format("%d:%02d", hour, mTimeManager.minute);
 
             if (mAmbient) {
                 if (DEBUG_LOGS) Log.v(TAG, "Drawing ambient canvas");
