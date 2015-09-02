@@ -74,7 +74,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private static final int     RANDOM_MINUTES_INC = 60;
     private static final boolean DEBUG_STEP_COUNTERS = false;
 
-    private static final boolean DEBUG_FAKE_NO_STEP_SENSOR = true;
+    private static final boolean DEBUG_FAKE_NO_STEP_SENSOR = false;
 
     private static final boolean DEBUG_FAKE_START_TIME = false;
     private static final int     DEBUG_FAKE_START_HOUR = 8;
