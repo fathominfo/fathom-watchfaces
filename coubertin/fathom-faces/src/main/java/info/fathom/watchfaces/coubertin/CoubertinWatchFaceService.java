@@ -67,7 +67,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private static final int     RESET_HOUR = 4;                                                    // at which hour will watch face reset [0...23], -1 to deactivate
 
     // DEBUG
-    private static final boolean DEBUG_LOGS = false;
+    private static final boolean DEBUG_LOGS = true;
     private static final boolean GENERATE_FAKE_STEPS = false;
     private static final int     RANDOM_FAKE_STEPS = 3000;
     private static final boolean SHOW_BUBBLE_VALUE_TAGS = false;
@@ -101,6 +101,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private int mDetectedSteps = 0;
 
 
+    /*
     // prevent memory leaks caused by the handler hanging around
     private static class WeakMainHandler extends Handler {
         private WeakReference<CoubertinWatchFaceService.Engine> ref;
@@ -126,6 +127,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             }
         }
     }
+    */
 
     private static final int MSG_UPDATE_TIMER = 0;
 
@@ -138,8 +140,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     private class Engine extends CanvasWatchFaceService.Engine {
 
         /* Handler to update the screen depending on the message */
-        final WeakMainHandler mMainHandler = new WeakMainHandler(this);
-        /*
+        //final WeakMainHandler mMainHandler = new WeakMainHandler(this);
         final Handler mMainHandler = new Handler() {
             @Override
             public void handleMessage(Message message) {
@@ -157,7 +158,6 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 }
             }
         };
-        */
 
         private boolean mAmbient;
 
@@ -267,6 +267,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                     mInitialSteps = (int) mSensorStepCount.values[0];
                     mPrevSteps = 0;
                     mCurrentSteps = 0;
+                    mDetectedSteps = 0;
                     bubbleManager.clearBubbles();
                     bubbleManager.prevSteps = 0;
                     bubbleManager.currentSteps = 0;
@@ -375,6 +376,11 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                     //mScreenOn = false;
                     onScreenChange(false);
                 }
+            }
+
+            @Override
+            public String toString() {
+                return "Screen Receiver";
             }
         };
 
@@ -585,6 +591,11 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             @Override
             public void onReceive(Context context, Intent intent) {
                 mTimeManager.setTimeZone(intent);
+            }
+
+            @Override
+            public String toString() {
+                return "Time Zone Receiver";
             }
         };
 
@@ -816,8 +827,10 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
             if (DEBUG_LOGS) Log.v(TAG, stepInc + " new steps!");
 
+            // tried moving this out to always cause an update
+            bubbleManager.updateSteps();
             if (stepInc > 0) {
-                bubbleManager.updateSteps();
+                //bubbleManager.updateSteps();
 
             // Sometimes the sensor yields a repeated reading
             } else {
@@ -987,7 +1000,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                         int newBigBubbleCount = mediumBubbleCount / scaleRatioBM;
                         bubblesMedium.remove(newBigBubbleCount * scaleRatioBM);
                         bubblesBig.add(newBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
-                                mPrevSteps < STEP_RATIO_BIG && mCurrentSteps >= STEP_RATIO_BIG, 0);
+                                mPrevSteps < STEP_RATIO_BIG && currentSteps >= STEP_RATIO_BIG, 0);
                         updateKeyframe++;
                         break;
                     case 6:
@@ -1003,7 +1016,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                         int newMBigBubbleCount = bigBubbleCount / scaleRatioBMB;
                         bubblesBig.remove(newMBigBubbleCount * scaleRatioBMB);
                         bubblesMBig.add(newMBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
-                                mPrevSteps < STEP_RATIO_MBIG && mCurrentSteps >= STEP_RATIO_MBIG, 0);
+                                mPrevSteps < STEP_RATIO_MBIG && currentSteps >= STEP_RATIO_MBIG, 0);
                         updateKeyframe++;
                         break;
                     case 8:
@@ -1019,8 +1032,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                         int newXBigBubbleCount = mBigBubbleCount / scaleRatioMBXB;
                         bubblesMBig.remove(newXBigBubbleCount * scaleRatioMBXB);
                         bubblesXBig.add(newXBigBubbleCount, SHOW_BUBBLE_VALUE_TAGS,
-                                (mPrevSteps < STEP_RATIO_XBIG && mCurrentSteps >= STEP_RATIO_XBIG) ||  // 10k
-                                (mPrevSteps < 2 * STEP_RATIO_XBIG && mCurrentSteps >= 2 * STEP_RATIO_XBIG),  // 20k
+                                (mPrevSteps < STEP_RATIO_XBIG && currentSteps >= STEP_RATIO_XBIG) ||  // 10k
+                                (mPrevSteps < 2 * STEP_RATIO_XBIG && currentSteps >= 2 * STEP_RATIO_XBIG),  // 20k
                                 0);
                         updateKeyframe++;
                         break;
