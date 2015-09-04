@@ -26,7 +26,6 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
-import java.lang.ref.WeakReference;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +93,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             10124
     };
 
+    private boolean mTwentyFourHourTime;
 
     private int mCurrentSteps = 0;
     static private boolean mUseStepDetector = true;
@@ -424,6 +424,8 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 if (mUseStepDetector) mSensorStepDetector.register();
                 mSensorAccelerometer.register();
 
+                mTwentyFourHourTime = DateFormat.is24HourFormat(getApplicationContext());
+
             } else {
                 bubbleManager.byeGlance();
 
@@ -489,11 +491,10 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         public void onDraw(Canvas canvas, Rect bounds) {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
 
-            boolean twentyFourHourTime = DateFormat.is24HourFormat(getApplicationContext());
             mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
             // Support for 24-hour time
             int hour = mTimeManager.hour;
-            if (!twentyFourHourTime) {
+            if (!mTwentyFourHourTime) {
                 hour = hour % 12;
                 if (hour == 0) {
                     hour = 12;

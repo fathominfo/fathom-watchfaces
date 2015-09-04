@@ -15,6 +15,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -135,7 +136,7 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
             }
         };
 
-        private boolean twentyFourHourTime;
+        private boolean mTwentyFourHourTime;
 
         //        private boolean mLowBitAmbient;
         //        private boolean mBurnInProtection;
@@ -266,6 +267,10 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
         public void onVisibilityChanged(boolean visible) {
             if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
+
+            if (visible) {
+                mTwentyFourHourTime = DateFormat.is24HourFormat(getApplicationContext());
+            }
 
             /*
             * Whether the timer should be running depends on whether we're visible
@@ -453,7 +458,7 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
             mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
             // Support for 24-hour time
             int hour = mTimeManager.hour;
-            if (!twentyFourHourTime) {
+            if (!mTwentyFourHourTime) {
                 hour = hour % 12;
                 if (hour == 0) {
                     hour = 12;

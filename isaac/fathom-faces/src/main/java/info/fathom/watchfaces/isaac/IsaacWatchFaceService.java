@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.text.format.DateFormat;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -87,7 +88,7 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
             }
         };
 
-        private boolean twentyFourHourTime;
+        private boolean mTwentyFourHourTime;
 
         private boolean mRegisteredTimeZoneReceiver = false;
         private boolean mAmbient, mScreenOn;
@@ -101,7 +102,7 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 
         private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
         private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
-        private final Rect textBounds = new Rect();
+        //private final Rect textBounds = new Rect();
         private Typeface RALEWAY_REGULAR_TYPEFACE;
 
         private int[] backgroundColors;
@@ -246,10 +247,13 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
             if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
-            if (visible)
+
+            if (visible) {
                 mSensorAccelerometer.register();
-            else
+                mTwentyFourHourTime = DateFormat.is24HourFormat(getApplicationContext());
+            } else {
                 mSensorAccelerometer.unregister();
+            }
 
             /*
             * Whether the timer should be running depends on whether we're visible
@@ -364,7 +368,7 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 //                    + String.format("%02d", mTimeManager.minute);
             // Support for 24-hour time
             int hour = mTimeManager.hour;
-            if (!twentyFourHourTime) {
+            if (!mTwentyFourHourTime) {
                 hour = hour % 12;
                 if (hour == 0) {
                     hour = 12;
