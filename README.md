@@ -2,9 +2,9 @@
 
 ![Fathom Watch Faces](https://github.com/fathominfo/fathom-watchfaces/blob/master/assets/fathom-watchfaces-banner-01.jpg "Fathom Watch Faces")
 
-Fathom Watch Faces is a repository of experimental watch faces for the new Android Wear Watches, commissioned by Google Android Experiments. 
-
 #### This is an [android experiment](http://androidexperiments.com)
+
+Fathom Watch Faces is a repository of experimental watch faces for the new Android Wear Watches, commissioned by Google Android Experiments. 
 
 [Coubertin Rings](https://play.google.com/store/apps/details?id=info.fathom.watchfaces.coubertin&hl=en) uses the built-in sensors on your watch to display playful interactive rings that represent your daily step count. The more steps you take, the more rings you earn. As you hit step milestones throughout the day, the rings get bigger, change color, and scale up to quantify higher step counts (e.g. 10 steps, 100 steps, 1,000 steps). Once you hit the higher step counts, your watch will reward you with a splash of color to help motivate you to the next ring. Shoot for 10,000 steps and achieve a jubilation of color!
 
