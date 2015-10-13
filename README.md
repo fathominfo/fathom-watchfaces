@@ -4,6 +4,7 @@
 
 Fathom Watch Faces is a repository of experimental watch faces for the new Android Wear Watches, commissioned by Google Android Experiments. 
 
+#### This is an [android experiment](http://androidexperiments.com)
 
 [Coubertin Rings](https://play.google.com/store/apps/details?id=info.fathom.watchfaces.coubertin&hl=en) uses the built-in sensors on your watch to display playful interactive rings that represent your daily step count. The more steps you take, the more rings you earn. As you hit step milestones throughout the day, the rings get bigger, change color, and scale up to quantify higher step counts (e.g. 10 steps, 100 steps, 1,000 steps). Once you hit the higher step counts, your watch will reward you with a splash of color to help motivate you to the next ring. Shoot for 10,000 steps and achieve a jubilation of color!
 
@@ -20,7 +21,7 @@ The watch design pays tribute to Isaac Newton’s laws of motion and his experim
 The design alludes to Jacques Lacan’s psychological term “Gaze,” or the realization that you are an object being looked at just as an inanimate object can be looked at. The *Gaze Effect* watch face is a quirky reference to self-awareness, and our relationship to personal devices and time.
 
 ## License
-
+```
 The MIT License (MIT)
 
 Copyright (c) 2015 Fathom Information Design
@@ -42,7 +43,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
+```
 
 
 
