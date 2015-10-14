@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
+import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.DateFormat;
 import android.text.format.Time;
@@ -21,13 +22,15 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class GazeWatchFaceService extends CanvasWatchFaceService {
-
     private static final String TAG = "GazeWatchFaceService";
 
     private static final long  INTERACTIVE_UPDATE_RATE_MS = 33;
@@ -105,10 +108,6 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
 
 
 
-
-
-
-
     @Override
     public Engine onCreateEngine() {
         return new Engine();
@@ -137,6 +136,10 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
         };
 
         private boolean mTwentyFourHourTime;
+        //        static final private String dateFormatStr =
+//                DateFormat.getBestDateTimePattern()
+//        private SimpleDateFormat dateFormat = new SimpleDateFormat(DateFormat
+        private java.text.DateFormat mDateFormat;
 
         //        private boolean mLowBitAmbient;
         //        private boolean mBurnInProtection;
@@ -157,10 +160,11 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
 
         private int mWidth;
         private int mHeight;
-        private float mCenterX;
-        private float mCenterY;
+//        private float mCenterX;
+//        private float mCenterY;
         private boolean mIsRound;
-        private float mRadius;
+//        private float mRadius;
+        private boolean mShowDate;
 
         private int glances = 0;                // how many times did the watch go from ambient to interactive?
         private int consecutiveGlances = 0;     // amount of last consecutive glances
@@ -180,6 +184,7 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
+                    .setAcceptsTapEvents(true)
                     .build());
 
             mTextTypeface = Typeface.createFromAsset(getApplicationContext().getAssets(),
@@ -251,6 +256,9 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
             if (DEBUG_LOGS) Log.v(TAG, "onAmbientModeChanged: " + inAmbientMode);
             super.onAmbientModeChanged(inAmbientMode);
 
+            // Reset to showing the time instead of the date
+            mShowDate = false;
+
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 invalidate();
@@ -268,8 +276,15 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
             if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
+            // Reset to showing the time instead of the date
+            mShowDate = false;
+
             if (visible) {
+                // Reset these in case the user has been fiddling with settings
                 mTwentyFourHourTime = DateFormat.is24HourFormat(getApplicationContext());
+                //mDateFormat = DateFormat.getDateFormat(getApplicationContext());
+                String pat = DateFormat.getBestDateTimePattern(Locale.getDefault(), "MM/dd");
+                mDateFormat = new SimpleDateFormat(pat);
             }
 
             /*
@@ -315,7 +330,6 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
          * the watch goes to ambient mode (if active), or if visibility changes (if ambient
          * mode is off).
          * This method should be called from a Broadcast receiver targeting Intent.ACTION_SCREEN_ON/OFF
-         * @param turnedOn
          */
         public void onScreenChange(boolean turnedOn) {
             if (DEBUG_LOGS) Log.v(TAG, "onScreenChange: " + turnedOn);
@@ -389,9 +403,9 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
 
             mWidth = width;
             mHeight = height;
-            mCenterX = 0.50f * mWidth;
-            mCenterY = 0.50f * mHeight;
-            mRadius  = 0.50f * mWidth;
+//            mCenterX = 0.50f * mWidth;
+//            mCenterY = 0.50f * mHeight;
+//            mRadius  = 0.50f * mWidth;
 
             mTextDigitsHeight = TEXT_DIGITS_HEIGHT * mHeight;
             mTextDigitsBaselineHeight = TEXT_DIGITS_BASELINE_HEIGHT * mHeight;
@@ -454,6 +468,7 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
+            System.out.println("v4");
 
             mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
             // Support for 24-hour time
@@ -465,6 +480,10 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
                 }
             }
             String timeStr = String.format("%d:%02d", hour, mTimeManager.minute);
+
+            if (mShowDate) {
+                timeStr = mDateFormat.format(new Date());
+            }
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT);
@@ -494,9 +513,29 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
                     canvas.drawText(Integer.toString(glances), mWidth - mTextGlancesRightMargin,
                             mTextGlancesBaselineHeight, mTextGlancesPaintInteractive);
                 }
-
             }
+        }
 
+        @Override
+        public void onTapCommand(@TapType int tapType, int x, int y, long eventTime) {
+            switch (tapType) {
+                case WatchFaceService.TAP_TYPE_TAP:
+                    mShowDate = !mShowDate;
+                    invalidate();
+                    break;
+
+                case WatchFaceService.TAP_TYPE_TOUCH:
+                    // tap started, provide feedback
+                    break;
+
+                case WatchFaceService.TAP_TYPE_TOUCH_CANCEL:
+                    // tap canceled, don't do anything
+                    break;
+
+                default:
+                    super.onTapCommand(tapType, x, y, eventTime);
+                    break;
+            }
         }
 
         private boolean mRegisteredTimeZoneReceiver = false;
