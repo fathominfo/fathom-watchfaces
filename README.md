@@ -2,7 +2,7 @@
 
 ![Fathom Watch Faces](https://github.com/fathominfo/fathom-watchfaces/blob/master/assets/fathom-watchfaces-banner-01.jpg "Fathom Watch Faces")
 
-#### This is an [Android Experiment](http://androidexperiments.com)
+#### This is an [Android Experiment](http://androidexperiments.com).
 
 Fathom Watch Faces is a repository of experimental watch faces for the new Android Wear Watches, commissioned by Google Android Experiments. 
 
