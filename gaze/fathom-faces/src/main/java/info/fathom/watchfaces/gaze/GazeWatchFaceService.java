@@ -22,13 +22,11 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+
 
 public class GazeWatchFaceService extends CanvasWatchFaceService {
     private static final String TAG = "GazeWatchFaceService";
@@ -139,7 +137,8 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
         //        static final private String dateFormatStr =
 //                DateFormat.getBestDateTimePattern()
 //        private SimpleDateFormat dateFormat = new SimpleDateFormat(DateFormat
-        private java.text.DateFormat mDateFormat;
+//        private java.text.DateFormat mDateFormat;
+        private boolean mDayBeforeMonth;
 
         //        private boolean mLowBitAmbient;
         //        private boolean mBurnInProtection;
@@ -283,8 +282,17 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
                 // Reset these in case the user has been fiddling with settings
                 mTwentyFourHourTime = DateFormat.is24HourFormat(getApplicationContext());
                 //mDateFormat = DateFormat.getDateFormat(getApplicationContext());
-                String pat = DateFormat.getBestDateTimePattern(Locale.getDefault(), "MM/dd");
-                mDateFormat = new SimpleDateFormat(pat);
+                //String pat = DateFormat.getBestDateTimePattern(Locale.getDefault(), "MM/dd");
+                //String pat = DateFormat.getBestDateTimePattern(Locale.forLanguageTag("de_CH"), "MM/dd");
+                //mDateFormat = new SimpleDateFormat(pat);
+                char[] odor = DateFormat.getDateFormatOrder(getApplicationContext());
+                int index = 0;
+                // If the year is first, step over the first element
+                if (odor[0] == 'y') {
+                    ++index;
+                }
+                // First (or next element) with either be 'M' or 'd'
+                mDayBeforeMonth = odor[index] == 'd';
             }
 
             /*
@@ -468,7 +476,6 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
 //            if (DEBUG_LOGS) Log.v(TAG, "Drawing canvas");
-            System.out.println("v4");
 
             mTimeManager.setToNow();  // if RANDOM_TIME_PER_GLANCE it won't update toNow
             // Support for 24-hour time
@@ -482,7 +489,12 @@ public class GazeWatchFaceService extends CanvasWatchFaceService {
             String timeStr = String.format("%d:%02d", hour, mTimeManager.minute);
 
             if (mShowDate) {
-                timeStr = mDateFormat.format(new Date());
+                //timeStr = mDateFormat.format(new Date());
+                if (mDayBeforeMonth) {
+                    timeStr = mTimeManager.monthDay + "/" + (mTimeManager.month + 1);
+                } else {
+                    timeStr = (mTimeManager.month + 1) + "/" + mTimeManager.monthDay;
+                }
             }
 
             if (mAmbient) {
