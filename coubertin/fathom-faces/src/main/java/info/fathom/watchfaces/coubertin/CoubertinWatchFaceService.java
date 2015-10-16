@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
+import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.DateFormat;
 import android.text.format.Time;
@@ -94,6 +95,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     };
 
     private boolean mTwentyFourHourTime;
+    private boolean mDayBeforeMonth;
 
     private int mCurrentSteps = 0;
     static private boolean mUseStepDetector = true;
@@ -162,7 +164,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         private boolean mAmbient;
 
         private TimeManager mTimeManager;
-        private int mLastAmbientHour;
+        //private int mLastAmbientHour;
         //private int glances;
 
         private boolean mStepCounterRegistered;
@@ -191,6 +193,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         private int mHeight;
         private float mCenterX, mCenterY;
         private boolean mIsRound;
+        private boolean mShowDate;
 
         private BubbleManager bubbleManager;
         private SplashScreen splashScreen;
@@ -204,6 +207,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                     .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
+                    .setAcceptsTapEvents(true)
                     .build());
 
             AssetManager assets = getApplicationContext().getAssets();
@@ -319,6 +323,9 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             if (DEBUG_LOGS) Log.v(TAG, "onAmbientModeChanged: " + inAmbientMode);
             super.onAmbientModeChanged(inAmbientMode);
 
+            // Reset to showing the time instead of the date
+            mShowDate = false;
+
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 invalidate();
@@ -342,7 +349,21 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
+            // Reset to showing the time instead of the date
+            mShowDate = false;
+
             if (visible) {
+                // Reset these in case the user has been fiddling with settings
+                mTwentyFourHourTime = DateFormat.is24HourFormat(getApplicationContext());
+                char[] odor = DateFormat.getDateFormatOrder(getApplicationContext());
+                int index = 0;
+                // If the year is first, step over the first element
+                if (odor[0] == 'y') {
+                    ++index;
+                }
+                // First (or next element) with either be 'M' or 'd'
+                mDayBeforeMonth = odor[index] == 'd';
+
                 mStepCounterRegistered = DEBUG_FAKE_NO_STEP_SENSOR ? false : mSensorStepCount.register();
                 if (mUseStepDetector) mSensorStepDetector.register();
                 mSensorAccelerometer.register();
@@ -502,6 +523,15 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             }
             String timeStr = String.format("%d:%02d", hour, mTimeManager.minute);
 
+            if (mShowDate) {
+                //timeStr = mDateFormat.format(new Date());
+                if (mDayBeforeMonth) {
+                    timeStr = mTimeManager.monthDay + "/" + (mTimeManager.month + 1);
+                } else {
+                    timeStr = (mTimeManager.month + 1) + "/" + mTimeManager.monthDay;
+                }
+            }
+
             String stepStr = !mStepCounterRegistered ? "No Step Sensor" :
                 mTestStepFormatter.format(mStepCountDisplay) + "#";
 
@@ -587,6 +617,29 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         }
 
 
+        @Override
+        public void onTapCommand(@TapType int tapType, int x, int y, long eventTime) {
+            switch (tapType) {
+                case WatchFaceService.TAP_TYPE_TAP:
+                    mShowDate = !mShowDate;
+                    invalidate();
+                    break;
+
+                case WatchFaceService.TAP_TYPE_TOUCH:
+                    // tap started, provide feedback
+                    break;
+
+                case WatchFaceService.TAP_TYPE_TOUCH_CANCEL:
+                    // tap canceled, don't do anything
+                    break;
+
+                default:
+                    super.onTapCommand(tapType, x, y, eventTime);
+                    break;
+            }
+        }
+
+
         private boolean mRegisteredTimeZoneReceiver = false;
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
             @Override
@@ -625,6 +678,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             }
         }
 
+
         /**
          * Returns whether the {@link #mMainHandler} timer should be running. The timer
          * should only run when we're visible and in interactive mode.
@@ -647,10 +701,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         }
 
 
-
-
-
-
+        // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
         private class TimeManager {
@@ -763,11 +814,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         }
 
 
-
-
-
-
-
+        // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
         private void updateStepCounts() {
@@ -856,18 +903,10 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         }
 
 
-
-
-
-
-
-
-
-
+        // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
         private class BubbleManager {
-
             private final static float ANIMATION_RATE   = 0.25f;
 
             private final static int STEP_RATIO_XBIG    = 10000;
@@ -1163,6 +1202,9 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
         }
 
 
+        // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+
         private class BubbleCollection {
             private static final float COLOR_INTERPOLATION_RATE = 0.15f;
 
@@ -1300,8 +1342,11 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
 
                 return Color.argb(currA, currR, currG, currB);
             }
-
         }
+
+
+        // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
 
         private class Bubble {
 
@@ -1511,8 +1556,11 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
                 grow();
                 if (DEBUG_LOGS) Log.v(TAG, "set relRadius: " + relRadius + ", radius: " + radius);
             }
-
         }
+
+
+        // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
 
         private class SplashScreen {
             private static final int FADE_IN_SPEED = 8;
@@ -1623,11 +1671,7 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     }
 
 
-
-
-
-
-
+    // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
     private SensorManager mSensorManager;
@@ -1701,9 +1745,10 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
     }
 
 
+    // . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
 
     private class SensorWrapper {
-
         SensorEventListener listener;
         SensorManager manager;
         String name;
@@ -1769,6 +1814,4 @@ public class CoubertinWatchFaceService extends CanvasWatchFaceService implements
             }
         }
     }
-
-
 }
