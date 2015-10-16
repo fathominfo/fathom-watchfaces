@@ -27,8 +27,11 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class IsaacWatchFaceService extends CanvasWatchFaceService implements SensorEventListener {
@@ -49,6 +52,10 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
     private static final float   TEXT_DIGITS_HEIGHT = 0.2f;  // as a factor of screen height
     private static final float   TEXT_DIGITS_BASELINE_HEIGHT = 0.43f;  // as a factor of screen height
     private static final float   TEXT_DIGITS_RIGHT_MARGIN = 0.08f;  // as a factor of screen width
+
+    private static final float   TEXT_DATE_HEIGHT = 0.10f;
+    private static final float   TEXT_DATE_BASELINE_HEIGHT = TEXT_DIGITS_BASELINE_HEIGHT + 0.15f;
+    private static final float   TEXT_DATE_RIGHT_MARGIN = 0.09f;  // as a factor of screen width
 
     private static final int     RESET_HOUR = 4;  // at which hour will watch face reset [0...23], -1 to deactivate
     private static final long    INACTIVITY_RESET_TIME = TimeUnit.HOURS.toMillis(1);
@@ -89,11 +96,10 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
         };
 
         private boolean mTwentyFourHourTime;
+        private SimpleDateFormat mDateFormat;
 
         private boolean mRegisteredTimeZoneReceiver = false;
-        private boolean mAmbient, mScreenOn;
-//        private boolean mLowBitAmbient;
-//        private boolean mBurnInProtection;
+        private boolean mAmbient;
 
         private TimeManager mTimeManager;
         private int mLastAmbientHour;
@@ -102,6 +108,8 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 
         private Paint mTextDigitsPaintInteractive, mTextDigitsPaintAmbient;
         private float mTextDigitsHeight, mTextDigitsBaselineHeight, mTextDigitsRightMargin;
+        private Paint mDatePaintInteractive, mDatePaintAmbient;
+        private float mDateHeight, mDateBaselineHeight, mDateRightMargin;
         //private final Rect textBounds = new Rect();
         private Typeface RALEWAY_REGULAR_TYPEFACE;
 
@@ -149,6 +157,18 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
             mTextDigitsPaintAmbient.setTextAlign(Paint.Align.RIGHT);
             mTextDigitsPaintAmbient.setAntiAlias(false);
 
+            mDatePaintInteractive = new Paint();
+            mDatePaintInteractive.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
+            mDatePaintInteractive.setTypeface(RALEWAY_REGULAR_TYPEFACE);
+            mDatePaintInteractive.setTextAlign(Paint.Align.RIGHT);
+            mDatePaintInteractive.setAntiAlias(true);
+
+            mDatePaintAmbient = new Paint();
+            mDatePaintAmbient.setColor(TEXT_DIGITS_COLOR_INTERACTIVE);
+            mDatePaintAmbient.setTypeface(RALEWAY_REGULAR_TYPEFACE);
+            mDatePaintAmbient.setTextAlign(Paint.Align.RIGHT);
+            mDatePaintAmbient.setAntiAlias(false);
+
             mGridPaint = new Paint();
             mGridPaint.setColor(BACKGROUND_COLOR_AMBIENT);
             mGridPaint.setStrokeWidth(1f);
@@ -157,7 +177,9 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 
             board = new Board();
 
-//            mTime  = new Time();
+            String pattern = DateFormat.getBestDateTimePattern(Locale.getDefault(), "MMM dd");
+            mDateFormat = new SimpleDateFormat(pattern);
+
             mTimeManager = new TimeManager() {
                 @Override
                 public void onReset() {
@@ -247,10 +269,10 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
             if (DEBUG_LOGS) Log.v(TAG, "onVisibilityChanged: " + visible);
             super.onVisibilityChanged(visible);
 
-
             if (visible) {
                 mSensorAccelerometer.register();
                 mTwentyFourHourTime = DateFormat.is24HourFormat(getApplicationContext());
+
             } else {
                 mSensorAccelerometer.unregister();
             }
@@ -270,11 +292,11 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
                 if (DEBUG_LOGS) Log.v(TAG, "Received intent: " + action);
                 if (action.equals(Intent.ACTION_SCREEN_ON)) {
                     if (DEBUG_LOGS) Log.v(TAG, "Screen ON");
-                    mScreenOn = true;
+                    //mScreenOn = true;
                     onScreenChange(true);
                 } else if (action.equals(Intent.ACTION_SCREEN_OFF)) {
                     if (DEBUG_LOGS) Log.v(TAG, "Screen OFF");
-                    mScreenOn = false;
+                    //mScreenOn = false;
                     onScreenChange(false);
                 }
             }
@@ -315,7 +337,7 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 
             } else {
                 if (timelyReset()) {
-                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watchface");
+                    if (DEBUG_LOGS) Log.v(TAG, "Resetting watch face");
                     board.reset();
                 }
 
@@ -337,9 +359,9 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 
             mWidth   = width;
             mHeight  = height;
-            mCenterX = 0.50f * mWidth;
-            mCenterY = 0.50f * mHeight;
-            mRadius  = 0.50f * mWidth;
+            mCenterX = mWidth / 2;
+            mCenterY = mHeight / 2;
+            mRadius  = mWidth / 2;
 
             board.initialize(mWidth, mHeight);
 
@@ -348,6 +370,12 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
             mTextDigitsRightMargin = TEXT_DIGITS_RIGHT_MARGIN * mWidth;
             mTextDigitsPaintInteractive.setTextSize(mTextDigitsHeight);
             mTextDigitsPaintAmbient.setTextSize(mTextDigitsHeight);
+
+            mDateHeight = TEXT_DATE_HEIGHT * mHeight;
+            mDateBaselineHeight = TEXT_DATE_BASELINE_HEIGHT * mHeight;
+            mDateRightMargin = TEXT_DATE_RIGHT_MARGIN * mWidth;
+            mDatePaintInteractive.setTextSize(mDateHeight);
+            mDatePaintAmbient.setTextSize(mDateHeight);
         }
 
         @Override
@@ -375,7 +403,7 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
                 }
             }
             String timeStr = String.format("%d:%02d", hour, mTimeManager.minute);
-
+            String dateStr = mDateFormat.format(new Date());
 
             if (mAmbient) {
                 canvas.drawColor(BACKGROUND_COLOR_AMBIENT); // background
@@ -384,6 +412,8 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
 //                renderGrid(canvas, 1, 1);
                 canvas.drawText(timeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintAmbient);
+                canvas.drawText(dateStr, mWidth - mDateRightMargin,
+                        mDateBaselineHeight, mDatePaintAmbient);
 
             } else {
                 canvas.drawColor(backgroundColors[mTimeManager.hour]);
@@ -391,6 +421,8 @@ public class IsaacWatchFaceService extends CanvasWatchFaceService implements Sen
                 board.render(canvas, false);
                 canvas.drawText(timeStr, mWidth - mTextDigitsRightMargin,
                         mTextDigitsBaselineHeight, mTextDigitsPaintInteractive);
+                canvas.drawText(dateStr, mWidth - mDateRightMargin,
+                        mDateBaselineHeight, mDatePaintInteractive);
             }
         }
 
